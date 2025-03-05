@@ -97,6 +97,19 @@ namespace CarbonResources
             m_collection.clear();
         }
 
+        bool Contains( const T other )
+		{
+            for (T attribute : m_collection)
+            {
+				if( attribute->operator==(other) )  // This is assuming pointers again, not allowed
+                {
+					return true;
+                }
+            }
+
+			return false;
+        }
+
 	    void Remove( typename std::vector<T>::const_iterator attributeIterator )
 	    {
 			delete ( *attributeIterator );
@@ -140,6 +153,13 @@ namespace CarbonResources
 
     struct RelativePath
     {
+        RelativePath(const std::string& inPrefix, const std::string& inFilename):
+			prefix(inPrefix),
+			filename(inFilename)
+        {
+
+        }
+
         RelativePath(std::string pathStr)
         {
 			FromString( pathStr );  //TODO this can fail
@@ -149,7 +169,7 @@ namespace CarbonResources
         bool FromString(const std::string& pathStr)
         {
 			
-			size_t separatorPosition = pathStr.find( ":/" );
+			size_t separatorPosition = pathStr.find( ":/" );    //TODO internalise the :/, don't require external API users just to get it right
 
             if (separatorPosition == std::string::npos)
             {
@@ -208,6 +228,8 @@ namespace CarbonResources
         virtual Result ImportFromYaml( YAML::Node& resource, const Version& documentVersion ); 
 
         virtual Result ExportToYaml( YAML::Emitter& out, const Version& documentVersion );
+
+        Result SetParametersFromData( const std::string& data );
 
     private:
 	    Result GetDevelopmentLocalData( ResourceGetDataParams& params ) const;

@@ -39,18 +39,17 @@ namespace CarbonResources
     };
 
 	class PatchResourceGroupImpl;
+	class ResourceGroupImpl;
 
     class API PatchResourceGroup final: public ResourceGroup
     {
 
     public:
-		PatchResourceGroup( const std::string& relativePath );
+		PatchResourceGroup( const std::string& relativePath, const ResourceGroupImpl* resourceGroup );   //TODO struct input and I think there is no reason to ever have this exposed, creating this is internal
 
 	    ~PatchResourceGroup();
 
         Result Apply( const PatchApplyParams& params );
-
-        Result SetResourceGroupPath( const std::string& resourceGroupPath ); // TODO don't like this in public API
 
     private:
 

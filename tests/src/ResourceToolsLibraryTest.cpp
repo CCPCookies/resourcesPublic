@@ -40,10 +40,9 @@ TEST( ResourceToolsTest, GZipCompressData )
 {
 	std::string inputDataToCompress = "SomeData";
 
-    unsigned char* compressedData = nullptr;
-	unsigned long compressedDataSize = 0;
+    std::string outputData = "";
 
-	EXPECT_TRUE( ResourceTools::GZipCompressData( reinterpret_cast<unsigned char*>( inputDataToCompress.data() ), inputDataToCompress.size(), compressedData, compressedDataSize ) );
+	EXPECT_TRUE( ResourceTools::GZipCompressData( inputDataToCompress, outputData ) );
 
 	// TODO check data using real data and data checksum
 }
@@ -52,10 +51,9 @@ TEST( ResourceToolsTest, GZipUncompressData )
 {
 	std::string inputDataToUncompress = "SomeData";
 
-	unsigned char* uncomrpessedData = nullptr;
-	unsigned long uncompressedDataSize = 0;
+	std::string outputData = "";
 
-	EXPECT_TRUE( ResourceTools::GZipUncompressData( reinterpret_cast<unsigned char*>( inputDataToUncompress.data() ), inputDataToUncompress.size(), uncomrpessedData, uncompressedDataSize ) );
+	EXPECT_TRUE( ResourceTools::GZipUncompressData( inputDataToUncompress, outputData ) );
 
 	// TODO check data using real data and data checksum
 }

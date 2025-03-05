@@ -60,6 +60,13 @@ namespace CarbonResources
 		std::string productionRemoteBaseUrl = "";
     };
 
+    struct API ResourceDestinationSettings
+    {
+		std::string developmentLocalBasePath = "";  // TODO needs to be supported and also needs a rename, it's not just developmentLocal now
+
+		std::string productionLocalBasePath = "";
+    };
+
     struct API ResourceGetDataParams
 	{
 		ResourceSourceSettings resourceSourceSettings;
@@ -69,7 +76,9 @@ namespace CarbonResources
 	};
   
     class ResourceImpl;
+	class PatchResourceGroupImpl;
 
+    //TODO remove Resource from public API and remove pimpl style
     class API Resource
     {
     protected:
@@ -82,11 +91,9 @@ namespace CarbonResources
 
 	    virtual ~Resource();
 
-        virtual Result Export( const Version& documentVersion );    // TODO arguments should be a struct
-
-        bool operator==( const Resource& other ) const
+        bool operator==( const Resource* other ) const  // TODO remove from public API
 		{
-			return GetRelativePath() == other.GetRelativePath();
+			return (GetRelativePath() == other->GetRelativePath()) && (GetChecksum() == other->GetChecksum());
 		}
 
         std::string GetRelativePath() const; // TODO should return a base type, DocumentParameter is internal
@@ -104,6 +111,7 @@ namespace CarbonResources
 		Result GetData( ResourceGetDataParams& params ) const;  //TODO remove from public API
 
         friend class ResourceGroupImpl;
+		friend class PatchResourceGroupImpl;
     };
 
 }

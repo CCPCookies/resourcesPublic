@@ -30,13 +30,9 @@ namespace CarbonResources
     {
     public:
 
-	    PatchResourceGroupImpl( const std::string& relativePath );
+	    PatchResourceGroupImpl( const std::string& relativePath, const ResourceGroupImpl* resourceGroup );
 
         ~PatchResourceGroupImpl();
-
-	    Result CreatePatch( const PatchCreateParams& params ) const;
-
-        Result SetResourceGroupPath( const std::string& resourceGroupPath );
 
     private:
 
@@ -50,7 +46,7 @@ namespace CarbonResources
 
     protected:
 
-        DocumentParameter<std::string> m_resourceGroupPathParameter = DocumentParameter<std::string>( { 0, 1, 0 }, "ResourceGroup" );
+        DocumentParameter<Resource*> m_resourceGroupParameter = DocumentParameter<Resource*>( { 0, 1, 0 }, "ResourceGroupResource" );
     };
 
 }

@@ -44,16 +44,11 @@ namespace CarbonResources
 
     struct API PatchCreateParams
 	{
-		ResourceSourceSettings resourceSourceSettings;
+		ResourceSourceSettings resourceSourceSettingsFrom;
 
-		ResourceGroup* latestResourceGroup = nullptr;
+		ResourceSourceSettings resourceSourceSettingsTo;
 
-		ResourceGroup* previousResourceGroup = nullptr;
-
-		std::string outputDirectoryPath = "";
-
-		PatchResourceGroup* patchResourceGroup = nullptr;
- 
+        ResourceDestinationSettings resourceDestinationSettings;
 	};
 
     struct API ResourceGroupImportFromFileParams
@@ -63,9 +58,16 @@ namespace CarbonResources
 
     struct API ResourceGroupExportToFileParams
 	{
-		std::string outputFilename = "";
+		ResourceDestinationSettings resourceDetinationSettings;
 
         Version outputDocumentVersion = S_DOCUMENT_VERSION;
+	};
+
+    struct API ResourceGroupSubtractionParams
+	{
+		ResourceGroup* subtractResourceGroup = nullptr;
+
+		ResourceGroup* result = nullptr;
 	};
 
     class ResourceGroupImpl;
@@ -90,9 +92,9 @@ namespace CarbonResources
 
         Result ExportToFile( const ResourceGroupExportToFileParams& params ) const;
 
-    private:
+        Result Subtraction( ResourceGroupSubtractionParams& params ) const; // TODO not too thrilled about this being in public API
 
-		Result AddResource( const Resource& resource );
+        Result AddResource( Resource* r ) const;
 
         friend class ResourceGroupImpl;
     };

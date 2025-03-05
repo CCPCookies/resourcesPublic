@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <filesystem>
 
 #define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
 #include <cryptopp/hex.h>
@@ -104,23 +105,47 @@ namespace ResourceTools
 	  return false;
   }
 
-  bool GZipCompressData(const unsigned char* dataToCompress, unsigned long dataToCompressSize, unsigned char* compressedData, unsigned long& compressedDataSize)
+  bool GZipCompressData(const std::string& dataToCompress, std::string& compressedData)
   {
-	  return false;
+      //TODO implement compression
+	  compressedData = dataToCompress;
+
+	  return true;
   }
 
-  bool GZipUncompressData(const unsigned char* dataToUncompress, unsigned long dataToUncompressSize, unsigned char* uncompressedData, unsigned long& uncompressedDataSize)
+  bool GZipUncompressData(const std::string& dataToUncompress, std::string& uncompressedData)
   {
-	  return false;
+      // TODO implement uncompression
+	  uncompressedData = dataToUncompress;
+
+	  return true;
   }
 
-  bool CreatePatch(const std::string& previousData, const std::string& latestData, std::string& outputPath)
+  bool CreatePatch(const std::string& previousData, const std::string& latestData, std::string& patchData)
   {
-	  return false;
+      // TODO implement patching
+	  patchData = latestData;
+
+	  return true;
   }
 
-  bool SaveFile(const std::string path, const std::string& data)
+  bool SaveFile( const std::string path, const std::string& data )
   {
+	  // Creates directories if required
+	  std::string directoryStr = path.substr( 0, path.find_last_of( "/" ) );
+
+	  std::filesystem::path directory( directoryStr );
+
+      if (!std::filesystem::exists(directory))
+      {
+		  std::filesystem::create_directories( directory );
+      }
+
+      if( !std::filesystem::exists( directory ) )
+	  {
+		  return false;
+	  }
+
 	  std::ofstream out( path );
 
       if (!out)

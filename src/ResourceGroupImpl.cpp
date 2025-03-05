@@ -15,7 +15,7 @@ namespace CarbonResources
     ResourceGroupImpl::ResourceGroupImpl( const std::string& relativePath ) :
 	    ResourceImpl( ResourceParams{ relativePath } )
     {
-
+		m_versionParameter = S_DOCUMENT_VERSION;
     }
 
     ResourceGroupImpl::~ResourceGroupImpl()
@@ -128,6 +128,31 @@ namespace CarbonResources
     }
 
     //TODO not a good structure, Don't like returns like this
+	//TODO Feels a bit strange that resourceGroup is thr one that creates this and not Resource
+	Resource* ResourceGroupImpl::CreateResourceFromResource( Resource* resource ) const
+    {
+		ResourceParams resourceParams;
+
+        resourceParams.relativePath = resource->GetRelativePath();
+
+        resourceParams.location = resource->GetLocation();
+
+        resourceParams.checksum = resource->GetChecksum();
+
+        resourceParams.compressedSize = resource->GetCompressedSize();
+
+        resourceParams.uncompressedSize = resource->GetUncompressedSize();
+
+        //This would need guarding against for binary compatability thought exercise TODO
+        resourceParams.something = resource->GetSomething();
+
+		Resource* createdResource = new Resource( resourceParams );
+
+        return createdResource;
+    }
+
+    //TODO not a good structure, Don't like returns like this
+    //TODO Feels a bit strange that resourceGroup is thr one that creates this and not Resource
     Resource* ResourceGroupImpl::CreateResourceFromYaml( YAML::Node& resource )
 	{
 		Resource* createdResource = new Resource( ResourceParams{} );
@@ -222,9 +247,11 @@ namespace CarbonResources
 		return Result::SUCCESS;
     } 
 
-    Result ResourceGroupImpl::ExportYamlToFile( const ResourceGroupExportToFileParams& params ) const
+    Result ResourceGroupImpl::ExportYamlToFile( const ResourceGroupExportToFileParams& params )
     {
-		std::ofstream outputStream;
+		
+		/*
+        std::ofstream outputStream;
 
 		outputStream.open( params.outputFilename, std::ios::out );
 
@@ -232,6 +259,7 @@ namespace CarbonResources
 		{
 			return Result::FAILED_TO_OPEN_FILE;
 		}
+        */
 
         YAML::Emitter out;
 
@@ -291,10 +319,27 @@ namespace CarbonResources
 
 		out << YAML::EndMap;
 
-        outputStream << out.c_str();
+        std::string data = out.c_str();
 
-        outputStream.close();
+        //std::stringstream outputStream;
 
+        //outputStream << data;
+
+        //outputStream.close();
+
+        // Update parameters
+		SetParametersFromData( data );
+
+        std::stringstream ss;
+
+        ss << params.resourceDetinationSettings.productionLocalBasePath;
+		ss << "/";
+		ss << GetLocation().GetValue();
+
+        if (!ResourceTools::SaveFile(ss.str(), data))
+        {
+			return Result::FAILED_TO_SAVE_FILE;
+        }
 
 		return Result::SUCCESS;
     }
@@ -303,91 +348,105 @@ namespace CarbonResources
 
     Result ResourceGroupImpl::CreatePatch( const PatchCreateParams& params ) const
     {
-        // TODO currently wip, working it through currently
-        // TODO there needs to be validation of the input parameters and tests for all variations
+		RelativePath p = GetRelativePath().GetValue();
 
-        // Make a copy of the previous resources so that matches can be removed to speed up searches
-		DocumentParameterCollection<Resource*> previousResources = params.previousResourceGroup->m_impl->m_resourcesParameter;
+        RelativePath patchPath( "patch", p.filename );
 
-        // Loop through each resource and create a patch if necessary
-        for (Resource* latestResource : m_resourcesParameter)
+		PatchResourceGroup patchResourceGroup( patchPath.ToString(), this );
+
+        for (Resource* resource : m_resourcesParameter)
         {
-            
-            auto iter = std::find( previousResources.begin(), previousResources.end(), latestResource );
+            // Get resource data from
+			ResourceGetDataParams resourceGetDataParamsFrom;
 
-            if (iter != previousResources.end())
+            resourceGetDataParamsFrom.resourceSourceSettings = params.resourceSourceSettingsFrom;
+                
+            Result fromResourceDataResult = resource->GetData( resourceGetDataParamsFrom );
+
+            if (fromResourceDataResult != Result::SUCCESS)
             {
-				Resource* previousResource = ( *iter );
-
-                previousResources.Remove( iter );
-
-                // Create a patch between previousResource and resource
-				ResourceGetDataParams getDataParamsForLatest;
-
-				getDataParamsForLatest.resourceSourceSettings = params.resourceSourceSettings;
-
-				latestResource->GetData( getDataParamsForLatest );
-
-                // Get data for previous resource
-                ResourceGetDataParams getDataParamsForPrevious;
-				
-                getDataParamsForPrevious.resourceSourceSettings = params.resourceSourceSettings;
-
-                previousResource->GetData( getDataParamsForPrevious );
-
-                // Create binary patch
-				std::string patchData;
-				ResourceTools::CreatePatch( getDataParamsForPrevious.data, getDataParamsForLatest.data, patchData );
-
-                // Create a resource for the patch (TODO this is set to change out of here)
-				PatchResourceParams patchResourceParams;
-
-                patchResourceParams.relativePath = "patch:/TODO";
-
-                patchResourceParams.location = "TODO";
-
-                patchResourceParams.checksum = "TODO";
-
-                patchResourceParams.compressedSize = 0;
-
-                patchResourceParams.uncompressedSize = 0;
-
-                patchResourceParams.something = 0;
-
-				PatchResource patchResource( patchResourceParams );
-
-                // Add as a patch resource entry
-				params.patchResourceGroup->AddResource( patchResource );
-
-
-                //TODO there are lots of returns that are not being checked here, this all needs tightening up
-
-                // Save the patch file
-				ResourceTools::SaveFile( "TODO", patchData );
-
+				return fromResourceDataResult;
             }
 
+            // Get resource data to
+			ResourceGetDataParams resourceGetDataParamsTo;
+
+			resourceGetDataParamsTo.resourceSourceSettings = params.resourceSourceSettingsTo;
+
+			Result toResourceDataResult = resource->GetData( resourceGetDataParamsTo );
+
+			if( toResourceDataResult != Result::SUCCESS )
+			{
+				return toResourceDataResult;
+			}
+
+            // Create a patch from the data
+			std::string patchData = "";
+
+            if (!ResourceTools::CreatePatch(resourceGetDataParamsFrom.data, resourceGetDataParamsTo.data, patchData))
+            {
+				return Result::FAILED_TO_CREATE_PATCH;
+            }
+
+            // Create a resource from patch data
+            // TODO prefixes for resource types should be formally defined somewhere
+			std::string patchResourceName = "patch:/" + resource->m_impl->GetRelativePath().GetValue().filename;
+
+            Resource* patchResource = new Resource( { patchResourceName } );
+			patchResource->m_impl->SetParametersFromData( patchData );
+
+            // Export file to filesystem
+			std::stringstream ss;
+			ss << params.resourceDestinationSettings.productionLocalBasePath;
+			ss << "/";
+			ss << patchResource->GetLocation();
+			if( !ResourceTools::SaveFile( ss.str(), patchData ) )
+            {
+				return Result::FAILED_TO_SAVE_FILE;
+            }
+
+            // Add the patch resource to the patchResourceGroup
+			patchResourceGroup.AddResource( patchResource );
         }
 
-        // Input resource group needs to be a resource itself saved to disk
-		//std::string underlyingResourceGroupRelativePath = params.latestResourceGroup->GetRelativePath().GetValue();
-		//params.patchResourceGroup->SetResourceGroupPath( underlyingResourceGroupRelativePath );
+        // Save the patchResourceGroup
+		ResourceGroupExportToFileParams patchResourceGroupExportToFileParams;
 
+        patchResourceGroupExportToFileParams.resourceDetinationSettings = params.resourceDestinationSettings;
 
-        // Should I save the patch group here?
-		ResourceGroupExportToFileParams patchResourceGroupExportParams;
-		patchResourceGroupExportParams.outputFilename = "TODO";
-
-		params.patchResourceGroup->ExportToFile( patchResourceGroupExportParams );
-
+		patchResourceGroup.ExportToFile( patchResourceGroupExportToFileParams );
 
         return Result::FAIL;
     }
 
 
-    Result ResourceGroupImpl::AddResource( const Resource& resource )
+    Result ResourceGroupImpl::AddResource( Resource* resource )
     {
-		return Result::FAIL;
+		m_resourcesParameter.PushBack( resource );
+
+		return Result::SUCCESS;
+    }
+
+    Result ResourceGroupImpl::Subtraction( ResourceGroupSubtractionParams& params ) const
+    {
+		DocumentParameterCollection<Resource*> subtractionResources = params.subtractResourceGroup->m_impl->m_resourcesParameter;
+
+
+        // Iterate through all resources
+        for (Resource* resource : m_resourcesParameter)
+        {
+            // If resource is not in subtraction group then add to result
+			if( !subtractionResources.Contains( resource ) )
+            {
+                // Create a copy of the resource
+				Resource* resourceCopy = CreateResourceFromResource( resource );
+
+				params.result->m_impl->AddResource( resourceCopy );
+            }
+            
+        }
+
+        return Result::SUCCESS;
     }
 
 }

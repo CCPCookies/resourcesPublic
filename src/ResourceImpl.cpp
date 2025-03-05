@@ -135,18 +135,12 @@ namespace CarbonResources
 			return Result::FAIL;
 		}
 
-		// Early out based on which arguments were provided
-		if( params.resourceSourceSettings.productionLocalBasePath == "" )
-		{
-			return Result::FAIL;
-		}
-
         // Construct path
 		std::stringstream ss;
 
 		ss << params.resourceSourceSettings.productionLocalBasePath;
-
-		ss << m_relativePath.GetValue().filename;
+        //TODO manage paths much better
+		ss << "/" << m_location.GetValue();
 
 		std::string path = ss.str();
 
@@ -229,6 +223,50 @@ namespace CarbonResources
 		return Result::SUCCESS;
 	}
 
+    Result ResourceImpl::SetParametersFromData(const std::string& data)
+    {
+        std::string checksum;
+
+		if( !ResourceTools::GenerateMd5Checksum( data, checksum ) )
+		{
+			return Result::FAILED_TO_GENERATE_CHECKSUM;
+		}
+
+        m_checksum = checksum;
+
+        std::string relativePath = m_relativePath.GetValue().ToString();
+
+        std::string relativePathChecksum = "";
+        
+        if (!ResourceTools::GenerateFowlerNollVoChecksum(relativePath, relativePathChecksum))
+        {
+			return Result::FAILED_TO_GENERATE_RELATIVE_PATH_CHECKSUM;
+        }
+
+        // TODO formalise location internally more to strengthen
+        std::stringstream ss;
+		ss << relativePathChecksum.substr( 0, 2 );
+		ss << "/";
+		ss << relativePathChecksum;
+		ss << "_";
+		ss << checksum;
+		m_location = ss.str();
+
+        std::string compressedData = "";
+
+        if (!ResourceTools::GZipCompressData(data, compressedData))
+        {
+			return Result::FAILED_TO_COMPRESS_DATA;
+        }
+
+        m_compressedSize = compressedData.size();
+
+        m_uncompressedSize = data.size();
+
+        // TODO guard thought exercise
+        m_something = 101;
+        
+    }
 
     Result ResourceImpl::ExportToYaml( YAML::Emitter& out, const Version& documentVersion )
 	{

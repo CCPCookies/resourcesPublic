@@ -37,11 +37,11 @@ namespace ResourceTools
 
     bool DownloadFile( const std::string& url, const std::string& outputPath );
 
-    bool GZipCompressData( const unsigned char* dataToCompress, unsigned long dataToCompressSize, unsigned char* compressedData, unsigned long& compressedDataSize );
+    bool GZipCompressData( const std::string& dataToCompress, std::string& compressedData );
 
-    bool GZipUncompressData( const unsigned char* dataToUncompress, unsigned long dataToUncompressSize, unsigned char* uncompressedData, unsigned long& uncompressedDataSize );
+    bool GZipUncompressData( const std::string& dataToUncompress, std::string& uncompressedData );
 
-    bool CreatePatch(const std::string& data1, const std::string& data2, std::string& outputPath);
+    bool CreatePatch(const std::string& data1, const std::string& data2, std::string& patchData);
 
     bool SaveFile( const std::string path, const std::string& data);
 

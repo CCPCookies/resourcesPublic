@@ -46,10 +46,14 @@ namespace CarbonResources
 
 	    Result CreatePatch( const PatchCreateParams& params ) const;
 
-	    Result AddResource( const Resource& resource );
+	    Result AddResource( Resource* resource );
+
+        Result Subtraction( ResourceGroupSubtractionParams& params ) const;
 
     private:
 	    virtual std::string Type() const;
+        
+        virtual Resource* CreateResourceFromResource( Resource* resource ) const; // TODO this function should match signature of others return Result etc
 
 	    virtual Resource* CreateResourceFromYaml( YAML::Node& resource );   // TODO this function should match signature of others return Result etc
 
@@ -61,7 +65,7 @@ namespace CarbonResources
 
 	    Result ImportFromYamlFile( ResourceGroupImportFromFileParams& params );
 
-	    Result ExportYamlToFile( const ResourceGroupExportToFileParams& params ) const;
+	    Result ExportYamlToFile( const ResourceGroupExportToFileParams& params );
 
     protected:
 	    // Document Parameters
