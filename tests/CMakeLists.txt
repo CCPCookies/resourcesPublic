@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 
 project(carbon-resources-test)
 
+find_package(CURL CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(tiny-process-library CONFIG REQUIRED)
 
@@ -61,6 +62,13 @@ if(WIN32)
     add_custom_command(
         TARGET carbon-resources-test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:carbon-resources-test> $<TARGET_FILE_DIR:carbon-resources-test>
+        COMMAND_EXPAND_LISTS
+    )
+
+    # Curl depends on zlib1.dll, which needs to be copied explicitly.
+    add_custom_command(
+        TARGET carbon-resources-test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:CURL::libcurl_shared>/zlib1.dll $<TARGET_FILE_DIR:carbon-resources-test>
         COMMAND_EXPAND_LISTS
     )
 elseif(APPLE)
