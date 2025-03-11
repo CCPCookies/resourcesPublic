@@ -9,6 +9,7 @@
 #include <cryptopp/hex.h>
 #include <cryptopp/md5.h>
 #include <cryptopp/files.h>
+#include <zlib.h>
 
 static CURL* s_curlHandle{nullptr};
 
@@ -163,20 +164,77 @@ size_t WriteToFileStreamCallback( void* contents, size_t size, size_t nmemb, voi
 	  return cc == CURLE_OK;
   }
 
-  bool GZipCompressData(const std::string& dataToCompress, std::string& compressedData)
+  bool GZipCompressData( const std::string& dataToCompress, std::string& compressedData )
   {
-      //TODO implement compression
-	  compressedData = dataToCompress;
+	  z_stream strm;
+	  constexpr int CHUNK = 16384; // 16kb
+	  unsigned char out[CHUNK];
 
-	  return true;
+	  strm.zalloc = Z_NULL;
+	  strm.zfree = Z_NULL;
+	  strm.opaque = Z_NULL;
+	  int windowBits = MAX_WBITS | 16; // 16 is a magic bit flag to specify GZip compression format.
+	  int ret = deflateInit2( &strm, Z_BEST_COMPRESSION, Z_DEFLATED, windowBits, 8, Z_DEFAULT_STRATEGY );
+	  if( ret != Z_OK )
+	  {
+		  return false;
+	  }
+
+	  strm.next_in = reinterpret_cast<Bytef*>( const_cast<char*>( dataToCompress.c_str() ) );
+	  strm.avail_in = static_cast<uInt>( dataToCompress.size() );
+
+	  do
+	  {
+		  strm.next_out = out;
+		  strm.avail_out = CHUNK;
+		  int flush = strm.avail_in <= CHUNK ? Z_FINISH : Z_NO_FLUSH;
+		  ret = deflate( &strm, flush );
+		  compressedData.append( std::string( reinterpret_cast<const char*>( out ), strm.total_out ) );
+	  } while( ret == Z_OK );
+
+	  if( ret != Z_STREAM_END )
+	  {
+		  deflateEnd( &strm );
+		  return false;
+	  }
+	  return deflateEnd( &strm ) == Z_OK;
   }
 
-  bool GZipUncompressData(const std::string& dataToUncompress, std::string& uncompressedData)
+  bool GZipUncompressData( const std::string& dataToUncompress, std::string& uncompressedData )
   {
-      // TODO implement uncompression
-	  uncompressedData = dataToUncompress;
+	  z_stream strm;
+	  constexpr int CHUNK = 16384; // 16kb
+	  unsigned char out[CHUNK];
 
-	  return true;
+	  strm.zalloc = Z_NULL;
+	  strm.zfree = Z_NULL;
+	  strm.opaque = Z_NULL;
+	  strm.avail_in = 0;
+	  strm.next_in = Z_NULL;
+	  int ret = inflateInit2( &strm, 16 | MAX_WBITS );
+	  if( ret != Z_OK )
+	  {
+		  return false;
+	  }
+
+	  strm.next_in = reinterpret_cast<Bytef*>( const_cast<char*>( dataToUncompress.c_str() ) );
+	  strm.avail_in = static_cast<uInt>( dataToUncompress.size() );
+
+	  do
+	  {
+		  strm.next_out = out;
+		  strm.avail_out = CHUNK;
+		  ret = inflate( &strm, Z_NO_FLUSH );
+		  uncompressedData.append( std::string( reinterpret_cast<const char*>( out ), strm.total_out ) );
+	  } while( ret == Z_OK );
+
+	  if( ret != Z_STREAM_END )
+	  {
+		  inflateEnd( &strm );
+		  return false;
+	  }
+
+	  return inflateEnd( &strm ) == Z_OK;
   }
 
   bool CreatePatch(const std::string& previousData, const std::string& latestData, std::string& patchData)
