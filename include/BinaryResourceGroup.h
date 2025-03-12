@@ -32,7 +32,7 @@ namespace CarbonResources
 
     struct API ThisIsAnExampleTodoRemove
     {
-		unsigned int size = sizeof( ThisIsAnExampleTodoRemove );
+		const unsigned int size = sizeof( ThisIsAnExampleTodoRemove );
 
 	    int a = 0;
 

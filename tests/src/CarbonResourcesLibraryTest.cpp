@@ -150,13 +150,71 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportExport_V_0_1_0 )
 
 TEST_F( CarbonResourcesLibraryTest, UnpackBundle )
 {
-	// Not yet implemented
-	EXPECT_TRUE( false );
+	// Load the byndle file
+	CarbonResources::BundleResourceGroup bundleResourceGroup;
+
+	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
+
+	importParamsPrevious.filename = GetTestFileFileAbsolutePath( "Bundle/BundleResourceGroup.yaml" );
+
+	EXPECT_EQ( bundleResourceGroup.ImportFromFile( importParamsPrevious ), CarbonResources::Result::SUCCESS );
+
+
+    // Unpack the bundle
+	CarbonResources::BundleUnpackParams bundleUnpackParams;
+	
+	bundleUnpackParams.chunkSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
+
+	bundleUnpackParams.chunkSourceSettings.basePath = GetTestFileFileAbsolutePath( "Bundle/LocalRemoteChunks/" );
+
+	bundleUnpackParams.resourceDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
+
+	bundleUnpackParams.resourceDestinationSettings.basePath = "ApplyPatchOut/";
+
+	EXPECT_EQ( bundleResourceGroup.Unpack( bundleUnpackParams ), CarbonResources::Result::SUCCESS );
+
+	// TODO test the output of the applied patches
+    
+
 }
 TEST_F( CarbonResourcesLibraryTest, CreateBundle )
 {
-    // Not yet implemented
-	EXPECT_TRUE( false );
+	// Import ResourceGroup
+	CarbonResources::ResourceGroup resourceGroup;
+
+	CarbonResources::ResourceGroupImportFromFileParams importParams;
+
+	importParams.filename = GetTestFileFileAbsolutePath( "Bundle/resfileindexShort.txt" );
+
+	EXPECT_EQ( resourceGroup.ImportFromFile( importParams ), CarbonResources::Result::SUCCESS );
+
+
+    // Create a bundle from the ResourceGroup
+	CarbonResources::BundleCreateParams bundleCreateParams;
+
+    bundleCreateParams.resourceGroupRelativePath = "ResourceGroup.yaml";
+
+	bundleCreateParams.resourceGroupBundleRelativePath = "BundleResourceGroup.yaml";
+
+	bundleCreateParams.resourceSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
+
+    bundleCreateParams.resourceSourceSettings.basePath = GetTestFileFileAbsolutePath( "Bundle/LocalRemote/" );
+
+    bundleCreateParams.chunkDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
+
+    bundleCreateParams.chunkDestinationSettings.basePath = "CreateBundleOut";
+
+    bundleCreateParams.resourceBundleResourceGroupDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
+
+	bundleCreateParams.resourceBundleResourceGroupDestinationSettings.basePath = "resPath";
+
+    bundleCreateParams.chunkSize = 1000;
+
+	EXPECT_EQ(resourceGroup.CreateBundle( bundleCreateParams ),CarbonResources::Result::SUCCESS);
+
+
+    // TODO test bundle output
+    
 }
 
 TEST_F( CarbonResourcesLibraryTest, ApplyPatch )
@@ -174,11 +232,18 @@ TEST_F( CarbonResourcesLibraryTest, ApplyPatch )
     // Apply the patch
 	CarbonResources::PatchApplyParams patchApplyParams;
 
-    patchApplyParams.patchBinarySourceSettings.productionLocalBasePath = GetTestFileFileAbsolutePath( "Patch/LocalRemote/" );
 
-    patchApplyParams.resourcesToPatchSourceSettings.productionLocalBasePath = GetTestFileFileAbsolutePath( "Patch/Local/" );
+    patchApplyParams.patchBinarySourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
 
-    patchApplyParams.resourcesToPatchDestinationSettings.productionLocalBasePath = "ApplyPatchOut";
+    patchApplyParams.patchBinarySourceSettings.basePath = GetTestFileFileAbsolutePath( "Patch/LocalRemote/" );
+
+    patchApplyParams.resourcesToPatchSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
+
+    patchApplyParams.resourcesToPatchSourceSettings.basePath = GetTestFileFileAbsolutePath( "Patch/Local/" );
+
+    patchApplyParams.resourcesToPatchDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
+
+    patchApplyParams.resourcesToPatchDestinationSettings.basePath = "ApplyPatchOut";
 
     EXPECT_EQ(patchResourceGroup.Apply( patchApplyParams ),CarbonResources::Result::SUCCESS);
 
@@ -216,13 +281,21 @@ TEST_F( CarbonResourcesLibraryTest, CreatePatch )
 
     patchCreateParams.resourceGroupPatchRelativePath = "PatchResourceGroup_previousBuild_latestBuild.yaml";
 
-    patchCreateParams.resourceSourceSettingsFrom.productionLocalBasePath = GetTestFileFileAbsolutePath( "resourcesLocal" );
+    patchCreateParams.resourceSourceSettingsFrom.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
 
-    patchCreateParams.resourceSourceSettingsTo.productionLocalBasePath = GetTestFileFileAbsolutePath( "resourcesRemote" );
+    patchCreateParams.resourceSourceSettingsFrom.basePath = GetTestFileFileAbsolutePath( "resourcesLocal" );
 
-    patchCreateParams.resourcePatchBinaryDestinationSettings.productionLocalBasePath = "SharedCache";
+    patchCreateParams.resourceSourceSettingsTo.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
 
-    patchCreateParams.resourcePatchResourceGroupDestinationSettings.developmentLocalBasePath = "resPath";
+    patchCreateParams.resourceSourceSettingsTo.basePath = GetTestFileFileAbsolutePath( "resourcesRemote" );
+
+    patchCreateParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
+
+    patchCreateParams.resourcePatchBinaryDestinationSettings.basePath = "SharedCache";
+
+    patchCreateParams.resourcePatchResourceGroupDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
+
+    patchCreateParams.resourcePatchResourceGroupDestinationSettings.basePath = "resPath";
 
     patchCreateParams.previousResourceGroup = &resourceGroupPrevious;
     

@@ -22,9 +22,18 @@ namespace CarbonResources
 
     }
 
-    DocumentParameter<unsigned int> BinaryResourceInfo::GetBinaryOperation() const
+    Result BinaryResourceInfo::GetBinaryOperation(unsigned int& binaryOperation) const
 	{
-		return m_binaryOperation;
+		if( !m_binaryOperation.HasValue() )
+		{
+			return Result::RESOURCE_VALUE_NOT_SET;
+		}
+		else
+		{
+			binaryOperation = m_binaryOperation.GetValue();
+
+			return Result::SUCCESS;
+		}
 	}
 
     Result BinaryResourceInfo::ImportFromYaml( YAML::Node& resource, const Version& documentVersion )

@@ -37,7 +37,7 @@ namespace CarbonResources
 
 	    ~BinaryResourceInfo();
 
-	    DocumentParameter<unsigned int> GetBinaryOperation() const;
+	    Result GetBinaryOperation(unsigned int& binaryOperation) const;
 
 	    virtual Result ImportFromYaml( YAML::Node& resource, const Version& documentVersion ) override;
 

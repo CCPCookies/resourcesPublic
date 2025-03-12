@@ -105,9 +105,13 @@ namespace CarbonResources
 
         
         // Load the resourceGroup from the resourceGroupResource
+		std::string resourceGroupData;
+
         ResourceGetDataParams resourceGroupDataParams;
 
         resourceGroupDataParams.resourceSourceSettings = params.patchBinarySourceSettings;
+
+        resourceGroupDataParams.data = &resourceGroupData;
 
         Result resourceGroupGetDataResult = m_resourceGroupParameter.GetValue()->GetData( resourceGroupDataParams );
 
@@ -118,7 +122,9 @@ namespace CarbonResources
 
         ResourceGroupImpl resourceGroup;
 
-        Result resourceGroupImportFromDataResult = resourceGroup.ImportFromData( resourceGroupDataParams.data );
+
+
+        Result resourceGroupImportFromDataResult = resourceGroup.ImportFromData( resourceGroupData );
 
         if( resourceGroupImportFromDataResult != Result::SUCCESS )
         {
@@ -137,9 +143,13 @@ namespace CarbonResources
 				ResourceInfo* patch = ( *patchIter );
 
 				// Patch found, Retreive and apply
+				std::string patchData;
+
 				ResourceGetDataParams patchGetDataParams;
 
 				patchGetDataParams.resourceSourceSettings = params.patchBinarySourceSettings;
+
+                patchGetDataParams.data = &patchData;
 
                 Result getPatchDataResult = patch->GetData( patchGetDataParams );
 
@@ -149,9 +159,13 @@ namespace CarbonResources
 				}
 
                 // Get previous data
+				std::string previousResourceData;
+
 				ResourceGetDataParams resourceGetDataParams;
 
 				resourceGetDataParams.resourceSourceSettings = params.resourcesToPatchSourceSettings;
+
+                resourceGetDataParams.data = &previousResourceData;
 
 				Result resourceGetDataResult = resource->GetData( resourceGetDataParams );
 
@@ -163,7 +177,7 @@ namespace CarbonResources
                 // Apply the patch to the previous data
 				std::string patchedResourceData;
 
-				if( !ResourceTools::ApplyPatch( resourceGetDataParams.data, patchGetDataParams.data, patchedResourceData ) )
+				if( !ResourceTools::ApplyPatch( previousResourceData, patchData, patchedResourceData ) )
 				{
 					return Result::FAILED_TO_APPLY_PATCH;
 				}
@@ -176,25 +190,39 @@ namespace CarbonResources
 					return Result::FAILED_TO_GENERATE_CHECKSUM;
 				}
 
-				const std::string destinationExpectedChecksum = resource->GetChecksum();
+                std::string destinationExpectedChecksum;
+
+                Result getChecksumResult = resource->GetChecksum( destinationExpectedChecksum );
+
+                if (getChecksumResult != Result::SUCCESS)
+                {
+					return getChecksumResult;
+                }
 
 				if( patchedFileChecksum != destinationExpectedChecksum )
 				{
-                    //TODO reinstate when test data is correct
-                    //Currently the test data used is compressed and so the checksum
-                    //Doesn't match what is in the test data
-                    //Either store this uncompressed or utilise decompression in the Get
-					//return Result::UNEXPECTED_PATCH_CHECKSUM_RESULT;
+					return Result::UNEXPECTED_PATCH_CHECKSUM_RESULT;
 				}
 
                 // Put the file in the destination specified
-				ResourceInfo patchedResource( { resource->GetRelativePath() } );
+				std::filesystem::path resourceRelativePath;
+
+                Result getResourceRelativePath = resource->GetRelativePath( resourceRelativePath );
+
+                if (getResourceRelativePath != Result::SUCCESS)
+                {
+					return getResourceRelativePath;
+                }
+
+				ResourceInfo patchedResource( { resourceRelativePath } );
 				patchedResource.SetParametersFromData( patchedResourceData );
 
 				// Export patch file
 				ResourcePutDataParams patchedResourceResourcePutDataParams;
 
 				patchedResourceResourcePutDataParams.resourceDestinationSettings = params.resourcesToPatchDestinationSettings;
+
+                patchedResourceResourcePutDataParams.data = &patchedResourceData;
 
 				Result putResourceDataResult = patchedResource.PutData( patchedResourceResourcePutDataParams );
 
@@ -208,9 +236,13 @@ namespace CarbonResources
             {
                 // No Patch found, indicates this is just a new file
                 // Just download file directly
+				std::string resourceData;
+
 				ResourceGetDataParams resourceGetDataParams;
 
                 resourceGetDataParams.resourceSourceSettings = params.patchBinarySourceSettings;
+
+                resourceGetDataParams.data = &resourceData;
 
 				Result resourceGetDataResult = resource->GetData( resourceGetDataParams );
 
@@ -223,7 +255,7 @@ namespace CarbonResources
 
                 resourcePutDataParams.resourceDestinationSettings = params.resourcesToPatchDestinationSettings;
 
-                resourcePutDataParams.data = resourceGetDataParams.data;    // TODO refactor this away, should not be a copy
+                resourcePutDataParams.data = &resourceData; 
 
                 Result resourcePutDataResult = resource->PutData( resourcePutDataParams );
 

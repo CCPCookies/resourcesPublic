@@ -66,9 +66,18 @@ namespace CarbonResources
 
     }
 
-    std::filesystem::path ResourceInfo::GetRelativePath() const
+    Result ResourceInfo::GetRelativePath(std::filesystem::path& relativePath) const
     {
-		return m_relativePath.GetValue();
+        if (!m_relativePath.HasValue())
+        {
+			return Result::RESOURCE_VALUE_NOT_SET;
+        }
+        else
+        {
+			relativePath = m_relativePath.GetValue();
+
+            return Result::SUCCESS;
+        }
     }
 
     void ResourceInfo::SetRelativePath( const std::filesystem::path& relativePath )
@@ -76,83 +85,125 @@ namespace CarbonResources
 		m_relativePath = relativePath;
     }
 
-    std::string ResourceInfo::GetLocation() const
+    Result ResourceInfo::GetLocation(std::string& location) const
     {
-		return m_location.GetValue().ToString();
+		if( !m_location.HasValue() )
+		{
+			return Result::RESOURCE_VALUE_NOT_SET;
+		}
+		else
+		{
+			location = m_location.GetValue().ToString();
+
+			return Result::SUCCESS;
+		}
     }
 
-    std::string ResourceInfo::GetType() const
+    Result ResourceInfo::GetType(std::string& type) const
     {
-		return m_type.GetValue();
+		if( !m_type.HasValue() )
+		{
+			return Result::RESOURCE_VALUE_NOT_SET;
+		}
+		else
+		{
+			type = m_type.GetValue();
+
+			return Result::SUCCESS;
+		}
     }
 
-    std::string ResourceInfo::GetChecksum() const
+    Result ResourceInfo::GetChecksum(std::string& checksum) const
     {
-		return m_checksum.GetValue();
+		if( !m_checksum.HasValue() )
+		{
+			return Result::RESOURCE_VALUE_NOT_SET;
+		}
+		else
+		{
+			checksum = m_checksum.GetValue();
+
+			return Result::SUCCESS;
+		}
     }
 
-    unsigned long ResourceInfo::GetUncompressedSize() const
+    Result ResourceInfo::GetUncompressedSize(unsigned long& uncompressedSize) const
     {
-        // TODO what if they don't have a value as they are optional
-        // probably needs to be refactored to return Result as return like everything else
-		return m_uncompressedSize.GetValue();
+		if( !m_uncompressedSize.HasValue() )
+		{
+			return Result::RESOURCE_VALUE_NOT_SET;
+		}
+		else
+		{
+			uncompressedSize = m_uncompressedSize.GetValue();
+
+			return Result::SUCCESS;
+		}
     }
 
-    unsigned long ResourceInfo::GetCompressedSize() const
+    Result ResourceInfo::GetCompressedSize(unsigned long& compressedSize) const
     {
-		return m_compressedSize.GetValue();
+		if( !m_compressedSize.HasValue() )
+		{
+			return Result::RESOURCE_VALUE_NOT_SET;
+		}
+		else
+		{
+			compressedSize = m_compressedSize.GetValue();
+
+			return Result::SUCCESS;
+		}
     }
 
-    unsigned long ResourceInfo::GetSomething() const
+    Result ResourceInfo::GetSomething(unsigned long& something) const
     {
-		return m_something.GetValue();
+		if( !m_something.HasValue() )
+		{
+			return Result::RESOURCE_VALUE_NOT_SET;
+		}
+		else
+		{
+			something = m_something.GetValue();
+
+			return Result::SUCCESS;
+		}
     }
    
     Result ResourceInfo::PutData( ResourcePutDataParams& params ) const
     {
-		bool dataWasSavedSomewhere = false;
-
-		if( params.resourceDestinationSettings.developmentLocalBasePath != "" )
-        {
-			Result putDevelopmentLocalDataResult = PutDevelopmentLocalData( params );
-
-			if( putDevelopmentLocalDataResult != Result::SUCCESS )
-			{
-				return putDevelopmentLocalDataResult;
-			}
-
-            dataWasSavedSomewhere = true;
-        }
-		
-        
-        if (params.resourceDestinationSettings.productionLocalBasePath != "")
-        {
-			Result putProductionLocalDataResult = PutProductionLocalData( params );
-
-			if( putProductionLocalDataResult != Result::SUCCESS )
-			{
-				return putProductionLocalDataResult;
-			}
-
-            dataWasSavedSomewhere = true;
-        }
-        
-        if (dataWasSavedSomewhere)
-        {
-			return Result::SUCCESS;
-        }
-        else
+        if (!params.data)
         {
 			return Result::FAILED_TO_SAVE_FILE;
         }
 
+        switch (params.resourceDestinationSettings.destinationType)
+        {
+		case ResourceDestinationType::LOCAL_RELATIVE:
+
+			return PutDataLocalRelative( params );
+
+			break;
+
+        case ResourceDestinationType::LOCAL_CDN:
+
+			return PutDataLocalCdn( params );
+		
+			break;
+
+		default:
+			return Result::FAILED_TO_SAVE_FILE;
+
+        }
+
     }
 
-    Result ResourceInfo::PutDevelopmentLocalData( ResourcePutDataParams& params ) const
+    Result ResourceInfo::PutDataLocalRelative( ResourcePutDataParams& params ) const
     {
-		std::filesystem::path path = params.resourceDestinationSettings.developmentLocalBasePath / m_relativePath.GetValue();
+		std::string& data = *params.data;
 
-        bool res = ResourceTools::SaveFile( path, params.data );
+		std::filesystem::path path = params.resourceDestinationSettings.basePath / m_relativePath.GetValue();
+
+        bool res = ResourceTools::SaveFile( path, data );
 
         if (res)
         {
@@ -165,12 +216,14 @@ namespace CarbonResources
 
     }
 
-    Result ResourceInfo::PutProductionLocalData( ResourcePutDataParams& params ) const
+    Result ResourceInfo::PutDataLocalCdn( ResourcePutDataParams& params ) const
     {
-        // Construct path
-		std::filesystem::path dataPath = params.resourceDestinationSettings.productionLocalBasePath / m_location.GetValue().ToString();
+		std::string& data = *params.data;
 
-        bool res = ResourceTools::SaveFile( dataPath, params.data );
+        // Construct path
+		std::filesystem::path dataPath = params.resourceDestinationSettings.basePath / m_location.GetValue().ToString();
+
+        bool res = ResourceTools::SaveFile( dataPath, data );
 
 		if( res )
 		{
@@ -187,44 +240,39 @@ namespace CarbonResources
     // TODO optionally run a validation on the data against checksum
 	Result ResourceInfo::GetData( ResourceGetDataParams& params ) const
     {
-        // Get file from development local
-		Result getDevelopmentLocalDataResult = GetDevelopmentLocalData( params );
-
-		if( getDevelopmentLocalDataResult == Result::SUCCESS )
-		{
-			return Result::SUCCESS;
-		}
-
-		// Get file from production local
-		Result getProductionLocalDataResult = GetProductionLocalData( params );
-
-		if( getProductionLocalDataResult == Result::SUCCESS )
-		{
-			return Result::SUCCESS;
-		}
-
-		// Get file from production remote
-		Result getProductionRemoteDataResult = GetProductionRemoteData( params );
-
-		if( getProductionRemoteDataResult == Result::SUCCESS )
-		{
-			return Result::SUCCESS;
-		}
-
-		return Result::FAILED_TO_OPEN_FILE;
-    }
-
-    Result ResourceInfo::GetDevelopmentLocalData( ResourceGetDataParams& params ) const
-    {
-        // Early out based on which arguments were provided
-        if (params.resourceSourceSettings.developmentLocalBasePath == "")
+        switch (params.resourceSourceSettings.sourceType)
         {
-			return Result::FAIL;
+		case ResourceSourceType::LOCAL_RELATIVE:
+
+			return GetDataLocalRelative( params );
+
+			break;
+
+		case ResourceSourceType::LOCAL_CDN:
+
+            return GetDataLocalCdn( params );
+
+			break;
+
+		case ResourceSourceType::REMOTE_CDN:
+
+            return GetDataRemoteCdn( params );
+
+			break;
+
+		default:
+			return Result::FAILED_TO_OPEN_FILE;
         }
 
-        std::filesystem::path dataPath = params.resourceSourceSettings.developmentLocalBasePath / m_relativePath.GetValue();
+    }
 
-		bool res = ResourceTools::GetLocalFileData( dataPath, params.data );
+    Result ResourceInfo::GetDataLocalRelative( ResourceGetDataParams& params ) const
+    {
+		std::string& data = *params.data;
+
+        std::filesystem::path dataPath = params.resourceSourceSettings.basePath / m_relativePath.GetValue();
+
+		bool res = ResourceTools::GetLocalFileData( dataPath, data );
 
 		if( res )
 		{
@@ -236,18 +284,14 @@ namespace CarbonResources
 		}
     }
 
-    Result ResourceInfo::GetProductionLocalData( ResourceGetDataParams& params ) const
+    Result ResourceInfo::GetDataLocalCdn( ResourceGetDataParams& params ) const
     {
-		// Early out based on which arguments were provided
-		if( params.resourceSourceSettings.productionLocalBasePath == "" )
-		{
-			return Result::FAIL;
-		}
+		std::string& data = *params.data;
 
         // Construct path
-        std::filesystem::path path = params.resourceSourceSettings.productionLocalBasePath / m_location.GetValue().ToString();
+        std::filesystem::path path = params.resourceSourceSettings.basePath / m_location.GetValue().ToString();
 
-		bool res = ResourceTools::GetLocalFileData( path, params.data );
+		bool res = ResourceTools::GetLocalFileData( path, data );
 
         if (res)
         {
@@ -260,13 +304,8 @@ namespace CarbonResources
     }
 
     // TODO this is where retry logic should reside
-	Result ResourceInfo::GetProductionRemoteData( ResourceGetDataParams& params ) const
+	Result ResourceInfo::GetDataRemoteCdn( ResourceGetDataParams& params ) const
     {
-		// Early out based on which arguments were provided
-		if( params.resourceSourceSettings.productionRemoteBaseUrl == "" )
-		{
-			return Result::FAIL;
-		}
 
 		bool downloadFileResult = ResourceTools::DownloadFile( "URL", "outputPath" );
 
@@ -277,7 +316,7 @@ namespace CarbonResources
         else
         {
             // Attempt locally now it has been downloaded
-			return GetProductionLocalData( params );
+			return GetDataLocalCdn( params );
         }
 
     }
@@ -378,17 +417,47 @@ namespace CarbonResources
 
     Result ResourceInfo::SetParametersFromResource( const ResourceInfo* other )
     {
-		m_relativePath = other->GetRelativePath();
+		std::filesystem::path relativePath;
 
-        m_location = other->GetLocation();
+        if (other->GetRelativePath(relativePath) == Result::SUCCESS)
+        {
+			m_relativePath = relativePath;
+        }
 
-        m_checksum = other->GetChecksum();
+		std::string location;
 
-        m_uncompressedSize = other->GetUncompressedSize();
+        if (other->GetLocation(location) == Result::SUCCESS)
+        {
+			m_location = location;
+        }
 
-        m_compressedSize = other->GetCompressedSize();
+        std::string checksum;
 
-        m_something = other->GetSomething();
+        if (other->GetChecksum(checksum) == Result::SUCCESS)
+        {
+			m_checksum = checksum;
+        }
+
+        unsigned long uncompressedSize;
+
+        if (other->GetUncompressedSize(uncompressedSize) == Result::SUCCESS)
+        {
+			m_uncompressedSize = uncompressedSize;
+        }
+
+        unsigned long compressedSize;
+
+        if( other->GetCompressedSize(compressedSize) == Result::SUCCESS )
+        {
+			m_compressedSize = compressedSize;
+        }
+
+        unsigned long something;
+
+        if (other->GetSomething(something) == Result::SUCCESS)
+        {
+			m_something = something;
+        }
 
         return Result::SUCCESS;
     }
@@ -404,9 +473,27 @@ namespace CarbonResources
 
         m_checksum = checksum;
 
+        std::string type;
+
+        Result getTypeResult = GetType( type );
+
+        if( getTypeResult != Result::SUCCESS )
+        {
+			return getTypeResult;
+        }
+
+        std::filesystem::path relativePath;
+
+        Result getRelativePathResult = GetRelativePath( relativePath );
+
+        if( getRelativePathResult != Result::SUCCESS )
+        {
+			return getRelativePathResult;
+        }
+
         Location l;
 
-		l.SetFromRelativePathAndDataChecksum( GetType(), GetRelativePath(), checksum );
+		l.SetFromRelativePathAndDataChecksum( type, relativePath, checksum );
 
 		m_location = l;
 
@@ -436,7 +523,16 @@ namespace CarbonResources
 				return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
 			}
 
-            std::string relativePathStr = GetRelativePath().string();
+            std::filesystem::path relativePath;
+
+            Result getRelativePathResult = GetRelativePath( relativePath );
+
+            if (getRelativePathResult != Result::SUCCESS)
+            {
+				return getRelativePathResult;
+            }
+
+            std::string relativePathStr = relativePath.string();
 			std::replace( relativePathStr.begin(), relativePathStr.end(), '\\', '/' );
 
 			out << YAML::Key << m_relativePath.GetTag();
@@ -452,7 +548,7 @@ namespace CarbonResources
 			}
 
 			out << YAML::Key << m_type.GetTag();
-			out << YAML::Value << GetType();
+			out << YAML::Value << m_type.GetValue();
 		}
 
         // Location

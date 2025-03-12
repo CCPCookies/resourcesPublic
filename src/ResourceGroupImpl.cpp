@@ -8,9 +8,11 @@
 //#include "BinaryResource.h"
 //#include "PatchResource.h"
 #include "ResourceInfo/PatchResourceGroupInfo.h"
+#include "ResourceInfo/BundleResourceGroupInfo.h"
 #include "ResourceInfo/ResourceGroupInfo.h"
 #include "ResourceInfo/PatchResourceInfo.h"
 #include "PatchResourceGroupImpl.h"
+#include "BundleResourceGroupImpl.h"
 
 namespace CarbonResources
 {
@@ -43,7 +45,7 @@ namespace CarbonResources
         return Result::FAIL;
     }
 
-    Result ResourceGroupImpl::ImportFromFile( ResourceGroupImportFromFileParams& params )
+    Result ResourceGroupImpl::ImportFromFile( const ResourceGroupImportFromFileParams& params )
     {
         if (params.filename.empty())
         {
@@ -195,17 +197,59 @@ namespace CarbonResources
     {
 		ResourceInfoParams resourceParams;
 
-        resourceParams.relativePath = resource->GetRelativePath();
+        std::filesystem::path relativePath;
 
-        resourceParams.location = resource->GetLocation();
+        Result getRelativePath = resource->GetRelativePath( relativePath );
 
-        resourceParams.checksum = resource->GetChecksum();
+        if (getRelativePath == Result::SUCCESS)
+        {
+			resourceParams.relativePath = relativePath;
+        }
 
-        resourceParams.compressedSize = resource->GetCompressedSize();
+        std::string location;
 
-        resourceParams.uncompressedSize = resource->GetUncompressedSize();
+        Result getLocationResult = resource->GetLocation( location );
 
-        resourceParams.something = resource->GetSomething();
+        if( getLocationResult == Result::SUCCESS )
+        {
+			resourceParams.location = location;
+        }
+
+        std::string checksum;
+
+        Result getChecksumResult = resource->GetChecksum( checksum );
+
+        if (getChecksumResult == Result::SUCCESS)
+        {
+			resourceParams.checksum = checksum;
+        }
+        
+        unsigned long compressedSize;
+
+        Result getCompressedSizeResult = resource->GetCompressedSize( compressedSize );
+
+        if( getCompressedSizeResult == Result::SUCCESS )
+        {
+			resourceParams.compressedSize = compressedSize;
+        }
+
+        unsigned long uncompressedSize;
+
+        Result getUncompressedSizeResult = resource->GetUncompressedSize( uncompressedSize );
+
+        if (getUncompressedSizeResult == Result::SUCCESS)
+        {
+			resourceParams.uncompressedSize = uncompressedSize;
+        }
+
+        unsigned long something;
+
+        Result getSomethingResult = resource->GetSomething( something );
+
+        if (getSomethingResult == Result::SUCCESS)
+        {
+			resourceParams.something = something;
+        }
 
 		ResourceInfo* createdResource = new ResourceInfo( resourceParams );
 
@@ -383,7 +427,186 @@ namespace CarbonResources
       
     }
 
-    Result ResourceGroupImpl::CreatePatch( PatchCreateParams& params ) const
+    Result ResourceGroupImpl::ProcessChunk( std::string& chunkData, const std::filesystem::path& chunkRelativePath, BundleResourceGroupImpl& bundleResourceGroup, const ResourceDestinationSettings& chunkDestinationSettings ) const
+    {
+		// Create resource from Patch Data
+		BundleResourceInfo* chunkResource = new BundleResourceInfo( { chunkRelativePath } ); // TODO it feels strange that this is a BundleResource but it is referred to as a chunk
+
+		chunkResource->SetParametersFromData( chunkData );
+
+		// Export chunk file
+		ResourcePutDataParams resourcePutDataParams;
+
+		resourcePutDataParams.resourceDestinationSettings = chunkDestinationSettings;
+
+		resourcePutDataParams.data = &chunkData;
+
+		Result putChunkDataResult = chunkResource->PutData( resourcePutDataParams );
+
+		if( putChunkDataResult != Result::SUCCESS )
+		{
+			delete chunkResource;
+
+			return putChunkDataResult;
+		}
+
+		// Add the chunk resource to the bundleResourceGroup
+		Result addResourceResult = bundleResourceGroup.AddResource( chunkResource );
+
+		if( addResourceResult != Result::SUCCESS )
+		{
+			delete chunkResource;
+
+			return addResourceResult;
+		}
+
+        return Result::SUCCESS;
+    }
+
+    Result ResourceGroupImpl::CreateBundle( const BundleCreateParams& params ) const
+    {
+        unsigned long numberOfChunks = 0;
+
+        std::string chunkBaseName = params.resourceGroupRelativePath.filename().replace_extension().string();
+
+		BundleResourceGroupImpl bundleResourceGroup;
+
+        bundleResourceGroup.SetChunkSize( params.chunkSize );
+
+		ResourceTools::ChunkStream chunkStream( params.chunkSize );
+
+        // Loop through all resources and send data for chunking
+        for (ResourceInfo* resource : m_resourcesParameter)
+        {
+			std::string resourceData;
+
+            ResourceGetDataParams resourceGetDataParams;
+
+            resourceGetDataParams.resourceSourceSettings = params.resourceSourceSettings;
+
+            resourceGetDataParams.data = &resourceData;
+
+			Result resourceGetDataResult = resource->GetData( resourceGetDataParams );
+
+            if (resourceGetDataResult != Result::SUCCESS)
+            {
+				return resourceGetDataResult;
+            }
+
+            // Add Resource to chunk stream
+			chunkStream << resourceData;
+
+            // Loop through possible created chunks
+			std::string chunkData;
+
+            ResourceTools::GetChunk chunkFile;
+
+            chunkFile.data = &chunkData;
+
+            chunkFile.clearCache = false;
+
+            while (chunkStream >> chunkFile)
+            {
+				
+                std::stringstream ss;
+				ss << chunkBaseName << numberOfChunks << ".chunk";
+				std::string chunkName = ss.str();
+
+                std::filesystem::path chunkPath = params.chunkDestinationSettings.basePath / ss.str();
+
+                Result processChunkResult = ProcessChunk( chunkData, chunkPath, bundleResourceGroup, params.chunkDestinationSettings );
+
+				if( processChunkResult != Result::SUCCESS )
+				{
+					return processChunkResult;
+				}
+
+                numberOfChunks++;
+
+            }
+
+        }
+
+        
+        // Create final incomplete chunk
+		std::string chunkData;
+
+		ResourceTools::GetChunk chunkFile;
+
+		chunkFile.data = &chunkData;
+
+		chunkFile.clearCache = true;
+
+		chunkStream >> chunkFile;
+
+		std::stringstream ss;
+		ss << chunkBaseName << numberOfChunks << ".chunk";
+		std::string chunkName = ss.str();
+
+		std::filesystem::path chunkPath = params.chunkDestinationSettings.basePath / ss.str();
+
+		Result processChunkResult = ProcessChunk( chunkData, chunkPath, bundleResourceGroup, params.chunkDestinationSettings );
+
+		if( processChunkResult != Result::SUCCESS )
+		{
+			return processChunkResult;
+		}
+
+
+
+
+		// Export this resource list
+		std::string resourceGroupData;
+
+		ExportToData( resourceGroupData );
+
+		ResourceGroupInfo resourceGroupInfo( { params.resourceGroupRelativePath } );
+
+		resourceGroupInfo.SetParametersFromData( resourceGroupData );
+
+		ResourcePutDataParams putDataParams;
+
+		putDataParams.resourceDestinationSettings = params.chunkDestinationSettings; // TODO the resource list is going where the chunks are, perhaps this is missleading
+
+		putDataParams.data = &resourceGroupData;
+
+		Result subtractionResourcePutResult = resourceGroupInfo.PutData( putDataParams );
+
+		if( subtractionResourcePutResult != Result::SUCCESS )
+		{
+			return subtractionResourcePutResult;
+		}
+
+
+
+		// Export the bundleGroup
+		bundleResourceGroup.SetResourceGroup( resourceGroupInfo );
+
+		std::string patchResourceGroupData;
+
+		bundleResourceGroup.ExportToData( patchResourceGroupData );
+
+		BundleResourceGroupInfo patchResourceGroupInfo( { params.resourceGroupBundleRelativePath } );
+
+		patchResourceGroupInfo.SetParametersFromData( patchResourceGroupData );
+
+		ResourcePutDataParams bundlePutDataParams;
+
+		bundlePutDataParams.resourceDestinationSettings = params.resourceBundleResourceGroupDestinationSettings;
+
+		bundlePutDataParams.data = &patchResourceGroupData;
+
+		Result patchResourceGroupPutResult = patchResourceGroupInfo.PutData( bundlePutDataParams );
+
+		if( patchResourceGroupPutResult != Result::SUCCESS )
+		{
+			return patchResourceGroupPutResult;
+		}
+
+        return Result::SUCCESS;
+    }
+
+    Result ResourceGroupImpl::CreatePatch( const PatchCreateParams& params ) const
     {
         if (params.previousResourceGroup->m_impl->GetType() != GetType())
         {
@@ -429,15 +652,28 @@ namespace CarbonResources
             // Suggesting that this is a new entry in latest
             // In which case there is no reason to create a patch
             // The new entry will be stored with the ResourceGroup related to the PatchResourceGroup
-            if (resourcePrevious->GetCompressedSize() != 0)
+			unsigned long compressedSize;
+
+            Result getResourcePreviousCompressedSizeResult = resourcePrevious->GetCompressedSize(compressedSize);
+
+            if (getResourcePreviousCompressedSizeResult != Result::SUCCESS)
+            {
+				return getResourcePreviousCompressedSizeResult;
+            }
+
+            if( compressedSize != 0 )
             {
                 // Resource is present in both previous and next with differing checksums
                 // Therefore a patch for the binary is created
 
 				// Get resource data previous
+				std::string previousResourceData;
+
 				ResourceGetDataParams resourceGetDataParamsFrom;
 
 				resourceGetDataParamsFrom.resourceSourceSettings = params.resourceSourceSettingsFrom;
+
+                resourceGetDataParamsFrom.data = &previousResourceData;
 
 				Result fromResourceDataResult = resourcePrevious->GetData( resourceGetDataParamsFrom );
 
@@ -447,9 +683,13 @@ namespace CarbonResources
 				}
 
 				// Get resource data next
+				std::string nextResourceData;
+
 				ResourceGetDataParams resourceGetDataParamsTo;
 
 				resourceGetDataParamsTo.resourceSourceSettings = params.resourceSourceSettingsTo;
+
+                resourceGetDataParamsTo.data = &nextResourceData;
 
 				Result toResourceDataResult = resourceLatest->GetData( resourceGetDataParamsTo );
 
@@ -461,20 +701,33 @@ namespace CarbonResources
 				// TODO only create a patch if this isn't a new file
 
 				// Create a patch from the data
-				ResourcePutDataParams resourcePutDataParams;
+				std::string patchData;
 
-				if( !ResourceTools::CreatePatch( resourceGetDataParamsFrom.data, resourceGetDataParamsTo.data, resourcePutDataParams.data ) )
+				if( !ResourceTools::CreatePatch( previousResourceData, nextResourceData, patchData ) )
 				{
 					return Result::FAILED_TO_CREATE_PATCH;
 				}
 
 				// Create a resource from patch data
-				PatchResourceInfo* patchResource = new PatchResourceInfo( { resourceLatest->GetRelativePath() } );
+				std::filesystem::path resourceLatestRelativePath;
 
-				patchResource->SetParametersFromData( resourcePutDataParams.data );
+                Result getResourceLatestRelativePathResult = resourceLatest->GetRelativePath( resourceLatestRelativePath );
+
+                if (getResourceLatestRelativePathResult != Result::SUCCESS)
+                {
+					return getResourceLatestRelativePathResult;
+                }
+
+				PatchResourceInfo* patchResource = new PatchResourceInfo( { resourceLatestRelativePath } );
+
+				patchResource->SetParametersFromData( patchData );
 
 				// Export patch file
+				ResourcePutDataParams resourcePutDataParams;
+
 				resourcePutDataParams.resourceDestinationSettings = params.resourcePatchBinaryDestinationSettings;
+
+                resourcePutDataParams.data = &patchData;
 
 				Result putPatchDataResult = patchResource->PutData( resourcePutDataParams );
 
@@ -486,7 +739,14 @@ namespace CarbonResources
 				}
 
 				// Add the patch resource to the patchResourceGroup
-				patchResourceGroup.AddResource( patchResource );
+				Result addResourceResult = patchResourceGroup.AddResource( patchResource );
+
+                if (addResourceResult != Result::SUCCESS)
+                {
+					delete patchResource;
+
+                    return addResourceResult;
+                }
             }
 
         }
@@ -504,7 +764,7 @@ namespace CarbonResources
 
         putDataParams.resourceDestinationSettings = params.resourcePatchBinaryDestinationSettings;
 
-        putDataParams.data = resourceGroupData; // TODO copy here remove, make it take a pointer
+        putDataParams.data = &resourceGroupData; 
 
         Result subtractionResourcePutResult = subtractionResourceGroupInfo.PutData( putDataParams );
 
@@ -530,7 +790,7 @@ namespace CarbonResources
 
 		patchPutDataParams.resourceDestinationSettings = params.resourcePatchResourceGroupDestinationSettings;
 
-		patchPutDataParams.data = patchResourceGroupData; // TODO copy here remove, make it take a pointer
+		patchPutDataParams.data = &patchResourceGroupData;
 
 		Result patchResourceGroupPutResult = patchResourceGroupInfo.PutData( patchPutDataParams );
 
@@ -570,8 +830,26 @@ namespace CarbonResources
 			{
 				ResourceInfo* resource2 = ( *subtractionResourcesFindIter );
 
+                std::string resource1Checksum;
+
+                Result getResource1ChecksumResult = resource->GetChecksum( resource1Checksum );
+
+                if (getResource1ChecksumResult != Result::SUCCESS)
+                {
+					return getResource1ChecksumResult;
+                }
+
+                std::string resource2Checksum;
+
+                Result getResource2ChecksumResult = resource2->GetChecksum( resource2Checksum );
+
+                if (getResource2ChecksumResult != Result::SUCCESS)
+                {
+					return getResource2ChecksumResult;
+                }
+
                 // Has this resource changed?
-                if (resource->GetChecksum() != resource2->GetChecksum())
+				if( resource1Checksum != resource2Checksum )
                 {
                     // The binary data has changed between versions, record an entry in both lists
 
@@ -600,8 +878,17 @@ namespace CarbonResources
                 // Place in a dummy entry into result1 which shows that resource is new
                 // This ensures that both lists stay the same size which makes it easier
                 // To parse later
+				std::filesystem::path resourceRelativePath;
+
+                Result getResourceRelativepathResult = resource->GetRelativePath( resourceRelativePath );
+
+                if (getResourceRelativepathResult != Result::SUCCESS)
+                {
+					return getResourceRelativepathResult;
+                }
+
 				ResourceInfoParams dummyResourceParams;
-				dummyResourceParams.relativePath = resource->GetRelativePath();
+				dummyResourceParams.relativePath = resourceRelativePath;
 
 				ResourceInfo* dummyResource = new ResourceInfo( dummyResourceParams );
 				params.result1->AddResource( dummyResource );

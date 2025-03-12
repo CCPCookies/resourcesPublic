@@ -29,42 +29,32 @@
 
 #include <iostream>
 
+#include "Macros.h"
+
 namespace CarbonResources
 {
     namespace Internal
     {
-#define OPTIONAL_LOAD( structName, fromStruct, member )           \
-		if( offsetof( struct structName, member ) < fromStruct.size ) \
-		{                                                             \
-			member = fromStruct.member;                                                    \
-		}
-
 	    struct ThisIsAnExampleTodoRemove
 	    {
             ThisIsAnExampleTodoRemove(const CarbonResources::ThisIsAnExampleTodoRemove& apiStruct)
             {
-				a = apiStruct.a;
+				ATTEMPT_LOAD_MEMBER( ThisIsAnExampleTodoRemove, apiStruct, a );
 
-                b = apiStruct.b;
+                ATTEMPT_LOAD_MEMBER( ThisIsAnExampleTodoRemove, apiStruct, b );
 
-                OPTIONAL_LOAD( ThisIsAnExampleTodoRemove, apiStruct, c );
-                
-                /*
-                if (offsetof(struct ThisIsAnExampleTodoRemove, c) < apiStruct.size)
-                {
-					c = apiStruct.c;
-                }
-                */
-				
+                ATTEMPT_LOAD_MEMBER( ThisIsAnExampleTodoRemove, apiStruct, c );	
+
             }
 
             unsigned int unused=0;
 
-		    int a;
+		    int a = 1;
 
-		    int b;
+		    int b = 2;
 
 		    int c = 404;
+
 	    };
     }
     

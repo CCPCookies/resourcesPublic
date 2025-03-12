@@ -237,14 +237,14 @@ namespace CarbonResources
 	{
 		ResourceSourceSettings resourceSourceSettings;
 
-		std::string data;
+		std::string* data = nullptr;
 	};
 
     struct ResourcePutDataParams
 	{
 		ResourceDestinationSettings resourceDestinationSettings;
 
-		std::string data; //TODO should be a pointer to data
+		std::string* data = nullptr;
 	};
 
 	class ResourcePutDataParams;
@@ -261,19 +261,19 @@ namespace CarbonResources
 
          // TODO Convert to return Result as they may not have a value
 		// Also keeps returns the same
-		std::filesystem::path GetRelativePath() const;
+		Result GetRelativePath(std::filesystem::path& relativePath) const;
 
-	    std::string GetLocation() const;
+	    Result GetLocation(std::string& location) const;
 
-        std::string GetType() const;
+        Result GetType(std::string& type) const;
 
-	    std::string GetChecksum() const;
+	    Result GetChecksum(std::string& checksum) const;
 
-	    unsigned long GetUncompressedSize() const;
+	    Result GetUncompressedSize(unsigned long& uncompressedSize) const;
 
-	    unsigned long GetCompressedSize() const;
+	    Result GetCompressedSize(unsigned long& compressedSize) const;
 
-	    unsigned long GetSomething() const;
+	    Result GetSomething(unsigned long& something) const;
 
 	    Result GetData( ResourceGetDataParams& params ) const;
 
@@ -289,22 +289,30 @@ namespace CarbonResources
 
         bool operator==( const ResourceInfo* other ) const 
 		{
+            if (!m_relativePath.HasValue())
+            {
+				return false;
+            }
+            if (!other->m_relativePath.HasValue())
+            {
+				return false;
+            }
             // Equality is defined as having the same relative path, not same data
-			return ( GetRelativePath() == other->GetRelativePath() );
+			return ( m_relativePath.GetValue() == other->m_relativePath.GetValue() );
 		}
 
         static std::string TypeId();
 
     private:
-	    Result GetDevelopmentLocalData( ResourceGetDataParams& params ) const;
+	    Result GetDataLocalRelative( ResourceGetDataParams& params ) const;
 
-	    Result GetProductionLocalData( ResourceGetDataParams& params ) const;
+	    Result GetDataLocalCdn( ResourceGetDataParams& params ) const;
 
-	    Result GetProductionRemoteData( ResourceGetDataParams& params ) const;
+	    Result GetDataRemoteCdn( ResourceGetDataParams& params ) const;
 
-        Result PutDevelopmentLocalData( ResourcePutDataParams& params ) const;
+        Result PutDataLocalRelative( ResourcePutDataParams& params ) const;
 
-		Result PutProductionLocalData( ResourcePutDataParams& params ) const;
+		Result PutDataLocalCdn( ResourcePutDataParams& params ) const;
 
     protected:
 

@@ -36,9 +36,9 @@ namespace CarbonResources
 
         PatchResourceGroupImpl( );
 
-        Result SetResourceGroup( const ResourceGroupInfo& resourceGroup);
-
         ~PatchResourceGroupImpl();
+
+        Result SetResourceGroup( const ResourceGroupInfo& resourceGroup );
 
         Result Apply( const PatchApplyParams& params );
 

@@ -28,7 +28,7 @@ namespace CarbonResources
     /// @note will relinquish ownership of bundle resource group
     Result ResourceGroup::CreateBundle( const BundleCreateParams& params ) const
     {
-	    return Result::FAIL;
+		return m_impl->CreateBundle( params );
     }
 
     /// @brief Create patch from resource group
@@ -37,7 +37,7 @@ namespace CarbonResources
     /// @param checksum will contain the resulting checksum on success
     /// @return true on success, false on failure
     /// @note will relinquish ownership of patch resource group
-    Result ResourceGroup::CreatePatch( PatchCreateParams& params ) const
+    Result ResourceGroup::CreatePatch( const PatchCreateParams& params ) const
     {
 	    return m_impl->CreatePatch( params );
     }
@@ -48,7 +48,7 @@ namespace CarbonResources
     /// @param checksum will contain the resulting checksum on success
     /// @return true on success, false on failure
     /// @note will relinquish ownership of patch resource group
-    Result ResourceGroup::ImportFromFile( ResourceGroupImportFromFileParams& params ) const
+    Result ResourceGroup::ImportFromFile( const ResourceGroupImportFromFileParams& params ) const
     {
 	    return m_impl->ImportFromFile( params );
     }

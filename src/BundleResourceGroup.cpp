@@ -23,7 +23,7 @@ namespace CarbonResources
 	/// @return true on success, false on failure
 	Result BundleResourceGroup::Unpack( const BundleUnpackParams& params )
     {
-		return Result::FAIL;
+		return m_impl->Unpack(params);
     }
 
 }

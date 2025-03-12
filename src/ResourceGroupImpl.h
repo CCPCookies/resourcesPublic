@@ -23,6 +23,8 @@
 #include "ResourceInfo/ResourceInfo.h"
 #include <vector>
 
+#include "Macros.h"
+
 namespace YAML
 {
     class Emitter;
@@ -31,6 +33,8 @@ namespace YAML
 
 namespace CarbonResources
 {
+
+    class BundleResourceGroupImpl;
 
     struct ResourceGroupSubtractionParams
     {
@@ -55,7 +59,7 @@ namespace CarbonResources
 
 	    ~ResourceGroupImpl();
 
-	    Result ImportFromFile( ResourceGroupImportFromFileParams& params );
+	    Result ImportFromFile( const ResourceGroupImportFromFileParams& params );
 
         Result ImportFromData( const std::string& data, DocumentType documentType = DocumentType::YAML );
 
@@ -63,7 +67,9 @@ namespace CarbonResources
 
         Result ExportToData( std::string& data, Version outputDocumentVersion = S_DOCUMENT_VERSION ) const;
 
-	    Result CreatePatch( PatchCreateParams& params ) const;
+        Result CreateBundle( const BundleCreateParams& params ) const;
+
+	    Result CreatePatch( const PatchCreateParams& params ) const;
 
 	    Result AddResource( ResourceInfo* resource );
 
@@ -82,8 +88,6 @@ namespace CarbonResources
         
         virtual ResourceInfo* CreateResourceFromResource( ResourceInfo* resource ) const; // TODO this function should match signature of others return Result etc
 
-	    
-
 	    virtual Result ImportGroupSpecialisedYaml( YAML::Node& resourceGroupFile );
 
 	    virtual Result ExportGroupSpecialisedYaml( YAML::Emitter& out, Version outputDocumentVersion ) const;
@@ -93,6 +97,8 @@ namespace CarbonResources
 	    Result ImportFromYaml( const std::string& data );
 
 	    Result ExportYaml( const Version& outputDocumentVersion, std::string& data ) const;
+
+        Result ProcessChunk( std::string& chunkData, const std::filesystem::path& chunkRelativePath, BundleResourceGroupImpl& bundleResourceGroup, const ResourceDestinationSettings& chunkDestinationSettings ) const;
 
     public: // TODO not thrilled by this is there a better way?
 	    // Document Parameters
