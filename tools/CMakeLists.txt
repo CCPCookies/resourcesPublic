@@ -3,6 +3,7 @@ project(carbon-resources-tools VERSION 1.0.0)
 
 find_package(cryptopp CONFIG REQUIRED)
 find_package(CURL CONFIG REQUIRED)
+find_package(ZLIB REQUIRED)
 
 set(SRC_FILES
     include/ResourceTools.h
@@ -19,6 +20,6 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}"
         FILES ${_SOURCES}
 )
 
-target_link_libraries(carbon-resources-tools PRIVATE cryptopp::cryptopp CURL::libcurl)
+target_link_libraries(carbon-resources-tools PRIVATE cryptopp::cryptopp CURL::libcurl ZLIB::ZLIB)
 
 target_include_directories(carbon-resources-tools PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
