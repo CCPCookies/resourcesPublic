@@ -171,7 +171,7 @@ size_t WriteToFileStreamCallback( void* contents, size_t size, size_t nmemb, voi
 		  strm.avail_out = CHUNK;
 		  int flush = strm.avail_in <= CHUNK ? Z_FINISH : Z_NO_FLUSH;
 		  ret = deflate( &strm, flush );
-		  compressedData.append( std::string( reinterpret_cast<const char*>( out ), strm.total_out ) );
+		  compressedData.append( std::string( reinterpret_cast<const char*>( out ), strm.total_out - compressedData.size() ) );
 	  } while( ret == Z_OK );
 
 	  if( ret != Z_STREAM_END )
