@@ -1,12 +1,20 @@
 
 #include "ResourceTools.h"
 
+#include "BundleStreamOut.h"
+
+#include <sstream>
+#include <filesystem>
+#include <fstream>
+
 #include <curl/curl.h>
 #include <zlib.h>
 
 #include "Md5ChecksumStream.h"
 #include "FileDataStreamIn.h"
 #include "FileDataStreamOut.h"
+
+
 
 static CURL* s_curlHandle{nullptr};
 
@@ -171,7 +179,7 @@ size_t WriteToFileStreamCallback( void* contents, size_t size, size_t nmemb, voi
 		  strm.avail_out = CHUNK;
 		  int flush = strm.avail_in <= CHUNK ? Z_FINISH : Z_NO_FLUSH;
 		  ret = deflate( &strm, flush );
-		  compressedData.append( std::string( reinterpret_cast<const char*>( out ), strm.total_out ) );
+		  compressedData.append( std::string( reinterpret_cast<const char*>( out ), strm.total_out - compressedData.size() ) );
 	  } while( ret == Z_OK );
 
 	  if( ret != Z_STREAM_END )
@@ -219,22 +227,6 @@ size_t WriteToFileStreamCallback( void* contents, size_t size, size_t nmemb, voi
 	  return inflateEnd( &strm ) == Z_OK;
   }
 
-  bool ApplyPatch(const std::string& data, const std::string& patchData, std::string& out)
-  {
-	// TODO implement patch application
-	  out = patchData;
-
-      return true;
-  }
-
-  bool CreatePatch(const std::string& previousData, const std::string& latestData, std::string& patchData)
-  {
-      // TODO implement patching
-	  patchData = latestData;
-
-	  return true;
-  }
-
   bool SaveFile( const std::filesystem::path& path, const std::string& data )
   {
 	  FileDataStreamOut fileDataStreamOut;
@@ -254,6 +246,5 @@ size_t WriteToFileStreamCallback( void* contents, size_t size, size_t nmemb, voi
       }
 
   }
-
 
 }

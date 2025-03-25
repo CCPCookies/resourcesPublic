@@ -12,6 +12,7 @@ set(SRC_FILES
     include/FileDataStreamOut.h
     include/GzipCompressionStream.h
     include/Md5ChecksumStream.h
+    include/Patching.h
     include/ResourceTools.h
     include/ScopedFile.h
     
@@ -23,11 +24,13 @@ set(SRC_FILES
     src/Md5ChecksumStream.cpp
     src/ResourceTools.cpp
     src/ScopedFile.cpp
+    src/Patching.cpp
 )
 
 add_library(carbon-resources-tools STATIC ${SRC_FILES})
 
 #target_link_libraries(carbon-resources-cli P)
+find_package(bsdiff CONFIG REQUIRED)
 
 get_target_property(_SOURCES carbon-resources-tools SOURCES)
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -35,6 +38,6 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}"
         FILES ${_SOURCES}
 )
 
-target_link_libraries(carbon-resources-tools PRIVATE cryptopp::cryptopp CURL::libcurl ZLIB::ZLIB)
+target_link_libraries(carbon-resources-tools PRIVATE cryptopp::cryptopp CURL::libcurl ZLIB::ZLIB static_bsdiff)
 
 target_include_directories(carbon-resources-tools PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
