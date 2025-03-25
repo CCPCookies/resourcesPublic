@@ -44,6 +44,12 @@ namespace ResourceTools
     // Not settled on correct approach to manage data etc
 
 	class BundleStreamOut;
+	struct RollingChecksum
+	{
+		uint64_t alpha;
+		uint64_t beta;
+		uint64_t checksum;
+	};
 
 	// Initialize CURL.
 	// Should be called once at program startup, but if you are initializing
@@ -57,6 +63,12 @@ namespace ResourceTools
     bool GenerateMd5Checksum( const std::string& data, std::string& checksum );
 
     bool GenerateFowlerNollVoChecksum( const std::string& input, std::string& checksum );
+
+	// Generate a weak checksum using the rsync algorithm https://rsync.samba.org/tech_report/node3.html
+	RollingChecksum GenerateRollingAdlerChecksum( const std::string& input, uint64_t start, uint64_t end );
+
+	// Generate a weak checksum using the rsync algorithm https://rsync.samba.org/tech_report/node3.html
+	RollingChecksum GenerateRollingAdlerChecksum( const std::string& input, uint64_t start, uint64_t end, RollingChecksum previous );
 
     bool GetLocalFileData( const std::filesystem::path& filepath, std::string& data );
 

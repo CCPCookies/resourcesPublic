@@ -462,3 +462,34 @@ TEST_F( ResourceToolsTest, ApplyPatchFileChunked )
 	// After patching before, it should be exactly the same as after.
 	ASSERT_EQ( beforeChecksum, afterChecksum );
 }
+
+TEST_F( ResourceToolsTest, RollingChecksum )
+{
+	std::string data("01234asdf567asdf89");
+	ResourceTools::RollingChecksum first = ResourceTools::GenerateRollingAdlerChecksum(data, 0, 5);
+	ResourceTools::RollingChecksum second = ResourceTools::GenerateRollingAdlerChecksum(data, 5, 9);
+	ResourceTools::RollingChecksum third = ResourceTools::GenerateRollingAdlerChecksum(data, 9, 12);
+	ResourceTools::RollingChecksum fourth = ResourceTools::GenerateRollingAdlerChecksum(data, 12, 16);
+	ResourceTools::RollingChecksum fifth = ResourceTools::GenerateRollingAdlerChecksum(data, 16, 18);
+
+	ASSERT_NE( first.checksum, second.checksum );
+	ASSERT_NE( first.checksum, third.checksum );
+	ASSERT_NE( first.checksum, fifth.checksum );
+	ASSERT_NE( second.checksum, third.checksum );
+	ASSERT_EQ( second.checksum, fourth.checksum );
+	ASSERT_NE( second.checksum, fifth.checksum );
+	ASSERT_NE( third.checksum, fourth.checksum );
+	ASSERT_NE( third.checksum, fifth.checksum );
+	ASSERT_NE( fourth.checksum, fifth.checksum );
+
+	ResourceTools::RollingChecksum previous = ResourceTools::GenerateRollingAdlerChecksum(data, 0, 4);
+	for( int i = 1; i < 12; ++i )
+	{
+		ResourceTools::RollingChecksum fromScratch = ResourceTools::GenerateRollingAdlerChecksum(data, i, i + 4);
+		ResourceTools::RollingChecksum incremental = ResourceTools::GenerateRollingAdlerChecksum(data, i, i + 4, previous);
+		ASSERT_EQ( fromScratch.alpha, incremental.alpha );
+		ASSERT_EQ( fromScratch.beta, incremental.beta );
+		ASSERT_EQ( fromScratch.checksum, incremental.checksum );
+		previous = fromScratch;
+	}
+}
