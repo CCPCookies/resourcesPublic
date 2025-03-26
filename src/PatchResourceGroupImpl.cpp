@@ -30,7 +30,7 @@ namespace CarbonResources
 		return m_resourceGroupParameter.GetValue()->SetParametersFromResource( &resourceGroup, m_versionParameter.GetValue() );
     }
 
-    void PatchResourceGroupImpl::SetMaxInputChunkSize( unsigned long maxInputChunkSize )
+    void PatchResourceGroupImpl::SetMaxInputChunkSize( uintmax_t maxInputChunkSize )
     {
 		m_maxInputChunkSize = maxInputChunkSize;
     }
@@ -96,7 +96,7 @@ namespace CarbonResources
 		{
 			if( YAML::Node parameter = resourceGroupFile[m_maxInputChunkSize.GetTag()] )
 			{
-				m_maxInputChunkSize = parameter.as<unsigned long>();
+				m_maxInputChunkSize = parameter.as<uintmax_t>();
 			}
 			else
 			{
@@ -273,7 +273,7 @@ namespace CarbonResources
 				    }
 
                     // Get previous data
-					unsigned long dataOffset;
+					uintmax_t dataOffset;
 
 					Result getPatchDataOffset = patch->GetDataOffset( dataOffset );
 
@@ -285,7 +285,7 @@ namespace CarbonResources
 				    std::string previousResourceData;
 
                     // Get previous size of resource
-					unsigned long previousUncompressedSize;
+					uintmax_t previousUncompressedSize;
 
 					Result getPreviousUncompressedSize = resource->GetUncompressedSize( previousUncompressedSize );
 
@@ -363,6 +363,37 @@ namespace CarbonResources
 
                     }
 
+				}
+
+                // Stream out the remaining expected data
+                uintmax_t expectedResourceSize = 0;
+
+                Result getResourceUncompressedSizeResult = resource->GetUncompressedSize( expectedResourceSize );
+
+                if (getResourceUncompressedSizeResult != Result::SUCCESS)
+                {
+					return getResourceUncompressedSizeResult;
+                }
+
+				while( temporaryResourceDataStreamOut.GetFileSize() < expectedResourceSize )
+				{
+					std::string dataChunk;
+
+					if( !( resourceDataStreamIn >> dataChunk ) )
+					{
+						return Result::FAILED_TO_READ_FROM_STREAM;
+					}
+
+					if( !( temporaryResourceDataStreamOut << dataChunk ) )
+					{
+						return Result::FAILED_TO_WRITE_TO_STREAM;
+					}
+
+					// Add to incremental checksum calculation
+					if( !( patchedFileChecksumStream << dataChunk ) )
+					{
+						return Result::FAILED_TO_GENERATE_CHECKSUM;
+					}
 				}
 
                 temporaryResourceDataStreamOut.Finish();

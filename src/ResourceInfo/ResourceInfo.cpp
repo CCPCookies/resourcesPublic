@@ -118,7 +118,7 @@ namespace CarbonResources
 		}
     }
 
-    Result ResourceInfo::GetUncompressedSize(unsigned long& uncompressedSize) const
+    Result ResourceInfo::GetUncompressedSize( uintmax_t& uncompressedSize ) const
     {
 		if( !m_uncompressedSize.HasValue() )
 		{
@@ -132,7 +132,7 @@ namespace CarbonResources
 		}
     }
 
-    Result ResourceInfo::GetCompressedSize(unsigned long& compressedSize) const
+    Result ResourceInfo::GetCompressedSize( uintmax_t& compressedSize ) const
     {
 		if( !m_compressedSize.HasValue() )
 		{
@@ -487,7 +487,7 @@ namespace CarbonResources
 		{
 			if( YAML::Node parameter = resource[m_uncompressedSize.GetTag()] )
 			{
-				m_uncompressedSize = parameter.as<unsigned long>();
+				m_uncompressedSize = parameter.as<uintmax_t>();
 			}
 			else
 			{
@@ -499,7 +499,7 @@ namespace CarbonResources
 		{
 			if( YAML::Node parameter = resource[m_compressedSize.GetTag()] )
 			{
-				m_compressedSize = parameter.as<unsigned long>();
+				m_compressedSize = parameter.as<uintmax_t>();
 			}
 			else
 			{
@@ -519,7 +519,6 @@ namespace CarbonResources
 
     Result ResourceInfo::SetParametersFromResource( const ResourceInfo* other, const VersionInternal& documentVersion )
     {
-        // TODO this needs to be version aware
         if (!other)
         {
 			return Result::FAIL;
@@ -569,7 +568,7 @@ namespace CarbonResources
         
         if (m_uncompressedSize.IsParameterExpectedInDocumentVersion(documentVersion))
         {
-			unsigned long uncompressedSize;
+			uintmax_t uncompressedSize;
 
 			Result getUncompressedSizeResult = other->GetUncompressedSize( uncompressedSize );
 
@@ -583,7 +582,7 @@ namespace CarbonResources
         
         if (m_compressedSize.IsParameterExpectedInDocumentVersion(documentVersion))
         {
-			unsigned long compressedSize;
+			uintmax_t compressedSize;
 
 			Result getCompressedSizeResult = other->GetCompressedSize( compressedSize );
 
@@ -643,19 +642,21 @@ namespace CarbonResources
 
         Location l;
 
-		l.SetFromRelativePathAndDataChecksum( relativePath, checksum );
+		Result setLocationResult = l.SetFromRelativePathAndDataChecksum( relativePath, checksum );
+
+        if (setLocationResult != Result::SUCCESS)
+        {
+			return setLocationResult;
+        }
 
 		m_location = l;
 
         std::string compressedData = "";
 
-        /*
-        * TODO reinstate
         if (!ResourceTools::GZipCompressData(data, compressedData))
         {
 			return Result::FAILED_TO_COMPRESS_DATA;
         }
-        */
 
         m_compressedSize = compressedData.size();
 

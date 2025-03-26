@@ -35,7 +35,7 @@ namespace ResourceTools
     class BundleStreamOut
     {
 	public:
-		BundleStreamOut( unsigned long chunkSize);
+		BundleStreamOut( uintmax_t chunkSize );
 
 		~BundleStreamOut();
 
@@ -44,13 +44,13 @@ namespace ResourceTools
         // Outputs chunks
 		bool operator>>( GetChunk& data );
 
-    	unsigned long GetChunkSize() const;
+    	uintmax_t GetChunkSize() const;
 
     	bool ReadBytes( size_t n, std::string& data );
 
     private:
 
-		unsigned long m_chunkSize;
+		uintmax_t m_chunkSize;
 
         std::string m_cache;
 

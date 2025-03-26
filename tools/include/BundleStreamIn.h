@@ -27,7 +27,7 @@ namespace ResourceTools
 
     struct GetFile
     {
-		unsigned long fileSize = 0;
+		uintmax_t fileSize = 0;
 
         std::string* data = nullptr;
     };
@@ -35,11 +35,11 @@ namespace ResourceTools
     class BundleStreamIn
 	{
 	public:
-		BundleStreamIn( unsigned long chunkSize );
+		BundleStreamIn( uintmax_t chunkSize );
 
 		~BundleStreamIn();
 
-        unsigned long GetCacheSize();
+        uintmax_t GetCacheSize();
 
 		bool operator<<( const std::string& chunkData );
 
@@ -48,18 +48,14 @@ namespace ResourceTools
 
 	private:
 
-        unsigned long m_chunkSize;
+        uintmax_t m_chunkSize;
 
 		std::string m_cache;
 
-        unsigned long m_dataReadOfCurrentFile;
+        uintmax_t m_dataReadOfCurrentFile;
 	};
 
 
-
-
-
-    
 }
 
 #endif // BundleStreamIn_H

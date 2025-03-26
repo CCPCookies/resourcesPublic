@@ -40,7 +40,7 @@ namespace CarbonResources
 
         Result SetResourceGroup( const ResourceGroupInfo& resourceGroup );
 
-        void SetMaxInputChunkSize( unsigned long maxInputChunkSize );
+        void SetMaxInputChunkSize( uintmax_t maxInputChunkSize );
 
         Result Apply( const PatchApplyParams& params );
 
@@ -60,7 +60,7 @@ namespace CarbonResources
 
     protected:
 
-        DocumentParameter<unsigned long> m_maxInputChunkSize = DocumentParameter<unsigned long>( { 0, 1, 0 }, "MaxInputChunkSize" );
+        DocumentParameter<uintmax_t> m_maxInputChunkSize = DocumentParameter<uintmax_t>( { 0, 1, 0 }, "MaxInputChunkSize" );
 
         DocumentParameter<ResourceGroupInfo*> m_resourceGroupParameter = DocumentParameter<ResourceGroupInfo*>( { 0, 1, 0 }, "ResourceGroupResource" );
     };

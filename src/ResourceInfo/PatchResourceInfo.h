@@ -27,7 +27,7 @@ namespace CarbonResources
     {
 		std::filesystem::path targetResourceRelativePath = "NOT_SET";
 
-        unsigned long dataOffset = 0;
+        uintmax_t dataOffset = 0;
     };
 
     class ResourceGroup;
@@ -43,7 +43,7 @@ namespace CarbonResources
 
         Result GetTargetResourceRelativePath( std::filesystem::path& targetResourceRelativePath ) const;
 
-        Result GetDataOffset( unsigned long& dataoffset ) const;
+        Result GetDataOffset( uintmax_t& dataoffset ) const;
 
 		virtual Result ImportFromYaml( YAML::Node& resource, const VersionInternal& documentVersion ) override;
 
@@ -53,7 +53,7 @@ namespace CarbonResources
 
     private:
 
-        DocumentParameter<unsigned long> m_dataOffset = DocumentParameter<unsigned long>( { 0, 0, 0 }, "DataOffset" );
+        DocumentParameter<uintmax_t> m_dataOffset = DocumentParameter<uintmax_t>( { 0, 0, 0 }, "DataOffset" );
 
 		DocumentParameter<std::filesystem::path> m_targetResourceRelativepath = DocumentParameter<std::filesystem::path>( { 0, 0, 0 }, "TargetResourceRelativePath" );
     };

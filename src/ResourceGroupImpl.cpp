@@ -97,6 +97,16 @@ namespace CarbonResources
 
                     Result setParametersFromDataResult = resource->SetParametersFromData( resourceData );
 
+                    //TEMP
+					uintmax_t fSize;
+					resource->GetUncompressedSize( fSize );
+					if( fSize != fileSize )
+                    {
+						int i = 0;
+						i++;
+                    }
+                    //TEMPEND
+
                     if (setParametersFromDataResult != Result::SUCCESS)
                     {
 					    return setParametersFromDataResult;
@@ -130,7 +140,7 @@ namespace CarbonResources
 						return Result::FAILED_TO_OPEN_FILE_STREAM;
                     }
 
-                    unsigned long compressedDataSize = 0;
+                    uintmax_t compressedDataSize = 0;
 
                     while (!fileStreamIn.IsFinished())
                     {
@@ -195,6 +205,7 @@ namespace CarbonResources
 
                     resourceParams.checksum = checksum;
 
+
                     Location l;
 
 					Result calculateLocationResult = l.SetFromRelativePathAndDataChecksum( resourceParams.relativePath, resourceParams.checksum );
@@ -207,6 +218,16 @@ namespace CarbonResources
                     resourceParams.location = l.ToString();
 
                     ResourceInfo* resource = new ResourceInfo( resourceParams );
+
+                    //TEMP
+					uintmax_t fSize;
+					resource->GetUncompressedSize( fSize );
+					if( fSize != fileSize )
+					{
+						int i = 0;
+						i++;
+					}
+					//TEMPEND
 
                     Result addResourceResult = AddResource( resource );
 
@@ -704,7 +725,7 @@ namespace CarbonResources
 
     Result ResourceGroupImpl::CreateBundle( const BundleCreateParams& params ) const
     {
-        unsigned long numberOfChunks = 0;
+		uintmax_t numberOfChunks = 0;
 
         std::string chunkBaseName = params.resourceGroupRelativePath.filename().replace_extension().string();
 
@@ -806,11 +827,21 @@ namespace CarbonResources
 		// Export this resource list
 		std::string resourceGroupData;
 
-		ExportToData( resourceGroupData );
+		Result exportToDataResult = ExportToData( resourceGroupData );
+
+        if (exportToDataResult != Result::SUCCESS)
+        {
+			return exportToDataResult;
+        }
 
 		ResourceGroupInfo resourceGroupInfo( { params.resourceGroupRelativePath } );
 
-		resourceGroupInfo.SetParametersFromData( resourceGroupData );
+		Result setParametersFromDataResult = resourceGroupInfo.SetParametersFromData( resourceGroupData );
+
+        if (setParametersFromDataResult != Result::SUCCESS)
+        {
+			return setParametersFromDataResult;
+        }
 
 		ResourcePutDataParams putDataParams;
 
@@ -825,18 +856,31 @@ namespace CarbonResources
 			return subtractionResourcePutResult;
 		}
 
-
-
 		// Export the bundleGroup
-		bundleResourceGroup.SetResourceGroup( resourceGroupInfo );
+		Result setResourceGroupResult = bundleResourceGroup.SetResourceGroup( resourceGroupInfo );
+
+        if (setResourceGroupResult != Result::SUCCESS)
+        {
+			return setResourceGroupResult;
+        }
 
 		std::string patchResourceGroupData;
 
-		bundleResourceGroup.ExportToData( patchResourceGroupData );
+		Result exportBundleResourceGroupToDataResult = bundleResourceGroup.ExportToData( patchResourceGroupData );
+
+        if (exportBundleResourceGroupToDataResult != Result::SUCCESS)
+        {
+			return exportBundleResourceGroupToDataResult;
+        }
 
 		BundleResourceGroupInfo patchResourceGroupInfo( { params.resourceGroupBundleRelativePath } );
 
-		patchResourceGroupInfo.SetParametersFromData( patchResourceGroupData );
+		Result setPatchParametersFromDataResult = patchResourceGroupInfo.SetParametersFromData( patchResourceGroupData );
+
+        if (setPatchParametersFromDataResult != Result::SUCCESS)
+        {
+			return setPatchParametersFromDataResult;
+        }
 
 		ResourcePutDataParams bundlePutDataParams;
 
@@ -904,7 +948,7 @@ namespace CarbonResources
             // Suggesting that this is a new entry in latest
             // In which case there is no reason to create a patch
             // The new entry will be stored with the ResourceGroup related to the PatchResourceGroup
-			unsigned long previousUncompressedSize;
+			uintmax_t previousUncompressedSize;
 
             Result getResourcePreviousCompressedSizeResult = resourcePrevious->GetUncompressedSize( previousUncompressedSize );
 
@@ -915,7 +959,7 @@ namespace CarbonResources
 
 
 
-            unsigned long nextUncompressedSize;
+            uintmax_t nextUncompressedSize;
 
 			Result getResourceNextCompressedSizeResult = resourceNext->GetUncompressedSize( nextUncompressedSize );
 
@@ -960,7 +1004,7 @@ namespace CarbonResources
 				}
 
                 // Process one chunk at a time
-				for( unsigned long dataOffset = 0; dataOffset < nextUncompressedSize; dataOffset += params.maxInputFileSize )
+				for( uintmax_t dataOffset = 0; dataOffset < nextUncompressedSize; dataOffset += params.maxInputFileSize )
                 {
 
 					std::string previousFileData = "";
@@ -1012,15 +1056,15 @@ namespace CarbonResources
                         {
                             // The chunks of the file are the same
                             // No patch is required
-                            // TODO test
 							continue;
                         }
 
                         // Previous and next data chunk are different, create a patch
-						if( !ResourceTools::CreatePatch( previousFileData, nextFileData, patchData ) )
+                        if( !ResourceTools::CreatePatch( previousFileData, nextFileData, patchData ) )
 						{
 							return Result::FAILED_TO_CREATE_PATCH;
 						}
+                        
                     }
                     else
                     {
@@ -1056,8 +1100,12 @@ namespace CarbonResources
 
 					PatchResourceInfo* patchResource = new PatchResourceInfo( patchResourceInfoParams );
 
-					patchResource->SetParametersFromData( patchData );
+					Result setParametersFromDataResult = patchResource->SetParametersFromData( patchData );
 
+                    if (setParametersFromDataResult != Result::SUCCESS)
+                    {
+						return setParametersFromDataResult;
+                    }
 
 
 					// Export patch file
@@ -1098,11 +1146,21 @@ namespace CarbonResources
         // Export the subtraction ResourceGroup
         std::string resourceGroupData;
 
-        resourceGroupSubtractionLatest.ExportToData( resourceGroupData );
+        Result exportResourceGroupSubtractionLatestResult = resourceGroupSubtractionLatest.ExportToData( resourceGroupData );
+
+        if (exportResourceGroupSubtractionLatestResult != Result::SUCCESS)
+        {
+			return exportResourceGroupSubtractionLatestResult;
+        }
 
 		ResourceGroupInfo subtractionResourceGroupInfo( { params.resourceGroupRelativePath } );
 
-        subtractionResourceGroupInfo.SetParametersFromData( resourceGroupData );
+        Result setParametersFromDataResult = subtractionResourceGroupInfo.SetParametersFromData( resourceGroupData );
+
+        if (setParametersFromDataResult != Result::SUCCESS)
+        {
+			return setParametersFromDataResult;
+        }
 
         ResourcePutDataParams putDataParams;
 
@@ -1120,15 +1178,30 @@ namespace CarbonResources
       
 
         // Export the patchGroup
-		patchResourceGroup.SetResourceGroup( subtractionResourceGroupInfo );
+		Result setResourceGroupResult = patchResourceGroup.SetResourceGroup( subtractionResourceGroupInfo );
+
+        if (setResourceGroupResult != Result::SUCCESS)
+        {
+			return setResourceGroupResult;
+        }
 
         std::string patchResourceGroupData;
 
-        patchResourceGroup.ExportToData( patchResourceGroupData );
+        Result exportToDataResult = patchResourceGroup.ExportToData( patchResourceGroupData );
+
+        if (exportToDataResult != Result::SUCCESS)
+        {
+			return exportToDataResult;
+        }
 
 		PatchResourceGroupInfo patchResourceGroupInfo( { params.resourceGroupPatchRelativePath } );
 
-        patchResourceGroupInfo.SetParametersFromData( patchResourceGroupData );
+        Result setPatchParametersFromDataResult = patchResourceGroupInfo.SetParametersFromData( patchResourceGroupData );
+
+        if (setPatchParametersFromDataResult != Result::SUCCESS)
+        {
+			return setPatchParametersFromDataResult;
+        }
 
         ResourcePutDataParams patchPutDataParams;
 
@@ -1143,8 +1216,6 @@ namespace CarbonResources
 			return patchResourceGroupPutResult;
 		}
 
-
- 
         return Result::SUCCESS;
     }
 
@@ -1155,7 +1226,7 @@ namespace CarbonResources
 
         m_numberOfResources = m_numberOfResources.GetValue() + 1;
 
-        unsigned long resourceUncompressedSize;
+        uintmax_t resourceUncompressedSize;
             
         Result resourceGetUncompressedSizeResult = resource->GetUncompressedSize( resourceUncompressedSize );
 
@@ -1166,7 +1237,7 @@ namespace CarbonResources
 
         m_totalResourcesSizeUncompressed = m_totalResourcesSizeUncompressed.GetValue() + resourceUncompressedSize;
 
-        unsigned long resourceCompressedSize;
+        uintmax_t resourceCompressedSize;
 
 		Result resourceGetCompressedSizeResult = resource->GetCompressedSize( resourceCompressedSize );
 

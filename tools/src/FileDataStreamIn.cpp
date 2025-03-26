@@ -4,7 +4,7 @@
 namespace ResourceTools
 {
   
-  FileDataStreamIn::FileDataStreamIn( unsigned long chunkSize /*= -1*/ ) :
+  FileDataStreamIn::FileDataStreamIn( uintmax_t chunkSize /*= -1*/ ) :
 	  m_chunkSize( chunkSize ),
 	  m_fileSize(0),
 	  m_currentPosition(0)
@@ -76,7 +76,7 @@ namespace ResourceTools
 		  m_chunkSize = m_fileSize;
       }
 
-	  unsigned long readSize = m_chunkSize;
+	  uintmax_t readSize = m_chunkSize;
 
       if( ( m_currentPosition + readSize ) > m_fileSize )
       {

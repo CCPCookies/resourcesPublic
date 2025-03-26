@@ -82,9 +82,9 @@ namespace CarbonResources
 
 		std::filesystem::path resourceGroupBundleRelativePath;
 
-        unsigned long chunkSize = 10000000;
+        uintmax_t chunkSize = 10000000;
 
-        unsigned long fileReadChunkSize = 10000000;
+        uintmax_t fileReadChunkSize = 10000000;
 
         ResourceDestinationSettings resourceBundleResourceGroupDestinationSettings;
 	};
@@ -93,7 +93,7 @@ namespace CarbonResources
 	{
 		unsigned int size = sizeof( PatchCreateParams );
 
-        unsigned long maxInputFileSize = -1;
+        uintmax_t maxInputFileSize = -1;
 
 		ResourceGroup* previousResourceGroup = nullptr;
 
@@ -160,7 +160,7 @@ namespace CarbonResources
 
 		std::filesystem::path directory = "";
 
-		unsigned long resourceStreamThreshold = 10000000;
+		uintmax_t resourceStreamThreshold = 10000000;
 
 		Version outputDocumentVersion = S_DOCUMENT_VERSION;
 

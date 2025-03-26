@@ -1,24 +1,24 @@
 Version: 0.1.0
 Type: ResourceGroup
 NumberOfResources: 3
-TotalResourcesSizeCompressed: 0
+TotalResourcesSizeCompressed: 99
 TotalResourcesSizeUnCompressed: 39
 Resources:
   - RelativePath: FileA.txt
     Type: Resource
-    Location: 0c/0c116e121cd3f1bb_5d0c6c965f253b05044b1d87de1fde5d
+    Location: b0/b07d8f2846fa3b42_5d0c6c965f253b05044b1d87de1fde5d
     Checksum: 5d0c6c965f253b05044b1d87de1fde5d
     UncompressedSize: 13
-    CompressedSize: 0
+    CompressedSize: 33
   - RelativePath: FileB.txt
     Type: Resource
-    Location: e9/e96b22052603a316_57a310234d1cb4a773d91daf3e85091b
+    Location: 2f/2fac434234a6f435_57a310234d1cb4a773d91daf3e85091b
     Checksum: 57a310234d1cb4a773d91daf3e85091b
     UncompressedSize: 13
-    CompressedSize: 0
+    CompressedSize: 33
   - RelativePath: FileC.txt
     Type: Resource
-    Location: 3a/3a08050ac1bf9041_dd8183e495550bef57503b89e4c4aae4
+    Location: b1/b1999339f17024f0_dd8183e495550bef57503b89e4c4aae4
     Checksum: dd8183e495550bef57503b89e4c4aae4
     UncompressedSize: 13
-    CompressedSize: 0
+    CompressedSize: 33

@@ -30,18 +30,6 @@
 namespace CarbonResources
 {
 
-    struct API ThisIsAnExampleTodoRemove
-    {
-		const unsigned int size = sizeof( ThisIsAnExampleTodoRemove );
-
-	    int a = 0;
-
-	    int b = 0;
-
-        int c = 0;
-    };
-
-
     class BinaryResourceGroupImpl;
 
     class API BinaryResourceGroup final: public ResourceGroup

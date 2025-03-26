@@ -5,7 +5,7 @@
 namespace ResourceTools
 {
   
-  BundleStreamIn::BundleStreamIn( unsigned long chunkSize ) :
+  BundleStreamIn::BundleStreamIn( uintmax_t chunkSize ) :
 	  m_chunkSize(chunkSize),
 	  m_dataReadOfCurrentFile( 0 )
   {
@@ -15,7 +15,7 @@ namespace ResourceTools
   {
   }
 
-  unsigned long BundleStreamIn::GetCacheSize()
+  uintmax_t BundleStreamIn::GetCacheSize()
   {
 	  return m_cache.size();
   }
@@ -42,7 +42,7 @@ namespace ResourceTools
 
         if( ( m_dataReadOfCurrentFile + m_chunkSize ) >= fileData.fileSize )
         {
-		    unsigned long remainingDataSize = fileData.fileSize - m_dataReadOfCurrentFile;
+			uintmax_t remainingDataSize = fileData.fileSize - m_dataReadOfCurrentFile;
 
 		    dataRef = m_cache.substr( 0, remainingDataSize );
 

@@ -30,7 +30,7 @@ namespace ResourceTools
     class FileDataStreamIn
 	{
 	public:
-		FileDataStreamIn( unsigned long chunkSize = -1);
+		FileDataStreamIn( uintmax_t chunkSize = -1 );
 
 		~FileDataStreamIn();
 
@@ -51,7 +51,7 @@ namespace ResourceTools
 
 		bool m_readInProgress;
 
-		unsigned long m_chunkSize;
+		uintmax_t m_chunkSize;
 
         std::ifstream m_inputStream;
 

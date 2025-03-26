@@ -234,11 +234,9 @@ namespace CarbonResources
 
 		std::string checksum = "";
 
-		unsigned long compressedSize = 0;
+		uintmax_t compressedSize = 0;
 
-		unsigned long uncompressedSize = 0;
-
-		unsigned long something = 0;
+		uintmax_t uncompressedSize = 0;
 	};
 
     struct ResourceGetDataStreamParams
@@ -290,9 +288,9 @@ namespace CarbonResources
 
 	    Result GetChecksum(std::string& checksum) const;
 
-	    Result GetUncompressedSize(unsigned long& uncompressedSize) const;
+	    Result GetUncompressedSize( uintmax_t& uncompressedSize ) const;
 
-	    Result GetCompressedSize(unsigned long& compressedSize) const;
+	    Result GetCompressedSize( uintmax_t& compressedSize ) const;
 
         Result GetDataStream( ResourceGetDataStreamParams& params ) const;
 
@@ -346,9 +344,9 @@ namespace CarbonResources
 
 		DocumentParameter<std::string> m_checksum = DocumentParameter<std::string>( { 0, 0, 0 }, "Checksum" );
 
-		DocumentParameter<unsigned long> m_compressedSize = DocumentParameter<unsigned long>( { 0, 0, 0 }, "CompressedSize" );
+		DocumentParameter<uintmax_t> m_compressedSize = DocumentParameter<uintmax_t>( { 0, 0, 0 }, "CompressedSize" );
 
-		DocumentParameter<unsigned long> m_uncompressedSize = DocumentParameter<unsigned long>( { 0, 0, 0 }, "UncompressedSize" );
+		DocumentParameter<uintmax_t> m_uncompressedSize = DocumentParameter<uintmax_t>( { 0, 0, 0 }, "UncompressedSize" );
 
     };
 

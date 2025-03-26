@@ -40,7 +40,7 @@ namespace CarbonResources
 		}
 	}
 
-    Result PatchResourceInfo::GetDataOffset( unsigned long& dataoffset ) const
+    Result PatchResourceInfo::GetDataOffset( uintmax_t& dataoffset ) const
     {
 		if( !m_dataOffset.HasValue() )
 		{
@@ -72,7 +72,7 @@ namespace CarbonResources
 		{
 			if( YAML::Node parameter = resource[m_dataOffset.GetTag()] )
 			{
-				m_dataOffset = parameter.as<unsigned long>();
+				m_dataOffset = parameter.as<uintmax_t>();
 			}
 			else
 			{
@@ -140,7 +140,7 @@ namespace CarbonResources
 
         if (m_dataOffset.IsParameterExpectedInDocumentVersion(documentVersion))
         {
-			unsigned long dataOffset;
+			uintmax_t dataOffset;
 
 			Result getOffsetResult = otherAsPatch->GetDataOffset( dataOffset );
 

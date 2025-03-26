@@ -46,7 +46,7 @@ namespace CarbonResources
 
         static std::string TypeId();
 
-        void SetChunkSize( unsigned long size );
+        void SetChunkSize( uintmax_t size );
 
     private:
 
@@ -58,7 +58,7 @@ namespace CarbonResources
 
     protected:
 
-        DocumentParameter<unsigned long> m_chunkSize = DocumentParameter<unsigned long>( { 0, 1, 0 }, "ChunkSize" );
+        DocumentParameter<uintmax_t> m_chunkSize = DocumentParameter<uintmax_t>( { 0, 1, 0 }, "ChunkSize" );
 
 		DocumentParameter<ResourceGroupInfo*> m_resourceGroupParameter = DocumentParameter<ResourceGroupInfo*>( { 0, 1, 0 }, "ResourceGroupResource" );
 

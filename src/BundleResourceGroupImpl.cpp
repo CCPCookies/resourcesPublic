@@ -28,7 +28,7 @@ namespace CarbonResources
 		delete m_resourceGroupParameter.GetValue();
     }
 
-    void BundleResourceGroupImpl::SetChunkSize( unsigned long size )
+    void BundleResourceGroupImpl::SetChunkSize( uintmax_t size )
     {
 		m_chunkSize = size;
     }
@@ -78,7 +78,7 @@ namespace CarbonResources
         for( ResourceInfo* resource : resourceGroup )
 		{
 
-            unsigned long resourceFileUncompressedSize;
+            uintmax_t resourceFileUncompressedSize;
 
             Result getUncompressedDataSizeResult = resource->GetUncompressedSize( resourceFileUncompressedSize );
 
@@ -200,7 +200,7 @@ namespace CarbonResources
             }
 
             /*
-			// Export data
+			// Export data TODO
 			ResourcePutDataParams resourcePutDataParams;
 
 			resourcePutDataParams.resourceDestinationSettings = params.resourceDestinationSettings;
@@ -275,7 +275,7 @@ namespace CarbonResources
         if (m_chunkSize.IsParameterExpectedInDocumentVersion(m_versionParameter.GetValue()))
         {
             // TODO handle failure
-			m_chunkSize = resourceGroupFile[m_chunkSize.GetTag()].as<unsigned long>();
+			m_chunkSize = resourceGroupFile[m_chunkSize.GetTag()].as<uintmax_t>();
         }
 
 		return Result::SUCCESS;

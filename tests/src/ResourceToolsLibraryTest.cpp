@@ -149,7 +149,7 @@ TEST_F( ResourceToolsTest, GZipUncompressData )
 
 TEST_F( ResourceToolsTest, ResourceChunking )
 {
-	unsigned long chunkSize = 1000;
+	uintmax_t chunkSize = 1000;
 
 	ResourceTools::BundleStreamOut bundleStream(chunkSize);
 
@@ -437,7 +437,7 @@ TEST_F( ResourceToolsTest, ApplyPatchFileChunked )
 	// Create a patch containing the difference between before and after.
 	ASSERT_TRUE( ResourceTools::CreatePatchFile( before_src, after_src, patch ) );
 
-	unsigned long chunkSize = 128;
+	uintmax_t chunkSize = 128;
 
 	ResourceTools::BundleStreamOut chunkStream(chunkSize);
 	std::string patchData;

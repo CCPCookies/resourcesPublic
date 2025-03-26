@@ -6,7 +6,7 @@ namespace ResourceTools
 {
   
 
-  BundleStreamOut::BundleStreamOut( unsigned long chunkSize ) :
+  BundleStreamOut::BundleStreamOut( uintmax_t chunkSize ) :
 	  m_chunkSize(chunkSize)
   {
 
@@ -65,7 +65,7 @@ namespace ResourceTools
 
   }
 
-  unsigned long BundleStreamOut::GetChunkSize() const
+  uintmax_t BundleStreamOut::GetChunkSize() const
   {
 	  return m_chunkSize;
   }

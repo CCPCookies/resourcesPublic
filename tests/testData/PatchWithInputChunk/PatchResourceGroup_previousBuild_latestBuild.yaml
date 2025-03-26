@@ -1,19 +1,22 @@
 Version: 0.1.0
 Type: PatchGroup
+NumberOfResources: 1
+TotalResourcesSizeCompressed: 101
+TotalResourcesSizeUnCompressed: 4793
 ResourceGroupResource:
   RelativePath: ResourceGroup_previousBuild_latestBuild.yaml
   Type: ResourceGroup
-  Location: 20/20b667e334ee0bf1_574ad965d73f344f020e35a7dcde6944
-  Checksum: 574ad965d73f344f020e35a7dcde6944
-  UncompressedSize: 480
-  CompressedSize: 246
+  Location: 2a/2a0859d673c05b5f_00419987eabf6ef5d7d304bf551d129c
+  Checksum: 00419987eabf6ef5d7d304bf551d129c
+  UncompressedSize: 573
+  CompressedSize: 280
 MaxInputChunkSize: 5000
 Resources:
   - RelativePath: Patches/Patch1.0
     Type: BinaryPatch
-    Location: ff/ff765f597b94a091_e0d5e58dc7417c3562ee7f902f7f5a38
-    Checksum: e0d5e58dc7417c3562ee7f902f7f5a38
-    UncompressedSize: 4745
-    CompressedSize: 1798
+    Location: b6/b6162ef461fa3545_a870e9045cacac979a32534b6d297fba
+    Checksum: a870e9045cacac979a32534b6d297fba
+    UncompressedSize: 4793
+    CompressedSize: 101
     TargetResourceRelativePath: intromovie.txt
     DataOffset: 5000
