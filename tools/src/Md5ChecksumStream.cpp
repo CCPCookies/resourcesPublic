@@ -76,6 +76,7 @@ namespace ResourceTools
 	  }
 
       Finish();
+  	  return true;
   }
 
 }

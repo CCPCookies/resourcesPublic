@@ -297,6 +297,53 @@ namespace ResourceTools
 	  return false;
   }
 
+  size_t CountMatchingChunks( const std::filesystem::path& fileA, size_t offsetA, std::filesystem::path fileB, size_t offsetB, size_t chunkSize )
+  {
+  	size_t result{ 0 };
+  	FileDataStreamIn streamA( chunkSize );
+  	if(!streamA.StartRead( fileA ))
+  	{
+  		return result;
+  	}
+  	streamA.Seek( offsetA );
+
+  	FileDataStreamIn streamB( chunkSize );
+  	if(!streamB.StartRead( fileB ))
+  	{
+  		return result;
+  	}
+  	streamB.Seek( offsetB );
+
+  	std::string chunkA;
+  	std::string chunkB;
+
+  	std::string checksumA;
+  	std::string checksumB;
+
+  	while( true )
+  	{
+  		if( !(streamA >> chunkA) || !(streamB >> chunkB) )
+  		{
+  			return result;
+  		}
+  		if( !ResourceTools::GenerateMd5Checksum( chunkA, checksumA ) )
+  		{
+  			return result;
+  		}
+  		if( !ResourceTools::GenerateMd5Checksum( chunkB, checksumB ) )
+  		{
+  			return result;
+  		}
+  		if( checksumA != checksumB )
+  		{
+  			break;
+  		}
+  		++result;
+  	}
+
+	return result;
+  }
+
   bool GetLocalFileData( const std::filesystem::path& filepath, std::string& data )
   {
 

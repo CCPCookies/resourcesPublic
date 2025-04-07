@@ -847,9 +847,6 @@ namespace CarbonResources
 			return processChunkResult;
 		}
 
-
-
-
 		// Export this resource list
 		std::string resourceGroupData;
 
@@ -924,7 +921,27 @@ namespace CarbonResources
         return Result::SUCCESS;
     }
 
-    Result ResourceGroupImpl::CreatePatch( const PatchCreateParams& params ) const
+	Result ResourceGroupImpl::ConstructPatchResourceInfo( const PatchCreateParams& params, int patchId, uintmax_t dataOffset, uint64_t patchSourceOffset, ResourceInfo* resourceNext, PatchResourceInfo*& patchResource ) const
+	{
+    	// Create a resource from patch data
+    	std::filesystem::path resourceLatestRelativePath;
+    	Result getResourceLatestRelativePathResult = resourceNext->GetRelativePath( resourceLatestRelativePath );
+    	if( getResourceLatestRelativePathResult != Result::SUCCESS )
+    	{
+    		return getResourceLatestRelativePathResult;
+    	}
+
+		PatchResourceInfoParams patchResourceInfoParams;
+		std::string patchFilename = params.patchFileRelativePathPrefix.string() + "." + std::to_string( patchId ); // TODO odd
+		patchResourceInfoParams.relativePath = patchFilename;
+		patchResourceInfoParams.targetResourceRelativePath = resourceLatestRelativePath;
+		patchResourceInfoParams.dataOffset = dataOffset;
+		patchResourceInfoParams.sourceOffset = patchSourceOffset;
+		patchResource = new PatchResourceInfo( patchResourceInfoParams );
+
+    	return Result::SUCCESS;
+	}
+	Result ResourceGroupImpl::CreatePatch( const PatchCreateParams& params ) const
     {
         if (params.previousResourceGroup->m_impl->GetType() != GetType())
         {
@@ -1029,11 +1046,25 @@ namespace CarbonResources
 					return getNextDataStreamResult;
 				}
 
+            	int chunkNumber = 0;
+            	std::filesystem::path asdf;
+            	resourceNext->GetRelativePath( asdf );
                 // Process one chunk at a time
 				for( uintmax_t dataOffset = 0; dataOffset < nextUncompressedSize; dataOffset += params.maxInputFileChunkSize )
                 {
-
+					++chunkNumber;
 					std::string previousFileData = "";
+
+					if( previousFileDataStream.IsFinished() )
+					{
+						if( previousFileDataStream.Size() > nextFileDataStream.GetCurrentPosition() )
+						{
+							// We ran out of data because we found a chunk match later in the file,
+							// but we can rewind back to where the read stream is in hopes
+							// of getting a good diff, rather than just treating it as new data.
+							previousFileDataStream.StartRead( previousFileDataStream.GetPath() );
+						}
+					}
 
                     // Handling if previous file is smaller than next file
                     // If so then previousFileData will be nothing and
@@ -1045,8 +1076,8 @@ namespace CarbonResources
 							return Result::FAILED_TO_RETRIEVE_CHUNK_DATA;
 						}
                     }
-                    
 
+					size_t nextStreamPosition = nextFileDataStream.GetCurrentPosition();
                     // Note: in the case that the next file is smaller than previous
                     // nothing is stored, application of the patch will chop off the extra file data
                     std::string nextFileData;
@@ -1060,94 +1091,118 @@ namespace CarbonResources
 					// Create a patch from the data
 					std::string patchData;
 
+					bool chunkMatchFound{false};
+					uint64_t matchCount{0};
+					uint64_t patchSourceOffset{0};
+
                     if (previousFileData != "")
 					{
-                        // Calculate checksum of the chunks
-                        // If they match there is no need for a patch
-						std::string previousFileDataChecksum;
+                    	// Here's how this should work:
+                    	// We find a matching chunk if it exists. If the chunk exists we make a patch with no data, because we'll get
+                    	// the data from the source file using the patch info. Consecutive patches should be collapsed into one big one.
+                    	// If we can't find a matching chunk, we will base the current diff off the chunk in the source starting after the final byte
+                    	// in the chunk from the source file that we last used.
+                    	// This should keep our patches pretty minimal, even if lots of data gets added early in the file causing offsets.
+                    	// It should also handle small changes in moved parts of the file pretty well.
+                    	chunkMatchFound = ResourceTools::FindMatchingChunk(nextFileData, previousFileDataStream.GetPath(), patchSourceOffset);
 
-                        if (!ResourceTools::GenerateMd5Checksum(previousFileData, previousFileDataChecksum))
-                        {
-							return Result::FAILED_TO_GENERATE_CHECKSUM;
-                        }
+                    	if( chunkMatchFound )
+                    	{
+                    		matchCount = 1;
+                    		matchCount += ResourceTools::CountMatchingChunks(
+                    			nextFileDataStream.GetPath(),
+                    			nextFileDataStream.GetCurrentPosition(),
+                    			previousFileDataStream.GetPath(),
+                    			patchSourceOffset + params.maxInputFileChunkSize,
+                    			params.maxInputFileChunkSize );
 
-                        std::string nextFileDataChecksum;
+                    		size_t matchSize = std::min(params.maxInputFileChunkSize * matchCount, previousFileDataStream.Size() - patchSourceOffset);
 
-						if( !ResourceTools::GenerateMd5Checksum( nextFileData, nextFileDataChecksum ) )
+                    		PatchResourceInfo* patchResource{nullptr};
+                    		ConstructPatchResourceInfo( params, patchId, dataOffset, patchSourceOffset, resourceNext, patchResource );
+                    		patchResource->SetParametersFromSourceStream( previousFileDataStream, matchSize );
+
+                    		// Advance the first stream by the size of the matching data,
+                    		// but move the point we generate patches from for the previous
+                    		// file data stream to the end of the match.
+                    		// It's hard to tell if it would be smarter to simply advance
+                    		// the destination data by the same amount of the source data,
+                    		// or perhaps even not to move it at all.
+                    		nextFileDataStream.Seek( std::min( nextFileDataStream.Size(), nextStreamPosition + matchSize ) );
+                    		previousFileDataStream.Seek( std::min(previousFileDataStream.Size(), patchSourceOffset + matchSize ) );
+                    		dataOffset += matchSize - params.maxInputFileChunkSize;
+
+                    		if( nextStreamPosition == 0 )
+                    		{
+                    			// This is the beginning of the file and it matches.
+                    			// There is no need to write patch data.
+                    			continue;
+                    		}
+
+                    		// Add the patch resource to the patchResourceGroup
+                    		Result addResourceResult = patchResourceGroup.AddResource( patchResource );
+
+                    		if( addResourceResult != Result::SUCCESS )
+                    		{
+                    			delete patchResource;
+
+                    			return addResourceResult;
+                    		}
+
+                    		patchId++;
+                    		continue;
+                    	}
+						else
 						{
-							return Result::FAILED_TO_GENERATE_CHECKSUM;
+							// Previous and next data chunk are different, create a patch
+							if( !ResourceTools::CreatePatch( previousFileData, nextFileData, patchData ) )
+							{
+								return Result::FAILED_TO_CREATE_PATCH;
+							}
+							patchSourceOffset = dataOffset;
 						}
-
-                        if (previousFileDataChecksum == nextFileDataChecksum)
-                        {
-                            // The chunks of the file are the same
-                            // No patch is required
-							continue;
-                        }
-
-                        // Previous and next data chunk are different, create a patch
-                        if( !ResourceTools::CreatePatch( previousFileData, nextFileData, patchData ) )
-						{
-							return Result::FAILED_TO_CREATE_PATCH;
-						}
-                        
                     }
                     else
                     {
                         // If there is no previous data then just store the data straight from the file
                         // All this data is new
 						patchData = nextFileData;
+                    	patchSourceOffset = dataOffset;
                     }
 					
 
                     //TODO handle the case where previousFileData and nextFileData match, in this case don't create a patch
 
 
-					// Create a resource from patch data
-					std::filesystem::path resourceLatestRelativePath;
 
-					Result getResourceLatestRelativePathResult = resourceNext->GetRelativePath( resourceLatestRelativePath );
 
-					if( getResourceLatestRelativePathResult != Result::SUCCESS )
+					PatchResourceInfo* patchResource{nullptr};
+					ConstructPatchResourceInfo( params, patchId, dataOffset, patchSourceOffset, resourceNext, patchResource );
+
+					if( !patchData.empty() )
 					{
-						return getResourceLatestRelativePathResult;
-					}
+						Result setParametersFromDataResult = patchResource->SetParametersFromData( patchData );
 
-					PatchResourceInfoParams patchResourceInfoParams;
+						if( setParametersFromDataResult != Result::SUCCESS )
+						{
+							return setParametersFromDataResult;
+						}
 
-					std::string patchFilename = params.patchFileRelativePathPrefix.string() + "." + std::to_string( patchId ); // TODO odd
+						// Export patch file
+						ResourcePutDataParams resourcePutDataParams;
 
-					patchResourceInfoParams.relativePath = patchFilename;
+						resourcePutDataParams.resourceDestinationSettings = params.resourcePatchBinaryDestinationSettings;
 
-					patchResourceInfoParams.targetResourceRelativePath = resourceLatestRelativePath;
+						resourcePutDataParams.data = &patchData;
 
-                    patchResourceInfoParams.dataOffset = dataOffset;
+						Result putPatchDataResult = patchResource->PutData( resourcePutDataParams );
 
+						if( putPatchDataResult != Result::SUCCESS )
+						{
+							delete patchResource;
 
-					PatchResourceInfo* patchResource = new PatchResourceInfo( patchResourceInfoParams );
-
-					Result setParametersFromDataResult = patchResource->SetParametersFromData( patchData );
-
-                    if (setParametersFromDataResult != Result::SUCCESS)
-                    {
-						return setParametersFromDataResult;
-                    }
-
-
-					// Export patch file
-					ResourcePutDataParams resourcePutDataParams;
-
-					resourcePutDataParams.resourceDestinationSettings = params.resourcePatchBinaryDestinationSettings;
-
-					resourcePutDataParams.data = &patchData;
-
-					Result putPatchDataResult = patchResource->PutData( resourcePutDataParams );
-
-					if( putPatchDataResult != Result::SUCCESS )
-					{
-						delete patchResource;
-
-						return putPatchDataResult;
+							return putPatchDataResult;
+						}
 					}
 
 					// Add the patch resource to the patchResourceGroup

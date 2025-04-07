@@ -91,6 +91,22 @@ bool CarbonResourcesTestFixture::FilesMatch( const std::filesystem::path& file1P
     
 }
 
+bool CarbonResourcesTestFixture::DirectoryIsSubset( const std::filesystem::path& dir1, const std::filesystem::path& dir2 )
+{
+	for( auto entry : std::filesystem::recursive_directory_iterator( dir1 ) )
+	{
+		if( entry.is_directory() )
+		{
+			continue;
+		}
+		if( !FilesMatch( entry.path(), dir2 / relative( entry.path(), dir1 ) ) )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 std::filesystem::path CarbonResourcesTestFixture::GetTestFileFileAbsolutePath( const std::filesystem::path& relativePath )
 {
     std::filesystem::path basePath( TEST_DATA_BASE_PATH );

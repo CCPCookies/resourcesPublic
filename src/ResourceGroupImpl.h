@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "Version.h"
+#include "ResourceInfo/PatchResourceInfo.h"
 
 namespace YAML
 {
@@ -70,7 +71,9 @@ namespace CarbonResources
 
         Result CreateBundle( const BundleCreateParams& params ) const;
 
-	    Result CreatePatch( const PatchCreateParams& params ) const;
+		Result ConstructPatchResourceInfo( const PatchCreateParams& params, int patchId, uintmax_t dataOffset, uint64_t patchSourceOffset, ResourceInfo* resourceNext, PatchResourceInfo*& patchResource ) const;
+
+		Result CreatePatch( const PatchCreateParams& params ) const;
 
 	    Result AddResource( ResourceInfo* resource );
 

@@ -314,6 +314,8 @@ namespace CarbonResources
 
         Result SetParametersFromData( const std::string& data );
 
+    	Result SetParametersFromSourceStream( ResourceTools::FileDataStreamIn& stream, size_t matchSize );
+
         virtual Result SetParametersFromResource( const ResourceInfo* other, const VersionInternal& documentVersion );
 
         bool operator==( const ResourceInfo* other ) const;

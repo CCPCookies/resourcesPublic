@@ -32,6 +32,11 @@ namespace ResourceTools
 	  return !m_readInProgress;
   }
 
+  std::filesystem::path FileDataStreamIn::GetPath()
+  {
+	  return m_path;
+  }
+
   size_t FileDataStreamIn::GetCurrentPosition()
   {
 	  return m_currentPosition;
@@ -42,6 +47,12 @@ namespace ResourceTools
 	  return m_fileSize;
   }
 
+  void FileDataStreamIn::Seek( size_t position )
+  {
+	  m_inputStream.seekg( static_cast<std::streamoff>( position ) );
+  	  m_currentPosition = position;
+  }
+
   bool FileDataStreamIn::StartRead( std::filesystem::path filepath )
   {
       m_inputStream.open( filepath, std::ios::in | std::ios::binary );
@@ -50,6 +61,8 @@ namespace ResourceTools
 	  {
 		  return false;
 	  }
+
+	  m_path = filepath;
 
       m_inputStream.seekg( 0, std::ios::end );
 
@@ -80,7 +93,7 @@ namespace ResourceTools
 
       if( ( m_currentPosition + readSize ) > m_fileSize )
       {
-		  readSize = m_fileSize - m_currentPosition;
+		  readSize = m_fileSize - std::min(m_fileSize, m_currentPosition);
       }
 
 	  data.resize( readSize );

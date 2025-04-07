@@ -264,13 +264,24 @@ namespace CarbonResources
 				    patchGetDataParams.resourceSourceSettings = params.patchBinarySourceSettings;
 
                     patchGetDataParams.data = &patchData;
-  
-                    Result getPatchDataResult = patch->GetData( patchGetDataParams );
 
-				    if( getPatchDataResult != Result::SUCCESS )
-				    {
-					    return getPatchDataResult;
-				    }
+					std::string location;
+					Result patchGetLocationResult = patch->GetLocation( location );
+					if( patchGetLocationResult != Result::SUCCESS )
+					{
+						return patchGetLocationResult;
+					}
+					bool hasPatchFile{!location.empty()};
+
+					if( hasPatchFile )
+					{
+						Result getPatchDataResult = patch->GetData( patchGetDataParams );
+
+						if( getPatchDataResult != Result::SUCCESS )
+						{
+							return getPatchDataResult;
+						}
+					}
 
                     // Get previous data
 					uintmax_t dataOffset;
@@ -320,32 +331,87 @@ namespace CarbonResources
 
                         }
 
-                        // Apply patch to data
-						if( !( resourceDataStreamIn >> previousResourceData ) )
-						{
-							return Result::FAILED_TO_READ_FROM_STREAM;
-						}
-
 						// Apply the patch to the previous data
 						std::string patchedResourceData;
 
-						if( !ResourceTools::ApplyPatch( previousResourceData, patchData, patchedResourceData ) )
-						{
-							return Result::FAILED_TO_APPLY_PATCH;
-						}
+                    	if( hasPatchFile )
+                    	{
+                    		// Apply patch to data
+                    		if( !( resourceDataStreamIn >> previousResourceData ) )
+                    		{
+                    			return Result::FAILED_TO_READ_FROM_STREAM;
+                    		}
+                    		if( !ResourceTools::ApplyPatch( previousResourceData, patchData, patchedResourceData ) )
+                    		{
+                    			return Result::FAILED_TO_APPLY_PATCH;
+                    		}
+                    		// Write the patch result to file
+                    		if( !( temporaryResourceDataStreamOut << patchedResourceData ) )
+                    		{
+                    			return Result::FAILED_TO_WRITE_TO_STREAM;
+                    		}
 
-                        // Write the patch result to file
-						if( !( temporaryResourceDataStreamOut << patchedResourceData ) )
-                        {
-							return Result::FAILED_TO_WRITE_TO_STREAM;
-                        }
+                    		// Add to incremental checksum calculation
+                    		if( !( patchedFileChecksumStream << patchedResourceData ) )
+                    		{
+                    			return Result::FAILED_TO_GENERATE_CHECKSUM;
+                    		}
+                    	}
+                    	else
+                    	{
+							ResourceTools::FileDataStreamIn sourceDataStreamIn(m_maxInputChunkSize.GetValue());
+                    		std::filesystem::path sourceLocation;
+                    		Result getLocationResult = resource->GetRelativePath( sourceLocation );
+                    		if (getLocationResult != Result::SUCCESS)
+                    		{
+                    			return getLocationResult;
+                    		}
+                    		if( !sourceDataStreamIn.StartRead(  params.resourcesToPatchSourceSettings.basePath / sourceLocation ) )
+                    		{
+                    			return Result::FAILED_TO_READ_FROM_STREAM;
+                    		}
+                    		uintmax_t sourceOffset{0};
+                    		Result getSourceOffsetResult = patch->GetSourceOffset( sourceOffset );
+                    		if( getSourceOffsetResult != Result::SUCCESS )
+                    		{
+								return getSourceOffsetResult;
+                    		}
+                    		uintmax_t unCompressedSize{0};
+                    		Result getUncompressedSizeResult = patch->GetUncompressedSize( unCompressedSize );
+                    		if( getUncompressedSizeResult != Result::SUCCESS )
+                    		{
+                    			return getUncompressedSizeResult;
+                    		}
+                    		sourceDataStreamIn.Seek( sourceOffset );
+                    		while( unCompressedSize )
+                    		{
+                    			std::string sourceData;
+                    			sourceDataStreamIn >> sourceData;
+                    			if( sourceData.empty() )
+                    			{
+                    				return Result::FAILED_TO_READ_FROM_STREAM;
+                    			}
+                    			resourceDataStreamIn >> previousResourceData;
+                    			if( sourceData.size() > unCompressedSize )
+                    			{
+                    				sourceData = sourceData.substr( unCompressedSize );
+                    			}
+                    			unCompressedSize -= std::min( sourceData.size(), unCompressedSize );
 
-                        // Add to incremental checksum calculation
-						if( !( patchedFileChecksumStream << patchedResourceData ) )
-						{
-							return Result::FAILED_TO_GENERATE_CHECKSUM;
-						}
+                    			// Write the data from the source file
+                    			if( !( temporaryResourceDataStreamOut << sourceData ) )
+                    			{
+                    				return Result::FAILED_TO_WRITE_TO_STREAM;
+                    			}
 
+                    			// Add to incremental checksum calculation
+                    			if( !( patchedFileChecksumStream << sourceData ) )
+                    			{
+                    				return Result::FAILED_TO_GENERATE_CHECKSUM;
+                    			}
+                    		}
+
+                    	}
                     }
                     else
                     {

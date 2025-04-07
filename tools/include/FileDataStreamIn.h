@@ -40,7 +40,11 @@ namespace ResourceTools
 
         bool StartRead( std::filesystem::path filepath );
 
+    	std::filesystem::path GetPath();
+
         size_t GetCurrentPosition();
+
+    	void Seek( size_t position );
 
         size_t Size();
 
@@ -58,6 +62,8 @@ namespace ResourceTools
         size_t m_currentPosition;
 
         size_t m_fileSize;
+
+    	std::filesystem::path m_path;
 	};
 
 }

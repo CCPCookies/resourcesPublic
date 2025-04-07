@@ -569,3 +569,18 @@ TEST_F( ResourceToolsTest, FindMatchingChunkInFile )
 	ASSERT_TRUE(ResourceTools::FindMatchingChunk( final, introMovieFilePath, offset ) );
 	ASSERT_EQ( offset, data.size() - 20 );
 }
+
+TEST_F( ResourceToolsTest, CountMatchingChunks )
+{
+	const char* testDataPathStr = std::getenv( "TEST_DATA_PATH" );
+	ASSERT_TRUE( testDataPathStr );
+	std::filesystem::path testDataPath(testDataPathStr);
+	std::filesystem::path introMovieFilePath = testDataPath / "Patch" / "previousBuildResources" / "introMoviePrefixed.txt";
+	std::filesystem::path introMoviePatchedFilePath = testDataPath / "Patch" / "nextBuildResources" / "introMoviePrefixed.txt";
+
+	const size_t CHUNK_SIZE{500};
+	const size_t PREFIX_SIZE{310};
+	ASSERT_EQ( ResourceTools::CountMatchingChunks( introMovieFilePath, 0, introMoviePatchedFilePath, 0, CHUNK_SIZE ), 0 );
+	ASSERT_EQ( ResourceTools::CountMatchingChunks( introMovieFilePath, 0, introMoviePatchedFilePath, PREFIX_SIZE, CHUNK_SIZE ), 20 );
+	ASSERT_EQ( ResourceTools::CountMatchingChunks( introMovieFilePath, CHUNK_SIZE, introMoviePatchedFilePath, CHUNK_SIZE + PREFIX_SIZE, 500 ), 19 );
+}

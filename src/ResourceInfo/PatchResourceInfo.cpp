@@ -18,6 +18,8 @@ namespace CarbonResources
 
         m_dataOffset = params.dataOffset;
 
+    	m_sourceOffset = params.sourceOffset;
+
 		m_type = TypeId();
     }
 
@@ -54,6 +56,19 @@ namespace CarbonResources
 		}
     }
 
+	Result PatchResourceInfo::GetSourceOffset( uintmax_t& sourceOffset ) const
+	{
+		if( !m_sourceOffset.HasValue() )
+		{
+			return Result::RESOURCE_VALUE_NOT_SET;
+		}
+		else
+		{
+			sourceOffset = m_sourceOffset.GetValue();
+			return Result::SUCCESS;
+		}
+	}
+
 	Result PatchResourceInfo::ImportFromYaml( YAML::Node& resource, const VersionInternal& documentVersion )
 	{
 		if( m_targetResourceRelativepath.IsParameterExpectedInDocumentVersion( documentVersion ) )
@@ -79,6 +94,18 @@ namespace CarbonResources
 				return Result::MALFORMED_RESOURCE_INPUT;
 			}
 		}
+
+    	if( m_sourceOffset.IsParameterExpectedInDocumentVersion( documentVersion ) )
+    	{
+    		if( YAML::Node parameter = resource[m_sourceOffset.GetTag()] )
+    		{
+    			m_sourceOffset = parameter.as<uintmax_t>();
+    		}
+    		else
+    		{
+    			return Result::MALFORMED_RESOURCE_INPUT;
+    		}
+    	}
 
 		return ResourceInfo::ImportFromYaml( resource, documentVersion );
 	}
@@ -115,6 +142,18 @@ namespace CarbonResources
 			out << YAML::Key << m_dataOffset.GetTag();
 			out << YAML::Value << m_dataOffset.GetValue();
 		}
+
+    	// Source offset
+    	if( m_sourceOffset.IsParameterExpectedInDocumentVersion( documentVersion ) )
+    	{
+    		if( !m_sourceOffset.HasValue() )
+    		{
+    			return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+    		}
+
+    		out << YAML::Key << m_sourceOffset.GetTag();
+    		out << YAML::Value << m_sourceOffset.GetValue();
+    	}
 
 		return Result::SUCCESS;
 	}

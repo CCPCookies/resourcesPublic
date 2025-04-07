@@ -352,7 +352,12 @@ TEST_F( CarbonResourcesLibraryTest, ApplyPatchWithChunking )
 
 	EXPECT_EQ( patchResourceGroup.Apply( patchApplyParams ), CarbonResources::Result::SUCCESS );
 
-	// TODO test the output of the applied patches
+	std::filesystem::path nextIntroMovie = GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/introMovie.txt" );
+	EXPECT_TRUE( FilesMatch( nextIntroMovie, patchApplyParams.resourcesToPatchDestinationSettings.basePath / "introMovie.txt" ) );
+	std::filesystem::path nextIntroMoviePrefixed = GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/introMoviePrefixed.txt" );
+	EXPECT_TRUE( FilesMatch( nextIntroMoviePrefixed, patchApplyParams.resourcesToPatchDestinationSettings.basePath / "introMoviePrefixed.txt" ) );
+	std::filesystem::path nextTestResource = GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/testresource2.txt" );
+	EXPECT_TRUE( FilesMatch( nextTestResource, patchApplyParams.resourcesToPatchDestinationSettings.basePath / "testresource2.txt" ) );
 }
 
 TEST_F( CarbonResourcesLibraryTest, CreatePatchWithChunking )
@@ -405,12 +410,15 @@ TEST_F( CarbonResourcesLibraryTest, CreatePatchWithChunking )
 
 	patchCreateParams.previousResourceGroup = &resourceGroupPrevious;
 
-	patchCreateParams.maxInputFileChunkSize = 5000;
+	patchCreateParams.maxInputFileChunkSize = 500;
 
 	EXPECT_EQ( resourceGroupLatest.CreatePatch( patchCreateParams ), CarbonResources::Result::SUCCESS );
 
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "PatchWithInputChunk/PatchResourceGroup_previousBuild_latestBuild.yaml" );
+	EXPECT_TRUE( FilesMatch( goldFile, patchCreateParams.resourcePatchResourceGroupDestinationSettings.basePath / "PatchResourceGroup_previousBuild_latestBuild.yaml" ) );
 
-	// TODO run tests on patch create
+	std::filesystem::path goldDirectory = GetTestFileFileAbsolutePath( "PatchWithInputChunk/LocalCDNPatches" );
+	EXPECT_TRUE( DirectoryIsSubset(  goldDirectory, patchCreateParams.resourcePatchBinaryDestinationSettings.basePath ) );
 }
 
 TEST_F( CarbonResourcesLibraryTest, CreateResourceGroupFromDirectory )
@@ -715,6 +723,6 @@ TEST_F( CarbonResourcesLibraryTest, CreateEVEPatchWithChunking )
     // As stated before the destination chunk type should be REMOTE_CDN so that the resulting chunks will be ready to be uploaded to the CDN, they are really the final patch data.
     // There is a problem in the logic of how bundles are currently chunked, more information has been written in the stub ResourceGroupImpl::CreateBundle
     // The fix is straightforward but relies on work not yet in, top of my head I think it was compression of large files.
-	
+
 }
 	*/

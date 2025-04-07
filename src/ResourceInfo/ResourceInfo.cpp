@@ -1,5 +1,7 @@
 #include "ResourceInfo.h"
 
+#include "Md5ChecksumStream.h"
+
 #include <sstream>
 
 #include <ResourceTools.h>
@@ -747,6 +749,37 @@ namespace CarbonResources
         return Result::SUCCESS;
         
     }
+
+	Result ResourceInfo::SetParametersFromSourceStream( ResourceTools::FileDataStreamIn& stream, size_t matchSize )
+	{
+		std::string chunk;
+		std::string checksum;
+    	size_t size;
+
+    	m_uncompressedSize = matchSize;
+
+    	auto start = stream.GetCurrentPosition();
+
+    	ResourceTools::Md5ChecksumStream md5ChecksumStream;
+    	while(matchSize)
+    	{
+
+    		stream >> chunk;
+    		size_t chunkSize = chunk.size() > matchSize ? matchSize : chunk.size();
+    		md5ChecksumStream << chunk.substr( chunkSize );
+    		matchSize -= chunkSize;
+    	}
+
+    	if (!md5ChecksumStream.FinishAndRetrieve(checksum))
+    	{
+    		stream.Seek( start );
+    		return Result::FAILED_TO_GENERATE_CHECKSUM;
+    	}
+
+    	m_checksum = checksum;
+    	stream.Seek( start );
+    	return Result::SUCCESS;
+	}
 
     Result ResourceInfo::ExportToYaml( YAML::Emitter& out, const VersionInternal& documentVersion )
 	{

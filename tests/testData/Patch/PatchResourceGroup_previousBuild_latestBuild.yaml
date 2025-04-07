@@ -20,3 +20,4 @@ Resources:
     CompressedSize: 110
     TargetResourceRelativePath: intromovie.txt
     DataOffset: 0
+    SourceOffset: 0
