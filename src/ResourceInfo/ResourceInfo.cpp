@@ -167,6 +167,11 @@ namespace CarbonResources
 
 			break;
 
+        case ResourceDestinationType::REMOTE_CDN:
+
+            // TODO Requires chunked compression that is not yet implemented
+            return Result::FAILED_TO_SAVE_FILE;
+
 		default:
 			return Result::FAILED_TO_SAVE_FILE;
 		}
@@ -193,6 +198,12 @@ namespace CarbonResources
 		
 			break;
 
+        case ResourceDestinationType::REMOTE_CDN:
+
+            return PutDataRemoteCdn( params );
+
+			break;
+
 		default:
 			return Result::FAILED_TO_SAVE_FILE;
 
@@ -217,6 +228,32 @@ namespace CarbonResources
 			return Result::FAILED_TO_SAVE_FILE;
         }
 
+    }
+
+    Result ResourceInfo::PutDataRemoteCdn( ResourcePutDataParams& params ) const
+    {
+		std::string& data = *params.data;
+
+		// Construct path
+		std::filesystem::path dataPath = params.resourceDestinationSettings.basePath / m_location.GetValue().ToString();
+
+        std::string compressedData;
+
+        if (!ResourceTools::GZipCompressData(data, compressedData))
+        {
+			return Result::FAILED_TO_COMPRESS_DATA;
+        }
+
+        bool res = ResourceTools::SaveFile( dataPath, compressedData );
+
+		if( res )
+		{
+			return Result::SUCCESS;
+		}
+		else
+		{
+			return Result::FAILED_TO_SAVE_FILE;
+		}
     }
 
     Result ResourceInfo::PutDataLocalCdn( ResourcePutDataParams& params ) const
@@ -378,18 +415,36 @@ namespace CarbonResources
     // TODO this is where retry logic should reside
 	Result ResourceInfo::GetDataRemoteCdn( ResourceGetDataParams& params ) const
     {
+		std::filesystem::path path = params.resourceSourceSettings.basePath / m_location.GetValue().ToString();
 
-		bool downloadFileResult = ResourceTools::DownloadFile( "URL", "outputPath" );
+        std::filesystem::path tempPath = params.cacheBasePath / m_location.GetValue().ToString();
+
+        std::string url = path.string();
+
+		std::replace( url.begin(), url.end(), '\\', '/' );
+
+		bool downloadFileResult = ResourceTools::DownloadFile( url, tempPath.string() );
 
         if (!downloadFileResult)
         {
 			return Result::FAILED_TO_DOWNLOAD_FILE;
         }
-        else
-        {
-            // Attempt locally now it has been downloaded
-			return GetDataLocalCdn( params );
-        }
+
+        if( params.expectedChecksum != "" )
+		{
+			// Calculate checksum of data matches expected.
+			// TODO
+		}
+
+		ResourceGetDataParams localParams = params;
+
+        localParams.resourceSourceSettings.sourceType = ResourceSourceType::LOCAL_CDN;
+
+        localParams.resourceSourceSettings.basePath = params.cacheBasePath;
+
+        // Attempt locally now it has been downloaded
+		return GetDataLocalCdn( localParams );
+        
 
     }
 
@@ -428,8 +483,35 @@ namespace CarbonResources
 
     Result ResourceInfo::GetDataStreamRemoteCdn( ResourceGetDataStreamParams& params ) const
     {
-        // TODO streaming from download needs work
-		return Result::FAIL;
+		std::filesystem::path path = params.resourceSourceSettings.basePath / m_location.GetValue().ToString();
+
+		std::filesystem::path tempPath = params.cacheBasePath / m_location.GetValue().ToString();
+
+        std::string url = path.string();
+
+        std::replace( url.begin(), url.end(), '\\', '/' );
+
+		bool downloadFileResult = ResourceTools::DownloadFile( url, tempPath.string() );
+
+		if( !downloadFileResult )
+		{
+			return Result::FAILED_TO_DOWNLOAD_FILE;
+		}
+
+		if( params.expectedChecksum != "" )
+		{
+			// Calculate checksum of data matches expected.
+			// TODO
+		}
+
+        ResourceGetDataStreamParams localCdnParams = params;
+
+        localCdnParams.resourceSourceSettings.sourceType = ResourceSourceType::LOCAL_CDN;
+
+        localCdnParams.resourceSourceSettings.basePath = params.cacheBasePath;
+
+        return GetDataStreamLocalCdn( localCdnParams );
+
     }
 
     Result ResourceInfo::ImportFromYaml( YAML::Node& resource, const VersionInternal& documentVersion )

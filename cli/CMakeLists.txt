@@ -4,6 +4,16 @@ project(carbon-resources-cli VERSION 1.0.0)
 find_package(argparse CONFIG REQUIRED)
 
 set(SRC_FILES
+    src/Cli.cpp
+    src/Cli.h
+    src/CliOperation.cpp
+    src/CliOperation.h
+    src/CreateBundleCliOperation.cpp
+    src/CreateBundleCliOperation.h
+    src/CreatePatchCliOperation.cpp
+    src/CreatePatchCliOperation.h
+    src/CreateResourceGroupCliOperation.cpp
+    src/CreateResourceGroupCliOperation.h
     src/main.cpp
 )
 

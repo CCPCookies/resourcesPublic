@@ -723,6 +723,32 @@ namespace CarbonResources
         return Result::SUCCESS;
     }
 
+
+    // TODO - Create chunks based on compressed size
+	/*
+    * Currently the cache is built up with data (best uncompressed)
+    * Then chunks are created from the uncompressed data
+    * The chunks would then be compressed when saved for upload (external to this process)
+    * We could compress the data before sending it to bundle, but
+    * that would then incur double compression and so we don't get best compression
+    * 
+    * What we want to do is gather the cache as before using uncompressed data
+    * but when creating the chunk it wants to compress the output first to see if
+    * the resulting chunk is then over the chunk threshold, if not it should
+    * add chunks to the resulting chunk and then compress both chunks of uncompressed data together
+    * until the compressed size of the combined chunks matches or exceededs the target chunk size.
+    * However, the return data from this should return the uncompressed data.
+    * Which as stated before would be compressed before upload.
+    * 
+    * This would give chunks with a slight size variation.
+    * It would join files with great compression ratios together but also split large files.
+    * 
+    * It will give better compression when multiple files are joined. 
+    * eg. if a patchResourceGroup often contains lots of patch files with fantastic compression ratios
+    * Chunking just based on uncompressed size would result in compressed chunks that are also tiny.
+    * Chunking as above would join many patches into a single chunk that when compressed would likely create
+    * A better compression ratio of the joined data and also a file size which is closer to the requested chunk size of the bundle.
+    */
     Result ResourceGroupImpl::CreateBundle( const BundleCreateParams& params ) const
     {
 		uintmax_t numberOfChunks = 0;
@@ -1252,7 +1278,7 @@ namespace CarbonResources
     }
 
     
-
+    // TODO efficiency of this function can be improved by removing past searched and found items from the search group
     Result ResourceGroupImpl::Diff( ResourceGroupSubtractionParams& params ) const
     {
 		DocumentParameterCollection<ResourceInfo*> subtractionResources = params.subtractResourceGroup->m_resourcesParameter;

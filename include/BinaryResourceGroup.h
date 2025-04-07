@@ -29,7 +29,7 @@
 
 namespace CarbonResources
 {
-
+    // TODO Promote functionality to ResourceGroup
     class BinaryResourceGroupImpl;
 
     class API BinaryResourceGroup final: public ResourceGroup

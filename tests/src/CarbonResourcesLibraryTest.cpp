@@ -256,6 +256,8 @@ TEST_F( CarbonResourcesLibraryTest, ApplyPatch )
 
 }
 
+// TODO create a patch with identical input ResourceGroups to ensure it is handled well
+
 TEST_F( CarbonResourcesLibraryTest, CreatePatch )
 {
     // Previous ResourceGroup
@@ -647,3 +649,64 @@ TEST_F( CarbonResourcesLibraryTest, ApplyVanguardPatchWithChunking )
 	// TODO test the output of the applied patches
 }
 */
+
+
+/*
+TEST_F( CarbonResourcesLibraryTest, CreateEVEPatchWithChunking )
+{
+	// Previous ResourceGroup
+	CarbonResources::ResourceGroup resourceGroupPrevious;
+
+	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
+
+	importParamsPrevious.filename = "C:/Binary-Patching-Resources/LiveTQResIndex.txt";
+
+	EXPECT_EQ( resourceGroupPrevious.ImportFromFile( importParamsPrevious ), CarbonResources::Result::SUCCESS );
+
+
+	// Latest ResourceGroup
+	CarbonResources::ResourceGroup resourceGroupLatest;
+
+	CarbonResources::ResourceGroupImportFromFileParams importParamsLatest;
+
+	importParamsLatest.filename = "C:/Binary-Patching-Resources/index/resfileindex.txt";
+
+	EXPECT_EQ( resourceGroupLatest.ImportFromFile( importParamsLatest ), CarbonResources::Result::SUCCESS );
+
+
+
+	// Create a patch from the subtraction index
+	CarbonResources::PatchCreateParams patchCreateParams;
+
+	patchCreateParams.resourceGroupRelativePath = "ResourceGroup_previousBuild_latestBuild.yaml";
+
+	patchCreateParams.resourceGroupPatchRelativePath = "PatchResourceGroup_previousBuild_latestBuild.yaml";
+
+	patchCreateParams.resourceSourceSettingsFrom.sourceType = CarbonResources::ResourceSourceType::REMOTE_CDN;
+
+	patchCreateParams.resourceSourceSettingsFrom.basePath = "https://resources.eveonline.com";
+
+	patchCreateParams.resourceSourceSettingsTo.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
+
+	patchCreateParams.resourceSourceSettingsTo.basePath = "C:/Users/gilbert/Documents/CCP/Repos/Perforce/eve/branches/sandbox/2025-BINARY-PATCHING/eve/client/res";
+
+	patchCreateParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::REMOTE_CDN;
+
+	patchCreateParams.resourcePatchBinaryDestinationSettings.basePath = "EVEData/Patches/";
+
+	patchCreateParams.resourcePatchResourceGroupDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
+
+	patchCreateParams.resourcePatchResourceGroupDestinationSettings.basePath = "EVEData/";
+
+	patchCreateParams.patchFileRelativePathPrefix = "Patches/Patch1";
+
+	patchCreateParams.previousResourceGroup = &resourceGroupPrevious;
+
+	patchCreateParams.maxInputFileChunkSize = 50000000;
+
+	EXPECT_EQ( resourceGroupLatest.CreatePatch( patchCreateParams ), CarbonResources::Result::SUCCESS );
+
+
+	// TODO run tests on patch create
+}
+	*/

@@ -245,6 +245,10 @@ namespace CarbonResources
 
 		ResourceTools::FileDataStreamIn* dataStream = nullptr;
 
+        std::filesystem::path cacheBasePath = "cache";
+
+		std::string expectedChecksum = "";
+
 	};
 
     struct ResourceGetDataParams
@@ -252,6 +256,10 @@ namespace CarbonResources
 		ResourceSourceSettings resourceSourceSettings;
 
 		std::string* data = nullptr;
+
+        std::filesystem::path cacheBasePath = "cache";
+
+        std::string expectedChecksum = "";
 	};
 
     struct ResourcePutDataStreamParams
@@ -332,6 +340,8 @@ namespace CarbonResources
         Result PutDataStreamLocalRelative( ResourcePutDataStreamParams& params ) const;
 
 		Result PutDataStreamLocalCdn( ResourcePutDataStreamParams& params ) const;
+
+        Result PutDataRemoteCdn( ResourcePutDataParams& params ) const;
 
     protected:
 

@@ -83,7 +83,7 @@ namespace CarbonResources
 	{
 		LOCAL_RELATIVE,
 		LOCAL_CDN,
-        REMOTE_CDN,  //TODO
+        REMOTE_CDN,
 	};
 
     /** @struct ResourceDestinationSettings
@@ -173,7 +173,7 @@ namespace CarbonResources
 
 		ResourceSourceSettings resourceSourceSettingsFrom;
 
-		ResourceSourceSettings resourceSourceSettingsTo;
+		ResourceSourceSettings resourceSourceSettingsTo;    // TODO this is sometimes Previous/Next and sometimes From/To unify
 
         ResourceDestinationSettings resourcePatchBinaryDestinationSettings;
 
