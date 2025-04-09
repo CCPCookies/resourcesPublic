@@ -103,23 +103,8 @@ TEST_F( ResourceToolsTest, GZipCompressData )
 	std::string unzippedFileData;
 	ASSERT_TRUE( ResourceTools::GetLocalFileData( unzippedSourcePath, unzippedFileData ) );
 
-	// Re-add carriage returns into the file, because that's how the file
-	// was when the test data was generated using the old system.
-	std::string reconstructedFileData;
-	size_t pos{0};
-	while( pos != std::string::npos )
-	{
-		pos = unzippedFileData.find( "\n" );
-		reconstructedFileData += unzippedFileData.substr( 0, pos );
-		unzippedFileData = unzippedFileData.substr( pos + 1 );
-		if( pos != std::string::npos )
-		{
-			reconstructedFileData += "\r\n";
-		}
-	}
-
 	std::string compressed;
-	EXPECT_TRUE( ResourceTools::GZipCompressData( reconstructedFileData, compressed ) );
+	EXPECT_TRUE( ResourceTools::GZipCompressData( unzippedFileData, compressed ) );
 
 	// Check that the compressed file matches the data in the file we have on disk
 	// EXCEPT for the header.
