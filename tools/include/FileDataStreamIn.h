@@ -44,6 +44,8 @@ namespace ResourceTools
 
         size_t GetCurrentPosition();
 
+		bool ReadBytes( size_t n, std::string& data );
+
     	void Seek( size_t position );
 
         size_t Size();

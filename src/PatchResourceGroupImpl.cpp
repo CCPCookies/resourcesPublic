@@ -285,13 +285,19 @@ namespace CarbonResources
 
                     // Get previous data
 					uintmax_t dataOffset;
-
+					uintmax_t sourceOffset;
 					Result getPatchDataOffset = patch->GetDataOffset( dataOffset );
 
                     if (getPatchDataOffset != Result::SUCCESS)
                     {
 						return getPatchDataOffset;
                     }
+
+					Result getPatchSourceOffset = patch->GetSourceOffset( sourceOffset );
+					if (getPatchSourceOffset != Result::SUCCESS)
+					{
+						return getPatchSourceOffset;
+					}
 
 				    std::string previousResourceData;
 
@@ -307,13 +313,20 @@ namespace CarbonResources
 
                     if (dataOffset < previousUncompressedSize)
                     {
-
+                    	int64_t previousSourcePosition = resourceDataStreamIn.GetCurrentPosition();
                         // Get to location of patch
-                        while (resourceDataStreamIn.GetCurrentPosition() < dataOffset)
+                        while (temporaryResourceDataStreamOut.GetFileSize() < dataOffset)
                         {
 							std::string dataChunk;
-
-                            if (!(resourceDataStreamIn >> dataChunk))
+							uint64_t remaining = dataOffset - temporaryResourceDataStreamOut.GetFileSize();
+							if( remaining < m_maxInputChunkSize.GetValue() )
+							{
+								if( !resourceDataStreamIn.ReadBytes( remaining, dataChunk ) )
+								{
+									return Result::FAILED_TO_READ_FROM_STREAM;
+								}
+							}
+                            else if (!(resourceDataStreamIn >> dataChunk))
                             {
 								return Result::FAILED_TO_READ_FROM_STREAM;
                             }
@@ -328,8 +341,10 @@ namespace CarbonResources
                             {
 								return Result::FAILED_TO_GENERATE_CHECKSUM;
                             }
-
+                        	previousSourcePosition += dataChunk.size();
                         }
+                    	resourceDataStreamIn.Seek( previousSourcePosition );
+
 
 						// Apply the patch to the previous data
 						std::string patchedResourceData;
@@ -337,6 +352,7 @@ namespace CarbonResources
                     	if( hasPatchFile )
                     	{
                     		// Apply patch to data
+                    		resourceDataStreamIn.Seek(sourceOffset);
                     		if( !( resourceDataStreamIn >> previousResourceData ) )
                     		{
                     			return Result::FAILED_TO_READ_FROM_STREAM;

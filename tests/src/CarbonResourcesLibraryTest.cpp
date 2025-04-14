@@ -367,7 +367,7 @@ TEST_F( CarbonResourcesLibraryTest, CreatePatchWithChunking )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
 
-	importParamsPrevious.filename = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" );
+	importParamsPrevious.filename = GetTestFileFileAbsolutePath( "PatchWithInputChunk/resfileindexShort_build_previous.txt" );
 
 	EXPECT_EQ( resourceGroupPrevious.ImportFromFile( importParamsPrevious ), CarbonResources::Result::SUCCESS );
 
@@ -377,7 +377,7 @@ TEST_F( CarbonResourcesLibraryTest, CreatePatchWithChunking )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsLatest;
 
-	importParamsLatest.filename = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_next.txt" );
+	importParamsLatest.filename = GetTestFileFileAbsolutePath( "PatchWithInputChunk/resfileindexShort_build_next.txt" );
 
 	EXPECT_EQ( resourceGroupLatest.ImportFromFile( importParamsLatest ), CarbonResources::Result::SUCCESS );
 
@@ -392,11 +392,11 @@ TEST_F( CarbonResourcesLibraryTest, CreatePatchWithChunking )
 
 	patchCreateParams.resourceSourceSettingsFrom.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsFrom.basePath = GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources" );
+	patchCreateParams.resourceSourceSettingsFrom.basePath = GetTestFileFileAbsolutePath( "PatchWithInputChunk/PreviousBuildResources" );
 
 	patchCreateParams.resourceSourceSettingsTo.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsTo.basePath = GetTestFileFileAbsolutePath( "Patch/NextBuildResources" );
+	patchCreateParams.resourceSourceSettingsTo.basePath = GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources" );
 
 	patchCreateParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
 

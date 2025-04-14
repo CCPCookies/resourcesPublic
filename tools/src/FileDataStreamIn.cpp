@@ -47,6 +47,25 @@ namespace ResourceTools
 	  return m_fileSize;
   }
 
+  bool FileDataStreamIn::ReadBytes( size_t readSize, std::string& out )
+  {
+	  if( ( m_currentPosition + readSize ) > m_fileSize )
+	  {
+		  return false;
+	  }
+	  out.resize( readSize );
+	  if( !m_inputStream.read( out.data(), static_cast<std::streamsize>( readSize ) ) )
+	  {
+		  return false;
+	  }
+	  m_currentPosition += readSize;
+	  if( m_currentPosition == m_fileSize )
+	  {
+		  Finish();
+	  }
+	  return true;
+  }
+
   void FileDataStreamIn::Seek( size_t position )
   {
 	  m_inputStream.seekg( static_cast<std::streamoff>( position ) );

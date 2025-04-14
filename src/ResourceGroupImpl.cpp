@@ -986,6 +986,8 @@ namespace CarbonResources
 			ResourceInfo* resourcePrevious = resourceGroupSubtractionPrevious.m_resourcesParameter.At( i );
 
 			ResourceInfo* resourceNext = resourceGroupSubtractionLatest.m_resourcesParameter.At( i );
+        	uint64_t patchSourceOffset{0};
+        	uint64_t patchSourceOffsetDelta{0};
 
             // Check to see if previous entry contains dummy information
             // Suggesting that this is a new entry in latest
@@ -1093,7 +1095,7 @@ namespace CarbonResources
 
 					bool chunkMatchFound{false};
 					uint64_t matchCount{0};
-					uint64_t patchSourceOffset{0};
+
 
                     if (previousFileData != "")
 					{
@@ -1131,6 +1133,7 @@ namespace CarbonResources
                     		nextFileDataStream.Seek( std::min( nextFileDataStream.Size(), nextStreamPosition + matchSize ) );
                     		previousFileDataStream.Seek( std::min(previousFileDataStream.Size(), patchSourceOffset + matchSize ) );
                     		dataOffset += matchSize - params.maxInputFileChunkSize;
+                    		patchSourceOffset += matchSize;
 
                     		if( nextStreamPosition == 0 )
                     		{
@@ -1159,7 +1162,7 @@ namespace CarbonResources
 							{
 								return Result::FAILED_TO_CREATE_PATCH;
 							}
-							patchSourceOffset = dataOffset;
+							patchSourceOffsetDelta = previousFileData.size();
 						}
                     }
                     else
@@ -1167,7 +1170,7 @@ namespace CarbonResources
                         // If there is no previous data then just store the data straight from the file
                         // All this data is new
 						patchData = nextFileData;
-                    	patchSourceOffset = dataOffset;
+                    	patchSourceOffsetDelta = nextFileData.size();
                     }
 					
 
@@ -1178,7 +1181,7 @@ namespace CarbonResources
 
 					PatchResourceInfo* patchResource{nullptr};
 					ConstructPatchResourceInfo( params, patchId, dataOffset, patchSourceOffset, resourceNext, patchResource );
-
+					patchSourceOffset += patchSourceOffsetDelta;
 					if( !patchData.empty() )
 					{
 						Result setParametersFromDataResult = patchResource->SetParametersFromData( patchData );

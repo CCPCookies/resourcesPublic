@@ -1,15 +1,15 @@
 Version: 0.1.0
 Type: PatchGroup
-NumberOfResources: 3
-TotalResourcesSizeCompressed: 413
-TotalResourcesSizeUnCompressed: 9662
+NumberOfResources: 11
+TotalResourcesSizeCompressed: 744
+TotalResourcesSizeUnCompressed: 19003
 ResourceGroupResource:
   RelativePath: ResourceGroup_previousBuild_latestBuild.yaml
   Type: ResourceGroup
-  Location: 2a/2a0859d673c05b5f_6e426f75cc5bae174965f0deb4cadefa
-  Checksum: 6e426f75cc5bae174965f0deb4cadefa
-  UncompressedSize: 800
-  CompressedSize: 340
+  Location: 2a/2a0859d673c05b5f_2f5847434f2aca4e8fdc678f573ca34b
+  Checksum: 2f5847434f2aca4e8fdc678f573ca34b
+  UncompressedSize: 1033
+  CompressedSize: 400
 MaxInputChunkSize: 500
 Resources:
   - RelativePath: Patches/Patch1.0
@@ -39,3 +39,75 @@ Resources:
     TargetResourceRelativePath: introMoviePrefixed.txt
     DataOffset: 500
     SourceOffset: 192
+  - RelativePath: Patches/Patch1.3
+    Type: BinaryPatch
+    Location: b6/b6162ef461fa3546_80575d7211c77cb6d98957287349d61c
+    Checksum: 80575d7211c77cb6d98957287349d61c
+    UncompressedSize: 572
+    CompressedSize: 65
+    TargetResourceRelativePath: introMovieSomewhatChanged.txt
+    DataOffset: 0
+    SourceOffset: 0
+  - RelativePath: Patches/Patch1.4
+    Type: BinaryPatch
+    Location: ""
+    Checksum: d41d8cd98f00b204e9800998ecf8427e
+    UncompressedSize: 2500
+    CompressedSize: 0
+    TargetResourceRelativePath: introMovieSomewhatChanged.txt
+    DataOffset: 500
+    SourceOffset: 490
+  - RelativePath: Patches/Patch1.5
+    Type: BinaryPatch
+    Location: b6/b6162ef461fa3540_0b845075280cebf44a5efba62a4e25b9
+    Checksum: 0b845075280cebf44a5efba62a4e25b9
+    UncompressedSize: 596
+    CompressedSize: 131
+    TargetResourceRelativePath: introMovieSomewhatChanged.txt
+    DataOffset: 3000
+    SourceOffset: 2990
+  - RelativePath: Patches/Patch1.6
+    Type: BinaryPatch
+    Location: ""
+    Checksum: d41d8cd98f00b204e9800998ecf8427e
+    UncompressedSize: 2500
+    CompressedSize: 0
+    TargetResourceRelativePath: introMovieSomewhatChanged.txt
+    DataOffset: 3500
+    SourceOffset: 3563
+  - RelativePath: Patches/Patch1.7
+    Type: BinaryPatch
+    Location: b6/b6162ef461fa3542_1897914775187d67c351d0d5083e1a34
+    Checksum: 1897914775187d67c351d0d5083e1a34
+    UncompressedSize: 572
+    CompressedSize: 68
+    TargetResourceRelativePath: introMovieSomewhatChanged.txt
+    DataOffset: 6000
+    SourceOffset: 6063
+  - RelativePath: Patches/Patch1.8
+    Type: BinaryPatch
+    Location: ""
+    Checksum: d41d8cd98f00b204e9800998ecf8427e
+    UncompressedSize: 500
+    CompressedSize: 0
+    TargetResourceRelativePath: introMovieSomewhatChanged.txt
+    DataOffset: 6500
+    SourceOffset: 6546
+  - RelativePath: Patches/Patch1.9
+    Type: BinaryPatch
+    Location: b6/b6162ef461fa354c_fd6ce110abe38279a42a65b8e4112c45
+    Checksum: fd6ce110abe38279a42a65b8e4112c45
+    UncompressedSize: 548
+    CompressedSize: 67
+    TargetResourceRelativePath: introMovieSomewhatChanged.txt
+    DataOffset: 7000
+    SourceOffset: 7046
+  - RelativePath: Patches/Patch1.10
+    Type: BinaryPatch
+    Location: ""
+    Checksum: 85c917256d92eb1970addd2664324ac2
+    UncompressedSize: 1553
+    CompressedSize: 0
+    TargetResourceRelativePath: introMovieSomewhatChanged.txt
+    DataOffset: 7500
+    SourceOffset: 7538
