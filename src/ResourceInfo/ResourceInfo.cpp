@@ -52,12 +52,28 @@ namespace CarbonResources
 		m_compressedSize = params.compressedSize;
 
 		m_uncompressedSize = params.uncompressedSize;
+
+    	m_binaryOperation = params.binaryOperation;
     }
 
     ResourceInfo::~ResourceInfo()
     {
 
     }
+
+	Result ResourceInfo::GetBinaryOperation( unsigned int& binaryOperation ) const
+	{
+		if( !m_binaryOperation.HasValue() )
+		{
+			return Result::RESOURCE_VALUE_NOT_SET;
+		}
+		else
+		{
+			binaryOperation = m_binaryOperation.GetValue();
+
+			return Result::SUCCESS;
+		}
+	}
 
     Result ResourceInfo::GetRelativePath(std::filesystem::path& relativePath) const
     {
@@ -346,7 +362,7 @@ namespace CarbonResources
 
 	Result ResourceInfo::GetData( ResourceGetDataParams& params ) const
     {
-        if (!params.data)
+        if (params.data == nullptr)
         {
 			return Result::FAILED_TO_OPEN_FILE;
         }
@@ -518,6 +534,17 @@ namespace CarbonResources
 
     Result ResourceInfo::ImportFromYaml( YAML::Node& resource, const VersionInternal& documentVersion )
 	{
+    	if( m_binaryOperation.IsParameterExpectedInDocumentVersion( documentVersion ) )
+    	{
+    		if( YAML::Node parameter = resource[m_binaryOperation.GetTag()] )
+    		{
+    			m_binaryOperation = parameter.as<unsigned long>();
+    		}
+    		else
+    		{
+    			return Result::MALFORMED_RESOURCE_INPUT;
+    		}
+    	}
 
 		if( m_relativePath.IsParameterExpectedInDocumentVersion( documentVersion ) )
 		{
@@ -677,6 +704,20 @@ namespace CarbonResources
 
 			m_compressedSize = compressedSize;
         }
+
+    	if (m_binaryOperation.IsParameterExpectedInDocumentVersion(documentVersion))
+    	{
+    		unsigned int binaryOperation;
+
+    		Result getBinaryOperationResult = other->GetBinaryOperation( binaryOperation );
+
+    		if( getBinaryOperationResult != Result::SUCCESS )
+    		{
+    			return getBinaryOperationResult;
+    		}
+
+    		m_binaryOperation = binaryOperation;
+    	}
 
         return Result::SUCCESS;
     }
@@ -865,6 +906,18 @@ namespace CarbonResources
 			out << YAML::Key << m_compressedSize.GetTag();
 			out << YAML::Value << m_compressedSize.GetValue();
 		}
+
+    	// Binary Operation
+    	if( m_binaryOperation.IsParameterExpectedInDocumentVersion( documentVersion ) )
+    	{
+    		if( !m_binaryOperation.HasValue() )
+    		{
+    			return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+    		}
+
+    		out << YAML::Key << m_binaryOperation.GetTag();
+    		out << YAML::Value << m_binaryOperation.GetValue();
+    	}
 
         /*
         // Clean this up after ABI thought exercises finished

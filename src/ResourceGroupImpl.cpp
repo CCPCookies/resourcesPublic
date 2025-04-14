@@ -9,7 +9,6 @@
 #include <ScopedFile.h>
 #include <Md5ChecksumStream.h>
 #include <GzipCompressionStream.h>
-#include "ResourceInfo/BinaryResourceInfo.h"
 #include "ResourceInfo/PatchResourceGroupInfo.h"
 #include "ResourceInfo/BundleResourceGroupInfo.h"
 #include "ResourceInfo/ResourceGroupInfo.h"
@@ -408,6 +407,16 @@ namespace CarbonResources
 
 			resourceParams.compressedSize = atol( value.c_str() );
 
+			if( !std::getline( ss, value, delimiter ) )
+			{
+				// 33206 seems to be what we currently set for non-binary resources.
+				resourceParams.binaryOperation = 33206;
+			}
+			else
+			{
+				resourceParams.binaryOperation = atol( value.c_str() );
+			}
+
             // ResourceGroup gets upgraded to 0.1.0
 			m_versionParameter = VersionInternal{ 0, 1, 0 };
 
@@ -477,7 +486,7 @@ namespace CarbonResources
 		}
 		else if( resourceType == BundleResourceInfo::TypeId() )
 		{
-			BinaryResourceInfo* binaryResourceInfo = new BinaryResourceInfo( {} );
+			ResourceInfo* binaryResourceInfo = new ResourceInfo( {} );
 
 			Result setParametersFromResourceResult = binaryResourceInfo->SetParametersFromResource( &resourceIn, m_versionParameter.GetValue() );
 

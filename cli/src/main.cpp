@@ -3,7 +3,6 @@
 #include <BundleResourceGroup.h>
 #include <PatchResourceGroup.h>
 #include <argparse/argparse.hpp>
-#include <BinaryResourceGroup.h>
 #include <filesystem>
 
 #include "Cli.h"

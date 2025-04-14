@@ -6,8 +6,6 @@
 
 #include <gtest/gtest.h>
 
-#include <BinaryResourceGroup.h>
-
 #include <FileDataStreamOut.h>
 
 // TODO I think it would be good if the output files of the tests were put in folders which match the test name
@@ -23,7 +21,7 @@ struct CarbonResourcesLibraryTest : public CarbonResourcesTestFixture{};
 TEST_F( CarbonResourcesLibraryTest, BinaryGroupImportExport_V_0_0_0_To_V_0_1_0 )
 {
 
-	CarbonResources::BinaryResourceGroup binaryResourceGroup;
+	CarbonResources::ResourceGroup binaryResourceGroup;
 
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
@@ -45,7 +43,7 @@ TEST_F( CarbonResourcesLibraryTest, BinaryGroupImportExport_V_0_0_0_To_V_0_1_0 )
 // Import a BinaryResourceGroup v0.1.0 and export it again checking input == output
 TEST_F( CarbonResourcesLibraryTest, BinaryGroupImportExport_V_0_1_0 )
 {
-	CarbonResources::BinaryResourceGroup binaryResourceGroup;
+	CarbonResources::ResourceGroup binaryResourceGroup;
 
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
@@ -150,7 +148,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportExport_V_0_1_0 )
 
 TEST_F( CarbonResourcesLibraryTest, UnpackBundle )
 {
-	// Load the byndle file
+	// Load the bundle file
 	CarbonResources::BundleResourceGroup bundleResourceGroup;
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;

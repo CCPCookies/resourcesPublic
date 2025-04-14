@@ -6,10 +6,11 @@ TotalResourcesSizeUnCompressed: 19003
 ResourceGroupResource:
   RelativePath: ResourceGroup_previousBuild_latestBuild.yaml
   Type: ResourceGroup
-  Location: 2a/2a0859d673c05b5f_2f5847434f2aca4e8fdc678f573ca34b
-  Checksum: 2f5847434f2aca4e8fdc678f573ca34b
-  UncompressedSize: 1033
-  CompressedSize: 400
+  Location: 2a/2a0859d673c05b5f_faf20797afff10bd6308f974829d1ec1
+  Checksum: faf20797afff10bd6308f974829d1ec1
+  UncompressedSize: 1141
+  CompressedSize: 422
+  BinaryOperation: 0
 MaxInputChunkSize: 500
 Resources:
   - RelativePath: Patches/Patch1.0
@@ -18,6 +19,7 @@ Resources:
     Checksum: b6bb4ef88fd12fa54e9e01ebaab2b4bd
     UncompressedSize: 165
     CompressedSize: 160
+    BinaryOperation: 0
     TargetResourceRelativePath: intromovie.txt
     DataOffset: 9000
     SourceOffset: 9000
@@ -27,6 +29,7 @@ Resources:
     Checksum: 0a5289fe6b2d734e776466be973dcaf8
     UncompressedSize: 572
     CompressedSize: 253
+    BinaryOperation: 0
     TargetResourceRelativePath: introMoviePrefixed.txt
     DataOffset: 0
     SourceOffset: 0
@@ -36,6 +39,7 @@ Resources:
     Checksum: f5c679fbd1dd6095ce223ad663851900
     UncompressedSize: 8925
     CompressedSize: 0
+    BinaryOperation: 0
     TargetResourceRelativePath: introMoviePrefixed.txt
     DataOffset: 500
     SourceOffset: 192
@@ -45,6 +49,7 @@ Resources:
     Checksum: 80575d7211c77cb6d98957287349d61c
     UncompressedSize: 572
     CompressedSize: 65
+    BinaryOperation: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 0
     SourceOffset: 0
@@ -54,6 +59,7 @@ Resources:
     Checksum: d41d8cd98f00b204e9800998ecf8427e
     UncompressedSize: 2500
     CompressedSize: 0
+    BinaryOperation: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 500
     SourceOffset: 490
@@ -63,6 +69,7 @@ Resources:
     Checksum: 0b845075280cebf44a5efba62a4e25b9
     UncompressedSize: 596
     CompressedSize: 131
+    BinaryOperation: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 3000
     SourceOffset: 2990
@@ -72,6 +79,7 @@ Resources:
     Checksum: d41d8cd98f00b204e9800998ecf8427e
     UncompressedSize: 2500
     CompressedSize: 0
+    BinaryOperation: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 3500
     SourceOffset: 3563
@@ -81,6 +89,7 @@ Resources:
     Checksum: 1897914775187d67c351d0d5083e1a34
     UncompressedSize: 572
     CompressedSize: 68
+    BinaryOperation: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 6000
     SourceOffset: 6063
@@ -90,6 +99,7 @@ Resources:
     Checksum: d41d8cd98f00b204e9800998ecf8427e
     UncompressedSize: 500
     CompressedSize: 0
+    BinaryOperation: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 6500
     SourceOffset: 6546
@@ -99,6 +109,7 @@ Resources:
     Checksum: fd6ce110abe38279a42a65b8e4112c45
     UncompressedSize: 548
     CompressedSize: 67
+    BinaryOperation: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 7000
     SourceOffset: 7046
@@ -108,6 +119,7 @@ Resources:
     Checksum: 85c917256d92eb1970addd2664324ac2
     UncompressedSize: 1553
     CompressedSize: 0
+    BinaryOperation: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 7500
     SourceOffset: 7538

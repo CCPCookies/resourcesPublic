@@ -237,6 +237,8 @@ namespace CarbonResources
 		uintmax_t compressedSize = 0;
 
 		uintmax_t uncompressedSize = 0;
+
+    	unsigned int binaryOperation = 0;
 	};
 
     struct ResourceGetDataStreamParams
@@ -287,6 +289,8 @@ namespace CarbonResources
 	    ~ResourceInfo();
 
 	    void SetRelativePath( const std::filesystem::path& relativePath );
+
+    	Result GetBinaryOperation( unsigned int& binaryOperation ) const;
 
 		Result GetRelativePath(std::filesystem::path& relativePath) const;
 
@@ -360,6 +364,7 @@ namespace CarbonResources
 
 		DocumentParameter<uintmax_t> m_uncompressedSize = DocumentParameter<uintmax_t>( { 0, 0, 0 }, "UncompressedSize" );
 
+    	DocumentParameter<unsigned int> m_binaryOperation = DocumentParameter<unsigned int>( { 0, 0, 0 }, "BinaryOperation" );
     };
 
 }
