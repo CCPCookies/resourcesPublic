@@ -343,6 +343,10 @@ namespace CarbonResources
                             }
                         	previousSourcePosition += dataChunk.size();
                         }
+                    	if( resourceDataStreamIn.IsFinished() )
+                    	{
+                    		resourceDataStreamIn.StartRead( resourceDataStreamIn.GetPath() );
+                    	}
                     	resourceDataStreamIn.Seek( previousSourcePosition );
 
 

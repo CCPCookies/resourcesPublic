@@ -1178,7 +1178,10 @@ namespace CarbonResources
                     {
                         // If there is no previous data then just store the data straight from the file
                         // All this data is new
-						patchData = nextFileData;
+                    	if( !ResourceTools::CreatePatch( "", nextFileData, patchData ) )
+                    	{
+                    		return Result::FAILED_TO_CREATE_PATCH;
+                    	}
                     	patchSourceOffsetDelta = nextFileData.size();
                     }
 					
