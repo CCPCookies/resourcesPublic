@@ -4,6 +4,9 @@
 #include "BundleStreamOut.h"
 
 #include <sstream>
+#if __APPLE__
+#include <sys/stat.h> // for lstat
+#endif
 #include <filesystem>
 #include <fstream>
 
@@ -495,5 +498,23 @@ size_t WriteToFileStreamCallback( void* contents, size_t size, size_t nmemb, voi
       }
 
   }
+
+#if __APPLE__
+  int64_t CalculateBinaryOperation( const std::filesystem::path& path )
+  {
+  	  struct stat s;
+	  int err = lstat( path.c_str(), &s );
+  	  if(err)
+  	  {
+	  	  return 0;
+  	  }
+  	  return s.st_mode;
+  }
+#elif WIN32
+  int64_t CalculateBinaryOperation( const std::filesystem::path& path )
+  {
+	  return 0;
+  }
+#endif
 
 }

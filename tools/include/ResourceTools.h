@@ -93,6 +93,8 @@ namespace ResourceTools
     bool GZipUncompressData( const std::string& dataToUncompress, std::string& uncompressedData );
 
     bool SaveFile( const std::filesystem::path& path, const std::string& data );
+
+    int64_t CalculateBinaryOperation( const std::filesystem::path& path );
 }
 
 #endif // ResourceTools_H

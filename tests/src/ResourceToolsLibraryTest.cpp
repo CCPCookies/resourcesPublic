@@ -584,3 +584,26 @@ TEST_F( ResourceToolsTest, CountMatchingChunks )
 	ASSERT_EQ( ResourceTools::CountMatchingChunks( introMovieFilePath, 0, introMoviePatchedFilePath, PREFIX_SIZE, CHUNK_SIZE ), 19 );
 	ASSERT_EQ( ResourceTools::CountMatchingChunks( introMovieFilePath, CHUNK_SIZE, introMoviePatchedFilePath, CHUNK_SIZE + PREFIX_SIZE, 500 ), 18 );
 }
+
+#if __APPLE__
+TEST_F( ResourceToolsTest, CalculateBinaryActionMacOS )
+{
+	// Expected values
+	// 33279: Binaries, not just executables (No extension, .so, .pyd)
+	// 33188: Basically everything else
+	std::filesystem::path testDataPath = std::getenv( "TEST_DATA_PATH" );
+	std::filesystem::path textFilePath = testDataPath / "resourcesOnBranch" / "introMovie.txt";
+	std::filesystem::path nonexistantFilePath = testDataPath / "resourcesOnBranch" / "thisFileDoesNotExist.txt";
+	ASSERT_EQ(33188, ResourceTools::CalculateBinaryOperation(textFilePath));
+	ASSERT_EQ(0, ResourceTools::CalculateBinaryOperation(nonexistantFilePath));
+}
+#elif WIN32
+TEST_F( ResourceToolsTest, CalculateBinaryActionWindows )
+{
+	// Expected values
+	// 33279: Executables (.exe, .bat, .cmd, .com) # See: update_st_mode_from_path Modules/posixmodule.c
+	// 66206: Basically everything else (.dll, .pyd, .yaml, .txt etc. )
+	std::filesystem::path testDataPathStr = std::getenv( "TEST_DATA_PATH" );
+	ASSERT_TRUE( false );
+}
+#endif
