@@ -602,8 +602,16 @@ TEST_F( ResourceToolsTest, CalculateBinaryOperationWindows )
 {
 	// Expected values
 	// 33279: Executables (.exe, .bat, .cmd, .com) # See: update_st_mode_from_path Modules/posixmodule.c
-	// 66206: Basically everything else (.dll, .pyd, .yaml, .txt etc. )
+	// 33206: Basically everything else (.dll, .pyd, .yaml, .txt etc. )
 	std::filesystem::path testDataPathStr = std::getenv( "TEST_DATA_PATH" );
-	ASSERT_TRUE( false );
+	std::filesystem::path testDataPath = std::getenv( "TEST_DATA_PATH" );
+	std::filesystem::path textFilePath = testDataPath / "resourcesOnBranch" / "introMovie.txt";
+	std::filesystem::path nonexistantFilePath = testDataPath / "resourcesOnBranch" / "thisFileDoesNotExist.txt";
+	std::filesystem::path binaryFilePath = std::filesystem::temp_directory_path() / "CarbonResources" /  "binary.exe";
+	std::ofstream binaryFile(binaryFilePath);
+	binaryFile.close();
+	ASSERT_EQ(33279, ResourceTools::CalculateBinaryOperation(binaryFilePath));
+	ASSERT_EQ(33206, ResourceTools::CalculateBinaryOperation(textFilePath));
+	ASSERT_EQ(0, ResourceTools::CalculateBinaryOperation(nonexistantFilePath));
 }
 #endif

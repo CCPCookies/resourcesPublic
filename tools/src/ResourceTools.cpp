@@ -511,9 +511,60 @@ size_t WriteToFileStreamCallback( void* contents, size_t size, size_t nmemb, voi
   	  return s.st_mode;
   }
 #elif WIN32
-  int64_t CalculateBinaryOperation( const std::filesystem::path& path )
+int FileAttributesToMode(DWORD attr)
   {
-	  return 0;
+  	int m = 0x8000; // Regular file, not a symlink or directory or anything.
+  	if (attr & FILE_ATTRIBUTE_READONLY) {
+  		m |= 0444;
+  	}
+  	else
+  	{
+  		m |= 0666;
+  	}
+  	return m;
+  }
+
+void SetExecutableFlagByFileExtension(const wchar_t *path, BY_HANDLE_FILE_INFORMATION fileInfo, int64_t &result) {
+  	const wchar_t *fileExtension = wcsrchr(path, '.');
+  	if (fileExtension) {
+  		if (_wcsicmp(fileExtension, L".exe") == 0 ||
+			  _wcsicmp(fileExtension, L".bat") == 0 ||
+			  _wcsicmp(fileExtension, L".cmd") == 0 ||
+			  _wcsicmp(fileExtension, L".com") == 0) {
+  			result |= 0111;
+			  }
+  	}
+  }
+
+int64_t CalculateBinaryOperation( const std::filesystem::path& path )
+{
+  	HANDLE hFile;
+  	BY_HANDLE_FILE_INFORMATION fileInfo;
+  	DWORD access = FILE_READ_ATTRIBUTES;
+  	DWORD flags{0};
+  	int64_t result{0};
+  	hFile = CreateFileW(path.wstring().c_str(), access, 0, nullptr, OPEN_EXISTING, flags, nullptr);
+
+  	if (hFile == INVALID_HANDLE_VALUE)
+  	{
+  		return 0;
+  	}
+
+  	FILE_BASIC_INFO basicInfo;
+  	if (!GetFileInformationByHandle(hFile, &fileInfo) || !GetFileInformationByHandleEx(hFile, FileBasicInfo, &basicInfo, sizeof(basicInfo)))
+  	{
+  		return 0;
+  	}
+
+  	auto fileType = GetFileType(hFile);
+  	if (fileType != FILE_TYPE_DISK) {
+  		return 0;
+  	}
+
+  	result = FileAttributesToMode(fileInfo.dwFileAttributes);
+  	SetExecutableFlagByFileExtension(path.wstring().c_str(), fileInfo, result);
+  	CloseHandle(hFile);
+  	return result;
   }
 #endif
 
