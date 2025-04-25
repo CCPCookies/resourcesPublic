@@ -542,7 +542,7 @@ namespace CarbonResources
     		}
     		else
     		{
-    			return Result::MALFORMED_RESOURCE_INPUT;
+    			m_binaryOperation.Reset();
     		}
     	}
 
@@ -715,8 +715,14 @@ namespace CarbonResources
     		{
     			return getBinaryOperationResult;
     		}
-
-    		m_binaryOperation = binaryOperation;
+			if( binaryOperation != 0 )
+			{
+				m_binaryOperation = binaryOperation;
+			}
+    		else
+    		{
+    			m_binaryOperation.Reset();
+    		}
     	}
 
         return Result::SUCCESS;
@@ -914,13 +920,12 @@ namespace CarbonResources
     	// Binary Operation
     	if( m_binaryOperation.IsParameterExpectedInDocumentVersion( documentVersion ) )
     	{
-    		if( !m_binaryOperation.HasValue() )
+    		// This is an optional field
+    		if( m_binaryOperation.HasValue() )
     		{
-    			return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+    			out << YAML::Key << m_binaryOperation.GetTag();
+    			out << YAML::Value << m_binaryOperation.GetValue();
     		}
-
-    		out << YAML::Key << m_binaryOperation.GetTag();
-    		out << YAML::Value << m_binaryOperation.GetValue();
     	}
 
         /*
