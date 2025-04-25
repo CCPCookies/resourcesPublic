@@ -409,8 +409,7 @@ namespace CarbonResources
 
 			if( !std::getline( ss, value, delimiter ) )
 			{
-				// 33206 seems to be what we currently set for non-binary resources.
-				resourceParams.binaryOperation = 33206;
+				resourceParams.binaryOperation = 0;
 			}
 			else
 			{
