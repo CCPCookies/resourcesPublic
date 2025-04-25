@@ -51,9 +51,9 @@ namespace ResourceTools
   	constexpr size_t CHUNK = 16384; // 16kb
   	int ret = Z_OK;
   	unsigned char outbuffer[CHUNK];
-  	size_t processed = std::min(CHUNK, m_buffer.size());
   	while( ret == Z_OK && ( finish || m_buffer.size() > CHUNK ) )
   	{
+  		size_t processed = std::min(CHUNK, m_buffer.size());
   		m_stream.next_in = reinterpret_cast<Bytef*>( const_cast<char*>( m_buffer.c_str() ) );
   		m_stream.avail_in = static_cast<uInt>( processed );
   		m_stream.next_out = outbuffer;
