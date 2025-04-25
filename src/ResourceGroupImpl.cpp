@@ -204,6 +204,7 @@ namespace CarbonResources
 
                     resourceParams.checksum = checksum;
 
+                	resourceParams.binaryOperation = ResourceTools::CalculateBinaryOperation( entry.path() );
 
                     Location l;
 
