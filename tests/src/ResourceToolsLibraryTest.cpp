@@ -8,6 +8,8 @@
 #include <gtest/gtest.h>
 
 #include "CarbonResourcesTestFixture.h"
+#include "FileDataStreamIn.h"
+#include "GzipCompressionStream.h"
 #include "Patching.h"
 
 struct ResourceToolsTest : public CarbonResourcesTestFixture
@@ -600,7 +602,6 @@ TEST_F( ResourceToolsTest, CalculateBinaryOperationWindows )
 	// Expected values
 	// 33279: Executables (.exe, .bat, .cmd, .com) # See: update_st_mode_from_path Modules/posixmodule.c
 	// 33206: Basically everything else (.dll, .pyd, .yaml, .txt etc. )
-	std::filesystem::path testDataPathStr = std::getenv( "TEST_DATA_PATH" );
 	std::filesystem::path testDataPath = std::getenv( "TEST_DATA_PATH" );
 	std::filesystem::path textFilePath = testDataPath / "resourcesOnBranch" / "introMovie.txt";
 	std::filesystem::path nonexistantFilePath = testDataPath / "resourcesOnBranch" / "thisFileDoesNotExist.txt";
@@ -612,3 +613,37 @@ TEST_F( ResourceToolsTest, CalculateBinaryOperationWindows )
 	ASSERT_EQ(0, ResourceTools::CalculateBinaryOperation(nonexistantFilePath));
 }
 #endif
+
+TEST_F( ResourceToolsTest, GzipStream )
+{
+	std::string outbuffer;
+	ResourceTools::GzipCompressionStream stream(&outbuffer);
+	stream.Start();
+	ResourceTools::FileDataStreamIn fileStreamIn( 50 );
+	std::filesystem::path testDataPath = std::getenv( "TEST_DATA_PATH" );
+	std::filesystem::path testFile = testDataPath / "resourcesOnBranch" / "introMovie.txt";
+	fileStreamIn.StartRead(testFile);
+	while (!fileStreamIn.IsFinished())
+	{
+		std::string fileData;
+		ASSERT_TRUE(fileStreamIn >> fileData);
+		std::string compressedData;
+
+		ASSERT_TRUE( stream << &fileData );
+	}
+	ASSERT_TRUE( stream.Finish() );
+
+
+	std::string uncompressedData;
+	EXPECT_TRUE( ResourceTools::GZipUncompressData( outbuffer, uncompressedData ) );
+
+	std::string originalData;
+	ResourceTools::GetLocalFileData( testFile, originalData );
+
+	std::string originalChecksum;
+	ResourceTools::GenerateMd5Checksum( originalData, originalChecksum );
+
+	std::string uncompressedChecksum;
+	ResourceTools::GenerateMd5Checksum( uncompressedData, uncompressedChecksum );
+	EXPECT_EQ( originalChecksum, uncompressedChecksum );
+}
