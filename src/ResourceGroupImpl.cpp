@@ -68,12 +68,14 @@ namespace CarbonResources
                 // Create resource
 			    auto fileSize = entry.file_size();
 
-                if( fileSize < params.resourceStreamThreshold )  
+                if( fileSize < params.resourceStreamThreshold )
                 {
                     // Create resource from data
 				    ResourceInfoParams resourceParams;
 					
                     resourceParams.relativePath = std::filesystem::relative( entry.path(), params.directory );
+
+                	resourceParams.binaryOperation = ResourceTools::CalculateBinaryOperation( entry.path() );
 
 				    ResourceInfo* resource = new ResourceInfo( resourceParams );
 
