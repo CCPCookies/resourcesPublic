@@ -41,8 +41,8 @@ TEST_F( ResourceToolsTest, DownloadFile )
 
 	const char* testDataPathStr = std::getenv( "TEST_DATA_PATH" );
 	ASSERT_TRUE( testDataPathStr );
+	ResourceTools::Downloader downloader;
 	std::filesystem::path testDataPath(testDataPathStr);
-	ResourceTools::Initialize();
 
 	std::filesystem::path sourcePath = testDataPath / "resourcesLocal" / FOLDER_NAME / FILE_NAME;
 	std::string sourcePathString(sourcePath.string());
@@ -56,7 +56,7 @@ TEST_F( ResourceToolsTest, DownloadFile )
 		std::filesystem::remove( outputPath );
 	}
 	EXPECT_FALSE( std::filesystem::exists( outputPath ) );
-	EXPECT_TRUE( ResourceTools::DownloadFile( url, outputPathString ) );
+	EXPECT_TRUE( downloader.DownloadFile( url, outputPathString ) );
 	EXPECT_TRUE( std::filesystem::exists( outputPath ) );
 
 	// Check if download succeeds.
@@ -72,7 +72,6 @@ TEST_F( ResourceToolsTest, DownloadFile )
 	std::string checksum;
 	ResourceTools::GenerateMd5Checksum( downloadedData, checksum );
 	EXPECT_STREQ( checksum.c_str(), "6ccf6b7e2e263646f5a78e77b9ba3168" );
-	ResourceTools::ShutDown();
 }
 
 TEST_F( ResourceToolsTest, GZipCompressString )
@@ -384,7 +383,6 @@ TEST_F( ResourceToolsTest, CreateApplyPatchFile )
 	const char* testDataPathStr = std::getenv( "TEST_DATA_PATH" );
 	ASSERT_TRUE( testDataPathStr );
 	std::filesystem::path testDataPath(testDataPathStr);
-	ResourceTools::Initialize();
 
 	std::filesystem::path before_src = testDataPath / "Patch" / "PreviousBuildResources" / "introMovie.txt";
 	std::filesystem::path after_src = testDataPath / "Patch" / "NextBuildResources" / "introMovie.txt";
@@ -422,7 +420,6 @@ TEST_F( ResourceToolsTest, ApplyPatchFileChunked )
 	const char* testDataPathStr = std::getenv( "TEST_DATA_PATH" );
 	ASSERT_TRUE( testDataPathStr );
 	std::filesystem::path testDataPath(testDataPathStr);
-	ResourceTools::Initialize();
 
 	std::filesystem::path before_src = testDataPath / "Patch" / "PreviousBuildResources" / "introMovie.txt";
 	std::filesystem::path after_src = testDataPath / "Patch" / "NextBuildResources" / "introMovie.txt";

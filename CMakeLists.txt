@@ -62,6 +62,10 @@ add_library(carbon-resources SHARED ${SRC_FILES})
 
 target_compile_definitions(carbon-resources PRIVATE EXPORT_LIBRARY)
 
+if(WIN32)
+    target_compile_definitions(carbon-resources PRIVATE NOMINMAX) # Do not define min/max macros.
+endif()
+
 target_link_libraries(carbon-resources PRIVATE carbon-resources-tools yaml-cpp::yaml-cpp)
 
 #target_include_directories(carbon-resources PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)

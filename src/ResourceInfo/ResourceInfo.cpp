@@ -441,7 +441,8 @@ namespace CarbonResources
 
 		std::replace( url.begin(), url.end(), '\\', '/' );
 
-		bool downloadFileResult = ResourceTools::DownloadFile( url, tempPath.string() );
+    	ResourceTools::Downloader downloader;
+		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string() );
 
         if (!downloadFileResult)
         {
@@ -509,7 +510,8 @@ namespace CarbonResources
 
         std::replace( url.begin(), url.end(), '\\', '/' );
 
-		bool downloadFileResult = ResourceTools::DownloadFile( url, tempPath.string() );
+    	ResourceTools::Downloader downloader;
+		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string() );
 
 		if( !downloadFileResult )
 		{
