@@ -53,15 +53,13 @@ namespace ResourceTools
           // Not enough data to create chunk
 		  return false;
       }
-      else
-      {
-          // Copy chunk amount out of cache
-		  std::string& dataRef = *data.data;
+	  // Copy chunk amount out of cache
+	  std::string& dataRef = *data.data;
 
-          dataRef = m_cache.substr( 0, m_chunkSize );
+	  dataRef = m_cache.substr( 0, m_chunkSize );
 
-		  m_cache.erase( 0, m_chunkSize );
-      }
+	  m_cache.erase( 0, m_chunkSize );
+	  return true;
 
   }
 
@@ -78,6 +76,7 @@ namespace ResourceTools
 	  }
   	  out = m_cache.substr( 0, n );
   	  m_cache.erase( 0, n );
+	  return true;
   }
 
 }
