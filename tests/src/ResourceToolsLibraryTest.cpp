@@ -88,32 +88,27 @@ TEST_F( ResourceToolsTest, GZipCompressString )
 
 TEST_F( ResourceToolsTest, GZipCompressData )
 {
-	const char* FOLDER_NAME = "a9";
-	const char* FILE_NAME = "a9d1721dd5cc6d54_e6bbb2df307e5a9527159a4c971034b5";
-	const int GZIP_HEADER_BYTES = 10; // The size of a standard gzip header with no "optional" fields.
-	const int FILENAME_BYTES = strlen( FILE_NAME ) + 1; // Number of bytes that the "optional" filename field takes up in the header. 49 characters and one '\0' byte
-
 	const char* testDataPathStr = std::getenv( "TEST_DATA_PATH" );
 	ASSERT_TRUE( testDataPathStr );
 	std::filesystem::path testDataPath( testDataPathStr );
-	std::filesystem::path zippedSourcePath = testDataPath / "resourcesLocal" / FOLDER_NAME / FILE_NAME;
-	std::filesystem::path unzippedSourcePath = testDataPath / "resourcesOnBranch" / "introMovie.txt";
+	std::filesystem::path sourcePath = testDataPath / "resourcesOnBranch" / "introMovie.txt";
 
-	std::string zippedFileData;
-	ASSERT_TRUE( ResourceTools::GetLocalFileData( zippedSourcePath, zippedFileData ) );
-
-	std::string unzippedFileData;
-	ASSERT_TRUE( ResourceTools::GetLocalFileData( unzippedSourcePath, unzippedFileData ) );
+	std::string fileData;
+	ASSERT_TRUE( ResourceTools::GetLocalFileData( sourcePath, fileData ) );
 
 	std::string compressed;
-	EXPECT_TRUE( ResourceTools::GZipCompressData( unzippedFileData, compressed ) );
+	EXPECT_TRUE( ResourceTools::GZipCompressData( fileData, compressed ) );
 
-	// Check that the compressed file matches the data in the file we have on disk
-	// EXCEPT for the header.
-	// https://docs.fileformat.com/compression/gz/
-	std::string compressedNoHeader = compressed.substr( GZIP_HEADER_BYTES );
-	std::string zippedFileDataNoHeader = zippedFileData.substr( GZIP_HEADER_BYTES + FILENAME_BYTES );
-	EXPECT_EQ( compressedNoHeader, zippedFileDataNoHeader );
+	std::string decompressed;
+	EXPECT_TRUE( ResourceTools::GZipUncompressData( compressed, decompressed ) );
+
+	// Make sure decompressed file matches expected contents.
+	std::string originalChecksum;
+	ResourceTools::GenerateMd5Checksum( fileData, originalChecksum );
+
+	std::string decompressedChecksum;
+	ResourceTools::GenerateMd5Checksum( decompressed, decompressedChecksum );
+	EXPECT_EQ( decompressedChecksum, originalChecksum );
 }
 
 TEST_F( ResourceToolsTest, GZipUncompressString )
@@ -122,31 +117,6 @@ TEST_F( ResourceToolsTest, GZipUncompressString )
 	std::string outputData = "";
 	EXPECT_TRUE( ResourceTools::GZipUncompressData( inputDataToUncompress, outputData ) );
 	EXPECT_EQ( outputData, "SomeData" );
-}
-
-TEST_F( ResourceToolsTest, GZipUncompressData )
-{
-	const char* FOLDER_NAME = "a9";
-	const char* FILE_NAME = "a9d1721dd5cc6d54_e6bbb2df307e5a9527159a4c971034b5";
-	const char* testDataPathStr = std::getenv( "TEST_DATA_PATH" );
-	ASSERT_TRUE( testDataPathStr );
-
-	std::filesystem::path testDataPath( testDataPathStr );
-	std::filesystem::path zippedSourcePath = testDataPath / "resourcesLocal" / FOLDER_NAME / FILE_NAME;
-	std::filesystem::path unzippedSourcePath = testDataPath / "resourcesOnBranch" / "introMovie.txt";
-
-	// Load gzipped file.
-	std::string zippedFileData;
-	ASSERT_TRUE( ResourceTools::GetLocalFileData( zippedSourcePath, zippedFileData ) );
-
-	// Decompress the file.
-	std::string decompressed;
-	EXPECT_TRUE( ResourceTools::GZipUncompressData( zippedFileData, decompressed ) );
-
-	// Make sure decompressed file matches expected contents.
-	std::string checksum;
-	ResourceTools::GenerateMd5Checksum( decompressed, checksum );
-	EXPECT_EQ( checksum, "e6bbb2df307e5a9527159a4c971034b5" );
 }
 
 TEST_F( ResourceToolsTest, ResourceChunking )
