@@ -23,6 +23,14 @@
 
 #include <Enums.h>
 
+#include <functional>
+
+namespace CarbonResources
+{
+    enum class ResourceSourceType;
+    enum class ResourceDestinationType;
+}
+
 namespace argparse
 {
 class ArgumentParser;
@@ -44,20 +52,41 @@ public:
 
 protected:
 
+    void PrintCommonOperationHeaderInformation() const;
+
     void PrintCarbonResourcesError( CarbonResources::Result result ) const;
 
     bool AddRequiredPositionalArgument( const std::string& argumentId, const std::string& helpString );
 
-	bool AddArgument( const std::string& argumentId, const std::string& shortArgumentId, const std::string& helpString, bool required = false, std::string defualtValue = "" );
+	bool AddArgument( const std::string& argumentId, const std::string& helpString, bool required = false, std::string defualtValue = "" );
 
-    static void StatusUpdate( int progress, const std::string& info );
+    argparse::ArgumentParser* m_argumentParser;
 
-	argparse::ArgumentParser* m_argumentParser;
+    CarbonResources::StatusCallback GetStatusCallback() const;
+
+    std::string SourceTypeToString( CarbonResources::ResourceSourceType type ) const;
+
+    std::string DestinationTypeToString( CarbonResources::ResourceDestinationType type ) const;
+
+private:
+
+    static void StatusUpdate( int layer, int progress, const std::string& info );
+
+    static char GetBusyChar();
+
+protected:
+
+	static inline unsigned int s_verbosity = 0;
 
 private:
 	std::string m_name;
 
 	std::string m_description;
+
+    static inline unsigned int s_lastMessageLength = 0;
+    
+	static inline char s_currentBusyAnimationChar = '/';
+
 };
 
 #endif // CliOperation_H

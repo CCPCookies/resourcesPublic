@@ -23,14 +23,19 @@
 #include <memory>
 #include <string>
 #include <sstream>
+#include <functional>
+
 #include "Exports.h"
 
 namespace CarbonResources
 {
 
+    /** Status Callback function signature. */
+    using StatusCallback = std::function<void( int, int, const std::string& )>;
+
     /**
-    * @enum CarbonResources::Result
-    * @brief Error return codes.
+    * @enum CarbonResources::ResultType
+    * @brief Error return type codes.
     * @var SUCCESS
     * Operation was successful.
     * @var FAIL
@@ -90,7 +95,7 @@ namespace CarbonResources
 	* @var RESOURCE_TYPE_MISSMATCH
     * Resource parameters were attempted to be set by a resource of a different type. This is an internal library error which shouldn't be encountered. If you encounter this error contact API addministrators.
     */
-    enum class Result
+    enum class ResultType
     {
 	    SUCCESS,
 	    FAIL,
@@ -122,6 +127,20 @@ namespace CarbonResources
 		INPUT_DIRECTORY_DOESNT_EXIST,
 	    RESOURCE_TYPE_MISSMATCH,
         //NOTE: if adding to this enum, a complimentary entry must be added to resultToString.
+    };
+
+    /** @struct Result
+    *  @brief Represents Version information. Version follows semantic versioning paradigm.
+    *  @var Result::type
+    *  Type of result returned
+    *  @var Version::info
+    *  Optional further information on the return
+    */
+    struct API Result
+    {
+		ResultType type = ResultType::SUCCESS;
+
+		std::string info = "";
     };
 	
 	bool API resultToString( Result result, std::string& output );

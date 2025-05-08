@@ -12,7 +12,7 @@ CreateResourceGroupCliOperation::CreateResourceGroupCliOperation() :
 
 	AddRequiredPositionalArgument( m_createResourceGroupPathArgumentId, "Base directory to create resource group from." );
 
-	AddArgument( m_createResourceGroupOutputFilenameArgumentId, "-o", "Filename for created resource group.", true, "ResourceGroup.yaml" );
+	AddArgument( m_createResourceGroupOutputFilenameArgumentId, "Filename for created resource group.", true, "ResourceGroup.yaml" );
 }
 
 bool CreateResourceGroupCliOperation::Execute() const
@@ -32,11 +32,11 @@ bool CreateResourceGroupCliOperation::CreateResourceGroup( const std::filesystem
 
 	createResourceGroupParams.directory = inputDirectory;
 
-	createResourceGroupParams.statusCallback = &StatusUpdate;
+	createResourceGroupParams.statusCallback = GetStatusCallback();
 
 	CarbonResources::Result createFromDirectoryResult = resourceGroup.CreateFromDirectory( createResourceGroupParams );
 
-	if( createFromDirectoryResult != CarbonResources::Result::SUCCESS )
+	if( createFromDirectoryResult.type != CarbonResources::ResultType::SUCCESS )
 	{
 		PrintCarbonResourcesError( createFromDirectoryResult );
 
@@ -47,11 +47,11 @@ bool CreateResourceGroupCliOperation::CreateResourceGroup( const std::filesystem
 
 	exportParams.filename = resourceGroupOutputDirectory;
 
-	exportParams.statusCallback = &StatusUpdate;
+	exportParams.statusCallback = GetStatusCallback();
 
 	CarbonResources::Result exportToFileResult = resourceGroup.ExportToFile( exportParams );
 
-	if( exportToFileResult != CarbonResources::Result::SUCCESS )
+	if( exportToFileResult.type != CarbonResources::ResultType::SUCCESS )
 	{
 		PrintCarbonResourcesError( exportToFileResult );
 

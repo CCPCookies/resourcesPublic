@@ -44,12 +44,12 @@ namespace CarbonResources
 		// Update status
 		if( params.statusCallback )
 		{
-			params.statusCallback( 0, "Creating Resource Group From Directory: " + params.directory.string() );
+			params.statusCallback( 0, 0, "Creating Resource Group From Directory: " + params.directory.string() );
 		}
 
         if (!std::filesystem::exists(params.directory))
         {
-			return Result::INPUT_DIRECTORY_DOESNT_EXIST;
+			return Result{ ResultType::INPUT_DIRECTORY_DOESNT_EXIST };
         }
 
         // Walk directory and create a resource from each file using data
@@ -62,7 +62,7 @@ namespace CarbonResources
                 // Update status
                 if (params.statusCallback)
                 {
-					params.statusCallback( 0, "Processing File: " + entry.path().string() );
+					params.statusCallback( 0, 0, "Processing File: " + entry.path().string() );
                 }
 
                 // Create resource
@@ -89,7 +89,7 @@ namespace CarbonResources
 
                     Result getResourceDataResult = resource->GetData( resourceGetDataParams );
 
-                    if (getResourceDataResult != Result::SUCCESS)
+                    if (getResourceDataResult.type != ResultType::SUCCESS)
                     {
 					    return getResourceDataResult;
                     }
@@ -106,14 +106,14 @@ namespace CarbonResources
                     }
                     //TEMPEND
 
-                    if (setParametersFromDataResult != Result::SUCCESS)
+                    if (setParametersFromDataResult.type != ResultType::SUCCESS)
                     {
 					    return setParametersFromDataResult;
                     }
 
                     Result addResourceResult = AddResource( resource );
 
-                    if (addResourceResult != Result::SUCCESS)
+                    if (addResourceResult.type != ResultType::SUCCESS)
                     {
 					    return addResourceResult;
                     }
@@ -136,7 +136,7 @@ namespace CarbonResources
 
                     if (!fileStreamIn.StartRead(entry.path()))
                     {
-						return Result::FAILED_TO_OPEN_FILE_STREAM;
+						return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
                     }
 
                     uintmax_t compressedDataSize = 0;
@@ -147,19 +147,19 @@ namespace CarbonResources
 						if( params.statusCallback )
 						{
 							float percentage = (100.0 / fileStreamIn.Size()) * fileStreamIn.GetCurrentPosition();
-							params.statusCallback( percentage, "Percentage Update" );
+							params.statusCallback( 0, percentage, "Percentage Update" );
 						}
 
 						std::string fileData;
 
                         if (!(fileStreamIn >> fileData))
                         {
-							return Result::FAILED_TO_READ_FROM_STREAM;
+							return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
                         }
 
                         if (!(checksumStream << fileData))
                         {
-							return Result::FAILED_TO_GENERATE_CHECKSUM;
+							return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
                         }
 
 						std::string compressedData;
@@ -190,7 +190,7 @@ namespace CarbonResources
 
                     if (!checksumStream.FinishAndRetrieve(checksum))
                     {
-						return Result::FAILED_TO_GENERATE_CHECKSUM;
+						return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
                     }
 
                     // Create resource from parameters
@@ -209,7 +209,7 @@ namespace CarbonResources
 
 					Result calculateLocationResult = l.SetFromRelativePathAndDataChecksum( resourceParams.relativePath, resourceParams.checksum );
 
-                    if (calculateLocationResult != Result::SUCCESS)
+                    if (calculateLocationResult.type != ResultType::SUCCESS)
                     {
 						return calculateLocationResult;
                     }
@@ -230,7 +230,7 @@ namespace CarbonResources
 
                     Result addResourceResult = AddResource( resource );
 
-					if( addResourceResult != Result::SUCCESS )
+					if( addResourceResult.type != ResultType::SUCCESS )
 					{
 						return addResourceResult;
 					}
@@ -241,10 +241,10 @@ namespace CarbonResources
 
         if( params.statusCallback )
 		{
-			params.statusCallback( 0, "Resource group successfully created from directory");
+			params.statusCallback( 0, 0, "Resource group successfully created from directory");
 		}
 
-        return Result::SUCCESS;
+        return Result{ ResultType::SUCCESS };
 
     }
 
@@ -257,24 +257,30 @@ namespace CarbonResources
 		case DocumentType::YAML:
 			return ImportFromYaml( data );
 		default:
-			return Result::UNSUPPORTED_FILE_FORMAT;
+			return Result{ ResultType::UNSUPPORTED_FILE_FORMAT };
         }
 
-        return Result::FAIL;
+        return Result{ ResultType::FAIL };
     }
 
     Result ResourceGroupImpl::ImportFromFile( const ResourceGroupImportFromFileParams& params )
     {
+        // Status update
+        if (params.statusCallback)
+        {
+			params.statusCallback( 1, 0, "Importing Resource Group from file." );
+        }
+
         if (params.filename.empty())
         {
-			return Result::FILE_NOT_FOUND;
+			return Result{ ResultType::FILE_NOT_FOUND };
         }
 
         std::string data;
 
 		if( !ResourceTools::GetLocalFileData( params.filename, data ) )
 		{
-			return Result::FAILED_TO_OPEN_FILE;
+			return Result{ ResultType::FAILED_TO_OPEN_FILE };
 		}
 
         // VERSION NEEDS TO BE CHECKED TO ENSURE ITS SUPPORTED ON IMPORT
@@ -282,22 +288,34 @@ namespace CarbonResources
 
         std::string extension = filename.extension().string();
         
+        Result importResult;
+
         if( extension == ".txt" )
         {
-			return ImportFromCSV( data );
+			importResult = ImportFromCSV( data, params.statusCallback );
         }
 		else if( extension == ".yml" )
         {
-			return ImportFromYaml( data );
+			importResult = ImportFromYaml( data, params.statusCallback );
         }
 		else if( extension == ".yaml" )
 		{
-			return ImportFromYaml( data );
+			importResult = ImportFromYaml( data, params.statusCallback );
 		}
         else
         {
-			return Result::UNSUPPORTED_FILE_FORMAT;
+			return Result{ ResultType::UNSUPPORTED_FILE_FORMAT };
         }
+
+        if( params.statusCallback )
+		{
+            if (importResult.type == ResultType::SUCCESS)
+			{
+				params.statusCallback( 1, 100, "Successfully imported ResourceGroup" );
+            }
+		}
+
+        return importResult;
     }
 
     Result ResourceGroupImpl::ExportToFile( const ResourceGroupExportToFileParams& params ) const
@@ -305,45 +323,51 @@ namespace CarbonResources
 		// Update status
 		if( params.statusCallback )
 		{
-			params.statusCallback( 0, "Exporting Resource Group to file: " + params.filename.string() );
+			params.statusCallback( 0, 0, "Exporting Resource Group to file: " + params.filename.string() );
 		}
 
 		std::string data = "";
 
         Result exportYamlResult = ExportYaml( params.outputDocumentVersion, data, params.statusCallback );
 
-        if (exportYamlResult != Result::SUCCESS)
+        if (exportYamlResult.type != ResultType::SUCCESS)
         {
 			return exportYamlResult;
         }
 
         if( !ResourceTools::SaveFile( params.filename, data ) )
 		{
-			return Result::FAILED_TO_SAVE_FILE;
+			return Result{ ResultType::FAILED_TO_SAVE_FILE };
 		}
 
         if( params.statusCallback )
 		{
-			params.statusCallback( 0, "Resource group successfully exported." );
+			params.statusCallback( 0, 0, "Resource group successfully exported." );
 		}
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
     }
 
     Result ResourceGroupImpl::ExportToData( std::string& data,  VersionInternal outputDocumentVersion /* = S_DOCUMENT_VERSION*/) const
     {
 		Result exportYamlResult = ExportYaml( outputDocumentVersion, data );
 
-		if( exportYamlResult != Result::SUCCESS )
+		if( exportYamlResult.type != ResultType::SUCCESS )
 		{
 			return exportYamlResult;
 		}
 
-        return Result::SUCCESS;
+        return Result{ ResultType::SUCCESS };
     }
 
-    Result ResourceGroupImpl::ImportFromCSV( const std::string& data )
+    Result ResourceGroupImpl::ImportFromCSV( const std::string& data, StatusCallback statusCallback /* = nullptr */ )
     {
+		// Status update
+		if( statusCallback )
+		{
+			statusCallback( 2, 5, "Importing Resource Group from CSV file." );
+		}
+
         std::stringstream inputStream;
 
         inputStream << data;
@@ -369,7 +393,7 @@ namespace CarbonResources
 
             if( !std::getline( ss, value, delimiter ) )
             {
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
             }
 
             // Split filename and prefix
@@ -381,28 +405,28 @@ namespace CarbonResources
 
 			if( !std::getline( ss, value, delimiter ) )
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 
 			resourceParams.location = value;
 
 			if( !std::getline( ss, value, delimiter ) )
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 
 			resourceParams.checksum = value;
 
 			if( !std::getline( ss, value, delimiter ) )
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 
 			resourceParams.uncompressedSize = atol( value.c_str() );
 
 			if( !std::getline( ss, value, delimiter ) )
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 
 			resourceParams.compressedSize = atol( value.c_str() );
@@ -425,13 +449,18 @@ namespace CarbonResources
 
             Result addResourceResult = AddResource( resource );
 
-            if (addResourceResult != Result::SUCCESS)
+            if (addResourceResult.type != ResultType::SUCCESS)
             {
 				return addResourceResult;
             }
+
+            if( statusCallback )
+			{
+				statusCallback( 2, -1, "Imported resource: " + resourceParams.relativePath.string() );
+			}
 		}
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
     }
 
     Result ResourceGroupImpl::CreateResourceFromResource( const ResourceInfo& resourceIn, ResourceInfo*& resourceOut ) const
@@ -442,7 +471,7 @@ namespace CarbonResources
 
 		Result getResourceTypeResult = resourceIn.GetType( resourceType );
 
-        if (getResourceTypeResult != Result::SUCCESS)
+        if (getResourceTypeResult.type != ResultType::SUCCESS)
         {
 			return getResourceTypeResult;
         }
@@ -453,7 +482,7 @@ namespace CarbonResources
 
             Result setParametersFromResourceResult = resourceOut->SetParametersFromResource( &resourceIn, m_versionParameter.GetValue() );
 
-            if (setParametersFromResourceResult != Result::SUCCESS)
+            if (setParametersFromResourceResult.type != ResultType::SUCCESS)
             {
 				return setParametersFromResourceResult;
             }
@@ -464,7 +493,7 @@ namespace CarbonResources
 
             Result setParametersFromResourceResult = patchResourceInfo->SetParametersFromResource( &resourceIn, m_versionParameter.GetValue() );
 
-            if( setParametersFromResourceResult != Result::SUCCESS )
+            if( setParametersFromResourceResult.type != ResultType::SUCCESS )
 			{
 				return setParametersFromResourceResult;
 			}
@@ -477,7 +506,7 @@ namespace CarbonResources
 
 			Result setParametersFromResourceResult = bundleResourceInfo->SetParametersFromResource( &resourceIn, m_versionParameter.GetValue() );
             
-            if( setParametersFromResourceResult != Result::SUCCESS )
+            if( setParametersFromResourceResult.type != ResultType::SUCCESS )
 			{
 				return setParametersFromResourceResult;
 			}
@@ -490,7 +519,7 @@ namespace CarbonResources
 
 			Result setParametersFromResourceResult = binaryResourceInfo->SetParametersFromResource( &resourceIn, m_versionParameter.GetValue() );
 
-            if( setParametersFromResourceResult != Result::SUCCESS )
+            if( setParametersFromResourceResult.type != ResultType::SUCCESS )
 			{
 				return setParametersFromResourceResult;
 			}
@@ -498,7 +527,7 @@ namespace CarbonResources
 			resourceOut = binaryResourceInfo;
 		}
 
-        return Result::SUCCESS;
+        return Result{ ResultType::SUCCESS };
 
     }
 
@@ -508,7 +537,7 @@ namespace CarbonResources
 
 		Result importFromYamlResult = resourceOut->ImportFromYaml( resource, m_versionParameter.GetValue() );
 
-        if( importFromYamlResult != Result::SUCCESS )
+        if( importFromYamlResult.type != ResultType::SUCCESS )
 		{
 			delete resourceOut;
 
@@ -518,12 +547,12 @@ namespace CarbonResources
 		}
         else
         {
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
         }
 
 	}
 
-    Result ResourceGroupImpl::ImportFromYaml( const std::string& data )
+    Result ResourceGroupImpl::ImportFromYaml( const std::string& data, StatusCallback statusCallback /* = nullptr */ )
     {
         YAML::Node resourceGroupFile = YAML::Load( data );
         
@@ -535,7 +564,7 @@ namespace CarbonResources
 
 		if( m_versionParameter.GetValue().getMajor() > S_DOCUMENT_VERSION.major )
         {
-			return Result::DOCUMENT_VERSION_UNSUPPORTED;
+			return Result{ ResultType::DOCUMENT_VERSION_UNSUPPORTED };
         }
 
         // If version is greater than the max version supported at compile then ceil to that
@@ -557,7 +586,7 @@ namespace CarbonResources
 
         Result res = ImportGroupSpecialisedYaml( resourceGroupFile );
 
-        if( res != Result::SUCCESS )
+        if( res.type != ResultType::SUCCESS )
 		{
 			return res;
 		}
@@ -574,21 +603,21 @@ namespace CarbonResources
 
             Result createResourceFromYamlResult = CreateResourceFromYaml( resourceNode, resource );
 
-            if (createResourceFromYamlResult != Result::SUCCESS)
+            if (createResourceFromYamlResult.type != ResultType::SUCCESS)
             {
 				return createResourceFromYamlResult;
             }
 
             Result addResourceResult = AddResource( resource );
 
-			if( addResourceResult != Result::SUCCESS )
+			if( addResourceResult.type != ResultType::SUCCESS )
 			{
 				return addResourceResult;
 			}
 
         }
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
     }
 
     std::string ResourceGroupImpl::GetType() const
@@ -603,15 +632,15 @@ namespace CarbonResources
 
     Result ResourceGroupImpl::ImportGroupSpecialisedYaml( YAML::Node& resourceGroupFile )
     {
-        return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
     }
 
     Result ResourceGroupImpl::ExportGroupSpecialisedYaml( YAML::Emitter& out, VersionInternal outputDocumentVersion ) const
     {
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
     } 
 
-    Result ResourceGroupImpl::ExportYaml( const VersionInternal& outputDocumentVersion, std::string& data, std::function<void( int, const std::string& )> statusCallback /*= nullptr*/ ) const
+    Result ResourceGroupImpl::ExportYaml( const VersionInternal& outputDocumentVersion, std::string& data, std::function<void( int, int, const std::string& )> statusCallback /*= nullptr*/ ) const
     {
 		
         YAML::Emitter out;
@@ -652,7 +681,7 @@ namespace CarbonResources
 
         Result res = ExportGroupSpecialisedYaml( out, sanitisedOutputDocumentVersion );
 
-		if( res != Result::SUCCESS )
+		if( res.type != ResultType::SUCCESS )
         {
 			return res;
         }
@@ -669,7 +698,7 @@ namespace CarbonResources
 			if( statusCallback )
 			{
 				float percentage = (100.0 / m_resourcesParameter.GetValue()->size()) * i;
-				statusCallback( percentage, "Percentage Update" );
+				statusCallback( 0, percentage, "Percentage Update" );
 				i++;
 			}
 
@@ -677,7 +706,7 @@ namespace CarbonResources
 
 			Result resourceExportResult = r->ExportToYaml( out, sanitisedOutputDocumentVersion );
 
-            if( resourceExportResult != Result::SUCCESS )
+            if( resourceExportResult.type != ResultType::SUCCESS )
 			{
 				return resourceExportResult;
 			}
@@ -692,7 +721,7 @@ namespace CarbonResources
 
         data = out.c_str();
 
-        return Result::SUCCESS;
+        return Result{ ResultType::SUCCESS };
       
     }
 
@@ -712,7 +741,7 @@ namespace CarbonResources
 
 		Result putChunkDataResult = chunkResource->PutData( resourcePutDataParams );
 
-		if( putChunkDataResult != Result::SUCCESS )
+		if( putChunkDataResult.type != ResultType::SUCCESS )
 		{
 			delete chunkResource;
 
@@ -722,14 +751,14 @@ namespace CarbonResources
 		// Add the chunk resource to the bundleResourceGroup
 		Result addResourceResult = bundleResourceGroup.AddResource( chunkResource );
 
-		if( addResourceResult != Result::SUCCESS )
+		if( addResourceResult.type != ResultType::SUCCESS )
 		{
 			delete chunkResource;
 
 			return addResourceResult;
 		}
 
-        return Result::SUCCESS;
+        return Result{ ResultType::SUCCESS };
     }
 
 
@@ -760,6 +789,12 @@ namespace CarbonResources
     */
     Result ResourceGroupImpl::CreateBundle( const BundleCreateParams& params ) const
     {
+		// Update status
+		if( params.statusCallback )
+		{
+			params.statusCallback( 0, 0, "Creating Bundle" );
+		}
+
 		uintmax_t numberOfChunks = 0;
 
         std::string chunkBaseName = params.resourceGroupRelativePath.filename().replace_extension().string();
@@ -769,6 +804,13 @@ namespace CarbonResources
         bundleResourceGroup.SetChunkSize( params.chunkSize );
 
 		ResourceTools::BundleStreamOut bundleStream( params.chunkSize );
+
+
+        // Update status
+		if( params.statusCallback )
+		{
+			params.statusCallback( 0, 0, "Generating Chunks" );
+		}
 
         // Loop through all resources and send data for chunking
         for (ResourceInfo* resource : m_resourcesParameter)
@@ -783,7 +825,7 @@ namespace CarbonResources
 
 			Result resourceGetDataResult = resource->GetDataStream( resourceGetDataParams );
 
-            if (resourceGetDataResult != Result::SUCCESS)
+            if (resourceGetDataResult.type != ResultType::SUCCESS)
             {
 				return resourceGetDataResult;
             }
@@ -794,7 +836,7 @@ namespace CarbonResources
 
                 if (!(resourceDataStream >> resourceDataChunk))
                 {
-					return Result::FAILED_TO_READ_FROM_STREAM;
+					return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
                 }
 
                 // Add Resource chunk to bundle stream
@@ -820,7 +862,7 @@ namespace CarbonResources
 
 					Result processChunkResult = ProcessChunk( chunkData, chunkPath, bundleResourceGroup, params.chunkDestinationSettings );
 
-					if( processChunkResult != Result::SUCCESS )
+					if( processChunkResult.type != ResultType::SUCCESS )
 					{
 						return processChunkResult;
 					}
@@ -851,17 +893,24 @@ namespace CarbonResources
 
 		Result processChunkResult = ProcessChunk( chunkData, chunkPath, bundleResourceGroup, params.chunkDestinationSettings );
 
-		if( processChunkResult != Result::SUCCESS )
+		if( processChunkResult.type != ResultType::SUCCESS )
 		{
 			return processChunkResult;
 		}
 
 		// Export this resource list
+        // 
+		// Update status
+		if( params.statusCallback )
+		{
+			params.statusCallback( 0, 0, "Exporting ResourceGroups" );
+		}
+
 		std::string resourceGroupData;
 
 		Result exportToDataResult = ExportToData( resourceGroupData );
 
-        if (exportToDataResult != Result::SUCCESS)
+        if (exportToDataResult.type != ResultType::SUCCESS)
         {
 			return exportToDataResult;
         }
@@ -870,7 +919,7 @@ namespace CarbonResources
 
 		Result setParametersFromDataResult = resourceGroupInfo.SetParametersFromData( resourceGroupData );
 
-        if (setParametersFromDataResult != Result::SUCCESS)
+        if (setParametersFromDataResult.type != ResultType::SUCCESS)
         {
 			return setParametersFromDataResult;
         }
@@ -883,7 +932,7 @@ namespace CarbonResources
 
 		Result subtractionResourcePutResult = resourceGroupInfo.PutData( putDataParams );
 
-		if( subtractionResourcePutResult != Result::SUCCESS )
+		if( subtractionResourcePutResult.type != ResultType::SUCCESS )
 		{
 			return subtractionResourcePutResult;
 		}
@@ -891,7 +940,7 @@ namespace CarbonResources
 		// Export the bundleGroup
 		Result setResourceGroupResult = bundleResourceGroup.SetResourceGroup( resourceGroupInfo );
 
-        if (setResourceGroupResult != Result::SUCCESS)
+        if (setResourceGroupResult.type != ResultType::SUCCESS)
         {
 			return setResourceGroupResult;
         }
@@ -900,7 +949,7 @@ namespace CarbonResources
 
 		Result exportBundleResourceGroupToDataResult = bundleResourceGroup.ExportToData( patchResourceGroupData );
 
-        if (exportBundleResourceGroupToDataResult != Result::SUCCESS)
+        if (exportBundleResourceGroupToDataResult.type != ResultType::SUCCESS)
         {
 			return exportBundleResourceGroupToDataResult;
         }
@@ -909,7 +958,7 @@ namespace CarbonResources
 
 		Result setPatchParametersFromDataResult = patchResourceGroupInfo.SetParametersFromData( patchResourceGroupData );
 
-        if (setPatchParametersFromDataResult != Result::SUCCESS)
+        if (setPatchParametersFromDataResult.type != ResultType::SUCCESS)
         {
 			return setPatchParametersFromDataResult;
         }
@@ -922,12 +971,18 @@ namespace CarbonResources
 
 		Result patchResourceGroupPutResult = patchResourceGroupInfo.PutData( bundlePutDataParams );
 
-		if( patchResourceGroupPutResult != Result::SUCCESS )
+		if( patchResourceGroupPutResult.type != ResultType::SUCCESS )
 		{
 			return patchResourceGroupPutResult;
 		}
 
-        return Result::SUCCESS;
+        // Update status
+		if( params.statusCallback )
+		{
+			params.statusCallback( 0, 0, "Bundle Creation Complete." );
+		}
+
+        return Result{ ResultType::SUCCESS };
     }
 
 	Result ResourceGroupImpl::ConstructPatchResourceInfo( const PatchCreateParams& params, int patchId, uintmax_t dataOffset, uint64_t patchSourceOffset, ResourceInfo* resourceNext, PatchResourceInfo*& patchResource ) const
@@ -935,7 +990,7 @@ namespace CarbonResources
     	// Create a resource from patch data
     	std::filesystem::path resourceLatestRelativePath;
     	Result getResourceLatestRelativePathResult = resourceNext->GetRelativePath( resourceLatestRelativePath );
-    	if( getResourceLatestRelativePathResult != Result::SUCCESS )
+    	if( getResourceLatestRelativePathResult.type != ResultType::SUCCESS )
     	{
     		return getResourceLatestRelativePathResult;
     	}
@@ -948,13 +1003,19 @@ namespace CarbonResources
 		patchResourceInfoParams.sourceOffset = patchSourceOffset;
 		patchResource = new PatchResourceInfo( patchResourceInfoParams );
 
-    	return Result::SUCCESS;
+    	return Result{ ResultType::SUCCESS };
 	}
 	Result ResourceGroupImpl::CreatePatch( const PatchCreateParams& params ) const
     {
+        // Update status
+		if( params.statusCallback )
+		{
+			params.statusCallback( 1, 0, "Creating Patch" );
+		}
+
         if (params.previousResourceGroup->m_impl->GetType() != GetType())
         {
-			return Result::PATCH_RESOURCE_LIST_MISSMATCH;
+			return Result{ ResultType::PATCH_RESOURCE_LIST_MISSMATCH };
         }
 
         PatchResourceGroupImpl patchResourceGroup;
@@ -975,9 +1036,17 @@ namespace CarbonResources
 
         resourceGroupSubtractionParams.result2 = &resourceGroupSubtractionLatest;
 
+        resourceGroupSubtractionParams.statusCallback = params.statusCallback;
+
+        // Update status
+		if( params.statusCallback )
+		{
+			params.statusCallback( 1, 20, "Calculaing resourceGroups delta." );
+		}
+
         Result subtractionResult = Diff( resourceGroupSubtractionParams );
 
-        if (subtractionResult != Result::SUCCESS)
+        if (subtractionResult.type != ResultType::SUCCESS)
         {
 			return subtractionResult;
         }
@@ -985,16 +1054,42 @@ namespace CarbonResources
         // Ensure that the diff results have the same number of members
         if (resourceGroupSubtractionPrevious.m_resourcesParameter.GetSize() != resourceGroupSubtractionLatest.m_resourcesParameter.GetSize())
         {
-			return Result::UNEXPECTED_PATCH_DIFF_ENCOUNTERED;
+			return Result{ ResultType::UNEXPECTED_PATCH_DIFF_ENCOUNTERED };
         }
 
         int patchId = 0;
 
+        // Update status
+		if( params.statusCallback )
+		{
+			params.statusCallback( 1, 40, "Generating Patches" );
+		}
+
         for (int i = 0; i < resourceGroupSubtractionLatest.m_resourcesParameter.GetSize(); i++)
         {
+			
 			ResourceInfo* resourcePrevious = resourceGroupSubtractionPrevious.m_resourcesParameter.At( i );
 
 			ResourceInfo* resourceNext = resourceGroupSubtractionLatest.m_resourcesParameter.At( i );
+
+            if( params.statusCallback )
+			{
+				float percentageComplete = ( 100.0 / resourceGroupSubtractionLatest.m_resourcesParameter.GetSize() ) * i;
+
+                std::filesystem::path relativePath;
+
+                Result getRelativePathResult = resourcePrevious->GetRelativePath( relativePath );
+
+                if (getRelativePathResult.type != ResultType::SUCCESS)
+                {
+					return getRelativePathResult;
+                }
+
+                std::string message = "Creating patch for: " + relativePath.string();
+
+				params.statusCallback( 2, percentageComplete, message );
+			}
+
         	size_t patchSourceOffset{0};
         	uint64_t patchSourceOffsetDelta{0};
 
@@ -1006,7 +1101,7 @@ namespace CarbonResources
 
             Result getResourcePreviousCompressedSizeResult = resourcePrevious->GetUncompressedSize( previousUncompressedSize );
 
-            if (getResourcePreviousCompressedSizeResult != Result::SUCCESS)
+            if (getResourcePreviousCompressedSizeResult.type != ResultType::SUCCESS)
             {
 				return getResourcePreviousCompressedSizeResult;
             }
@@ -1017,7 +1112,7 @@ namespace CarbonResources
 
 			Result getResourceNextCompressedSizeResult = resourceNext->GetUncompressedSize( nextUncompressedSize );
 
-			if( getResourceNextCompressedSizeResult != Result::SUCCESS )
+			if( getResourceNextCompressedSizeResult.type != ResultType::SUCCESS )
 			{
 				return getResourceNextCompressedSizeResult;
 			}
@@ -1036,7 +1131,7 @@ namespace CarbonResources
 
                 Result getPreviousDataStreamResult = resourcePrevious->GetDataStream( previousResourceGetDataStreamParams );
 
-                if (getPreviousDataStreamResult != Result::SUCCESS)
+                if (getPreviousDataStreamResult.type != ResultType::SUCCESS)
                 {
 					return getPreviousDataStreamResult;
                 }
@@ -1052,7 +1147,7 @@ namespace CarbonResources
 
                 Result getNextDataStreamResult = resourceNext->GetDataStream( nextResourceGetDataStreamParams );
 
-				if( getNextDataStreamResult != Result::SUCCESS )
+				if( getNextDataStreamResult.type != ResultType::SUCCESS )
 				{
 					return getNextDataStreamResult;
 				}
@@ -1084,7 +1179,7 @@ namespace CarbonResources
                     {
 						if( !( previousFileDataStream >> previousFileData ) )
 						{
-							return Result::FAILED_TO_RETRIEVE_CHUNK_DATA;
+							return Result{ ResultType::FAILED_TO_RETRIEVE_CHUNK_DATA };
 						}
                     }
 
@@ -1097,7 +1192,7 @@ namespace CarbonResources
 					{
 						if(!(nextFileDataStream >> nextFileData))
 						{
-							return Result::FAILED_TO_RETRIEVE_CHUNK_DATA;
+							return Result{ ResultType::FAILED_TO_RETRIEVE_CHUNK_DATA };
 						}
 					}
 
@@ -1162,7 +1257,7 @@ namespace CarbonResources
                     		// Add the patch resource to the patchResourceGroup
                     		Result addResourceResult = patchResourceGroup.AddResource( patchResource );
 
-                    		if( addResourceResult != Result::SUCCESS )
+                    		if( addResourceResult.type != ResultType::SUCCESS )
                     		{
                     			delete patchResource;
 
@@ -1170,6 +1265,7 @@ namespace CarbonResources
                     		}
 
                     		patchId++;
+
                     		continue;
                     	}
 						else
@@ -1177,7 +1273,7 @@ namespace CarbonResources
 							// Previous and next data chunk are different, create a patch
 							if( !ResourceTools::CreatePatch( previousFileData, nextFileData, patchData ) )
 							{
-								return Result::FAILED_TO_CREATE_PATCH;
+								return Result{ ResultType::FAILED_TO_CREATE_PATCH };
 							}
 							patchSourceOffsetDelta = previousFileData.size();
 						}
@@ -1188,7 +1284,7 @@ namespace CarbonResources
                         // All this data is new
                     	if( !ResourceTools::CreatePatch( "", nextFileData, patchData ) )
                     	{
-                    		return Result::FAILED_TO_CREATE_PATCH;
+							return Result{ ResultType::FAILED_TO_CREATE_PATCH };
                     	}
                     	patchSourceOffsetDelta = nextFileData.size();
                     }
@@ -1206,7 +1302,7 @@ namespace CarbonResources
 					{
 						Result setParametersFromDataResult = patchResource->SetParametersFromData( patchData );
 
-						if( setParametersFromDataResult != Result::SUCCESS )
+						if( setParametersFromDataResult.type != ResultType::SUCCESS )
 						{
 							return setParametersFromDataResult;
 						}
@@ -1220,7 +1316,7 @@ namespace CarbonResources
 
 						Result putPatchDataResult = patchResource->PutData( resourcePutDataParams );
 
-						if( putPatchDataResult != Result::SUCCESS )
+						if( putPatchDataResult.type != ResultType::SUCCESS )
 						{
 							delete patchResource;
 
@@ -1231,7 +1327,7 @@ namespace CarbonResources
 					// Add the patch resource to the patchResourceGroup
 					Result addResourceResult = patchResourceGroup.AddResource( patchResource );
 
-					if( addResourceResult != Result::SUCCESS )
+					if( addResourceResult.type != ResultType::SUCCESS )
 					{
 						delete patchResource;
 
@@ -1247,12 +1343,18 @@ namespace CarbonResources
 
         }
 
+        // Update status
+		if( params.statusCallback )
+		{
+			params.statusCallback( 1, 60, "Exporting ResourceGroups." );
+		}
+
         // Export the subtraction ResourceGroup
         std::string resourceGroupData;
 
         Result exportResourceGroupSubtractionLatestResult = resourceGroupSubtractionLatest.ExportToData( resourceGroupData );
 
-        if (exportResourceGroupSubtractionLatestResult != Result::SUCCESS)
+        if (exportResourceGroupSubtractionLatestResult.type != ResultType::SUCCESS)
         {
 			return exportResourceGroupSubtractionLatestResult;
         }
@@ -1261,7 +1363,7 @@ namespace CarbonResources
 
         Result setParametersFromDataResult = subtractionResourceGroupInfo.SetParametersFromData( resourceGroupData );
 
-        if (setParametersFromDataResult != Result::SUCCESS)
+        if (setParametersFromDataResult.type != ResultType::SUCCESS)
         {
 			return setParametersFromDataResult;
         }
@@ -1274,7 +1376,7 @@ namespace CarbonResources
 
         Result subtractionResourcePutResult = subtractionResourceGroupInfo.PutData( putDataParams );
 
-        if (subtractionResourcePutResult != Result::SUCCESS)
+        if (subtractionResourcePutResult.type != ResultType::SUCCESS)
         {
 			return subtractionResourcePutResult;
         }
@@ -1284,7 +1386,7 @@ namespace CarbonResources
         // Export the patchGroup
 		Result setResourceGroupResult = patchResourceGroup.SetResourceGroup( subtractionResourceGroupInfo );
 
-        if (setResourceGroupResult != Result::SUCCESS)
+        if (setResourceGroupResult.type != ResultType::SUCCESS)
         {
 			return setResourceGroupResult;
         }
@@ -1293,7 +1395,7 @@ namespace CarbonResources
 
         Result exportToDataResult = patchResourceGroup.ExportToData( patchResourceGroupData );
 
-        if (exportToDataResult != Result::SUCCESS)
+        if (exportToDataResult.type != ResultType::SUCCESS)
         {
 			return exportToDataResult;
         }
@@ -1302,7 +1404,7 @@ namespace CarbonResources
 
         Result setPatchParametersFromDataResult = patchResourceGroupInfo.SetParametersFromData( patchResourceGroupData );
 
-        if (setPatchParametersFromDataResult != Result::SUCCESS)
+        if (setPatchParametersFromDataResult.type != ResultType::SUCCESS)
         {
 			return setPatchParametersFromDataResult;
         }
@@ -1315,12 +1417,18 @@ namespace CarbonResources
 
 		Result patchResourceGroupPutResult = patchResourceGroupInfo.PutData( patchPutDataParams );
 
-        if( patchResourceGroupPutResult != Result::SUCCESS )
+        if( patchResourceGroupPutResult.type != ResultType::SUCCESS )
 		{
 			return patchResourceGroupPutResult;
 		}
 
-        return Result::SUCCESS;
+        // Update status
+		if( params.statusCallback )
+		{
+			params.statusCallback( 1, 100, "Patch Created" );
+		}
+
+        return Result{ ResultType::SUCCESS };
     }
 
 
@@ -1334,7 +1442,7 @@ namespace CarbonResources
             
         Result resourceGetUncompressedSizeResult = resource->GetUncompressedSize( resourceUncompressedSize );
 
-        if( resourceGetUncompressedSizeResult != Result::SUCCESS )
+        if( resourceGetUncompressedSizeResult.type != ResultType::SUCCESS )
         {
 			return resourceGetUncompressedSizeResult;
         }
@@ -1345,26 +1453,55 @@ namespace CarbonResources
 
 		Result resourceGetCompressedSizeResult = resource->GetCompressedSize( resourceCompressedSize );
 
-		if( resourceGetCompressedSizeResult != Result::SUCCESS )
+		if( resourceGetCompressedSizeResult.type != ResultType::SUCCESS )
 		{
 			return resourceGetCompressedSizeResult;
 		}
 
 		m_totalResourcesSizeCompressed = m_totalResourcesSizeCompressed.GetValue() + resourceCompressedSize;
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
     }
 
     
     // TODO efficiency of this function can be improved by removing past searched and found items from the search group
     Result ResourceGroupImpl::Diff( ResourceGroupSubtractionParams& params ) const
     {
+		if( params.statusCallback )
+		{
+			params.statusCallback( 2, 0, "Calculating diff between two resource groups." );
+		}
+
 		DocumentParameterCollection<ResourceInfo*> subtractionResources = params.subtractResourceGroup->m_resourcesParameter;
 
 
         // Iterate through all resources
+
+        // Value only required for status updates
+		int i = 0;
+
         for (ResourceInfo* resource : m_resourcesParameter)
         {
+			if( params.statusCallback )
+			{
+				std::filesystem::path relativePath;
+
+				Result getRelativePathResult = resource->GetRelativePath( relativePath );
+
+                if (getRelativePathResult.type != ResultType::SUCCESS)
+                {
+					return getRelativePathResult;
+                }
+
+				std::string message = "Processing: " + relativePath.string();
+
+                float percentComplete = ( 100.0 / m_resourcesParameter.GetSize() ) * i;
+
+				params.statusCallback( 2, percentComplete, message );
+				
+                i++;
+			}
+
             // Note: here we can also detect if a value is not present in the latest that was present in previous
             // We could remove those files
 			auto subtractionResourcesFindIter = subtractionResources.Find( resource );
@@ -1377,7 +1514,7 @@ namespace CarbonResources
 
                 Result getResource1ChecksumResult = resource->GetChecksum( resource1Checksum );
 
-                if (getResource1ChecksumResult != Result::SUCCESS)
+                if (getResource1ChecksumResult.type != ResultType::SUCCESS)
                 {
 					return getResource1ChecksumResult;
                 }
@@ -1386,7 +1523,7 @@ namespace CarbonResources
 
                 Result getResource2ChecksumResult = resource2->GetChecksum( resource2Checksum );
 
-                if (getResource2ChecksumResult != Result::SUCCESS)
+                if (getResource2ChecksumResult.type != ResultType::SUCCESS)
                 {
 					return getResource2ChecksumResult;
                 }
@@ -1401,7 +1538,7 @@ namespace CarbonResources
 
                     Result createResourceFromResource1Result = CreateResourceFromResource( *resource, resourceCopy1 );
 
-                    if (createResourceFromResource1Result != Result::SUCCESS)
+                    if (createResourceFromResource1Result.type != ResultType::SUCCESS)
                     {
 						return createResourceFromResource1Result;
                     }
@@ -1415,7 +1552,7 @@ namespace CarbonResources
 
                     Result createResourceFromResource2Result = CreateResourceFromResource( *resource2, resourceCopy2 );
 
-                    if( createResourceFromResource2Result != Result::SUCCESS )
+                    if( createResourceFromResource2Result.type != ResultType::SUCCESS )
 					{
 						return createResourceFromResource2Result;
 					}
@@ -1432,7 +1569,7 @@ namespace CarbonResources
 
                 Result createResourceFromResourceResult = CreateResourceFromResource( *resource, resourceCopy1 );
 
-                if (createResourceFromResourceResult != Result::SUCCESS)
+                if (createResourceFromResourceResult.type != ResultType::SUCCESS)
                 {
 					return createResourceFromResourceResult;
                 }
@@ -1446,7 +1583,7 @@ namespace CarbonResources
 
                 Result getResourceRelativepathResult = resource->GetRelativePath( resourceRelativePath );
 
-                if (getResourceRelativepathResult != Result::SUCCESS)
+                if (getResourceRelativepathResult.type != ResultType::SUCCESS)
                 {
 					return getResourceRelativepathResult;
                 }
@@ -1461,7 +1598,12 @@ namespace CarbonResources
             
         }
 
-        return Result::SUCCESS;
+        if( params.statusCallback )
+		{
+			params.statusCallback( 2, 100, "Diff calculation complete." );
+		}
+
+        return Result{ ResultType::SUCCESS };
     }
 
     std::vector<ResourceInfo*>::iterator ResourceGroupImpl::begin()

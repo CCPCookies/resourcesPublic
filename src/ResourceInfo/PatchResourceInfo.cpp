@@ -32,13 +32,13 @@ namespace CarbonResources
 	{
 		if( !m_targetResourceRelativepath.HasValue() )
 		{
-			return Result::RESOURCE_VALUE_NOT_SET;
+			return Result{ ResultType::RESOURCE_VALUE_NOT_SET };
 		}
 		else
 		{
 			targetResourceRelativePath = m_targetResourceRelativepath.GetValue();
 
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 	}
 
@@ -46,13 +46,13 @@ namespace CarbonResources
     {
 		if( !m_dataOffset.HasValue() )
 		{
-			return Result::RESOURCE_VALUE_NOT_SET;
+			return Result{ ResultType::RESOURCE_VALUE_NOT_SET };
 		}
 		else
 		{
 			dataoffset = m_dataOffset.GetValue();
 
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
     }
 
@@ -60,12 +60,12 @@ namespace CarbonResources
 	{
 		if( !m_sourceOffset.HasValue() )
 		{
-			return Result::RESOURCE_VALUE_NOT_SET;
+			return Result{ ResultType::RESOURCE_VALUE_NOT_SET };
 		}
 		else
 		{
 			sourceOffset = m_sourceOffset.GetValue();
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 	}
 
@@ -79,7 +79,7 @@ namespace CarbonResources
 			}
 			else
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 		}
 
@@ -91,7 +91,7 @@ namespace CarbonResources
 			}
 			else
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 		}
 
@@ -103,7 +103,7 @@ namespace CarbonResources
     		}
     		else
     		{
-    			return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
     		}
     	}
 
@@ -114,7 +114,7 @@ namespace CarbonResources
 	{
 		Result resourceExportResult = ResourceInfo::ExportToYaml( out, documentVersion );
 
-		if( resourceExportResult != Result::SUCCESS )
+		if( resourceExportResult.type != ResultType::SUCCESS )
 		{
 			return resourceExportResult;
 		}
@@ -124,7 +124,7 @@ namespace CarbonResources
 		{
 			if( !m_targetResourceRelativepath.HasValue() )
 			{
-				return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+				return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
 			}
 
 			out << YAML::Key << m_targetResourceRelativepath.GetTag();
@@ -136,7 +136,7 @@ namespace CarbonResources
 		{
 			if( !m_dataOffset.HasValue() )
 			{
-				return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+				return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
 			}
 
 			out << YAML::Key << m_dataOffset.GetTag();
@@ -148,14 +148,14 @@ namespace CarbonResources
     	{
     		if( !m_sourceOffset.HasValue() )
     		{
-    			return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+				return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
     		}
 
     		out << YAML::Key << m_sourceOffset.GetTag();
     		out << YAML::Value << m_sourceOffset.GetValue();
     	}
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
 	}
 
     std::string PatchResourceInfo::TypeId( )
@@ -167,12 +167,12 @@ namespace CarbonResources
 	{
 		if( other == nullptr )
         {
-			return Result::FAIL;
+			return Result{ ResultType::FAIL };
         }
 
         if (other->TypeId() != TypeId())
         {
-			return Result::RESOURCE_TYPE_MISSMATCH;
+			return Result{ ResultType::RESOURCE_TYPE_MISSMATCH };
         }
 
         const PatchResourceInfo* otherAsPatch = reinterpret_cast<const PatchResourceInfo*>( other );
@@ -183,7 +183,7 @@ namespace CarbonResources
 
 			Result getOffsetResult = otherAsPatch->GetDataOffset( dataOffset );
 
-			if( getOffsetResult != Result::SUCCESS )
+			if( getOffsetResult.type != ResultType::SUCCESS )
 			{
 				return getOffsetResult;
 			}
@@ -197,7 +197,7 @@ namespace CarbonResources
 
 			Result getTargetResourceRelativePathResult = otherAsPatch->GetTargetResourceRelativePath( targetResourceRelativePath );
 
-			if( getTargetResourceRelativePathResult != Result::SUCCESS )
+			if( getTargetResourceRelativePathResult.type != ResultType::SUCCESS )
 			{
 				return getTargetResourceRelativePathResult;
 			}

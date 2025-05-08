@@ -36,7 +36,7 @@ namespace CarbonResources
     class ResourceGroup;
     class PatchResourceGroup;
     class BundleResourceGroup;
-	enum class Result;
+	struct Result;
     
     /** @enum ResourceSourceType
     *  @brief Parameters to represent resource source location type
@@ -63,8 +63,6 @@ namespace CarbonResources
     */
     struct API ResourceSourceSettings
 	{
-		unsigned int size = sizeof( ResourceSourceSettings );
-
 		ResourceSourceType sourceType = ResourceSourceType::LOCAL_CDN;
 
         std::filesystem::path basePath = "";
@@ -95,8 +93,6 @@ namespace CarbonResources
     */
 	struct API ResourceDestinationSettings
 	{
-		unsigned int size = sizeof( ResourceDestinationSettings );
-
 		ResourceDestinationType destinationType = ResourceDestinationType::LOCAL_CDN;
 
         std::filesystem::path basePath = "";
@@ -118,22 +114,26 @@ namespace CarbonResources
     *  Size of chunks to read files in. Default is 10000000.
     *  @var BundleCreateParams::resourceBundleResourceGroupDestinationSettings
     *  Where to save the resulting BundleResourceGroup
+    *  @var BundleCreateParams::statusCallback
+    *  Optional status function callback. Callback is triggered at key status update events.
     */
     struct API BundleCreateParams
 	{
-		ResourceSourceSettings resourceSourceSettings;
+		ResourceSourceSettings resourceSourceSettings = { CarbonResources::ResourceSourceType::LOCAL_CDN, "" };
 
-        ResourceDestinationSettings chunkDestinationSettings;
+        ResourceDestinationSettings chunkDestinationSettings = { CarbonResources::ResourceDestinationType::REMOTE_CDN, "BundleOut/Chunks/" };
 
-        std::filesystem::path resourceGroupRelativePath;
+        std::filesystem::path resourceGroupRelativePath = "ResourceGroup.yaml";
 
-		std::filesystem::path resourceGroupBundleRelativePath;
+		std::filesystem::path resourceGroupBundleRelativePath = "BundleResourceGroup.yaml";
 
-        uintmax_t chunkSize = 10000000;
+        uintmax_t chunkSize = 50000000;
 
         uintmax_t fileReadChunkSize = 10000000;
 
-        ResourceDestinationSettings resourceBundleResourceGroupDestinationSettings;
+        ResourceDestinationSettings resourceBundleResourceGroupDestinationSettings = { CarbonResources::ResourceDestinationType::LOCAL_RELATIVE, "BundleOut/" };
+		
+        StatusCallback statusCallback = nullptr;
 	};
 
     /** @struct PatchCreateParams
@@ -156,38 +156,44 @@ namespace CarbonResources
     *  Where the produced binary patches will be saved.
     *  @var PatchCreateParams::resourcePatchResourceGroupDestinationSettings
     *  Where the produced PatchResourceGroup will be saved.
+    *  @var PatchCreateParams::statusCallback
+    *  Optional status function callback. Callback is triggered at key status update events.
     */
     struct API PatchCreateParams
 	{
-		unsigned int size = sizeof( PatchCreateParams );
-
-        uintmax_t maxInputFileChunkSize = -1;
+        uintmax_t maxInputFileChunkSize = 50000000;
 
 		ResourceGroup* previousResourceGroup = nullptr;
 
-        std::filesystem::path resourceGroupRelativePath;
+        std::filesystem::path resourceGroupRelativePath = "ResourceGroup.yaml";
 
-        std::filesystem::path resourceGroupPatchRelativePath;
+        std::filesystem::path resourceGroupPatchRelativePath = "PatchResourceGroup.yaml";
 
         std::filesystem::path patchFileRelativePathPrefix = "Patches/Patch";
 
-		ResourceSourceSettings resourceSourceSettingsFrom;
+		ResourceSourceSettings resourceSourceSettingsFrom = { CarbonResources::ResourceSourceType::REMOTE_CDN, "" };
 
-		ResourceSourceSettings resourceSourceSettingsTo;    // TODO this is sometimes Previous/Next and sometimes From/To unify
+		ResourceSourceSettings resourceSourceSettingsTo = { CarbonResources::ResourceSourceType::LOCAL_RELATIVE, "" }; // TODO this is sometimes Previous/Next and sometimes From/To unify
 
-        ResourceDestinationSettings resourcePatchBinaryDestinationSettings;
-
-        ResourceDestinationSettings resourcePatchResourceGroupDestinationSettings;
-	};
+        ResourceDestinationSettings resourcePatchBinaryDestinationSettings = { CarbonResources::ResourceDestinationType::LOCAL_CDN, "PatchOut/Patches/" };
+;
+        ResourceDestinationSettings resourcePatchResourceGroupDestinationSettings = { CarbonResources::ResourceDestinationType::LOCAL_RELATIVE, "PatchOut/" };
+	
+        StatusCallback statusCallback = nullptr;
+    };
 
     /** @struct ResourceGroupImportFromFileParams
     *  @brief Function Parameters required for CarbonResources::ResourceGroup::ImportFromFile
     *  @var ResourceGroupImportFromFileParams::filename
     *  Full filename of input file.
+    *  @var ResourceGroupImportFromFileParams::statusCallback
+    *  Optional status function callback. Callback is triggered at key status update events.
     */
     struct API ResourceGroupImportFromFileParams
 	{
 		std::filesystem::path filename;
+
+        StatusCallback statusCallback = nullptr;
 	};
 
     /** @struct ResourceGroupExportToFileParams
@@ -201,13 +207,11 @@ namespace CarbonResources
     */
 	struct API ResourceGroupExportToFileParams
 	{
-		const unsigned int size = sizeof( ResourceGroupExportToFileParams );
-
 		std::filesystem::path filename = "";
 
 		Version outputDocumentVersion = S_DOCUMENT_VERSION;
 
-        std::function<void( int, const std::string& )> statusCallback = nullptr;
+        StatusCallback statusCallback = nullptr;
 	};
 
 	/** @struct CreateResourceGroupFromDirectoryParams
@@ -223,15 +227,13 @@ namespace CarbonResources
     */
 	struct API CreateResourceGroupFromDirectoryParams
 	{
-		const unsigned int size = sizeof( CreateResourceGroupFromDirectoryParams );
-
 		std::filesystem::path directory = "";
 
 		uintmax_t resourceStreamThreshold = 10000000;
 
 		Version outputDocumentVersion = S_DOCUMENT_VERSION;
 
-        std::function<void( int, const std::string& )> statusCallback = nullptr;
+        StatusCallback statusCallback = nullptr;
 	};
 
     class ResourceGroupImpl;    // TODO remove these from public API

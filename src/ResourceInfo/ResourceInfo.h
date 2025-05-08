@@ -122,7 +122,7 @@ namespace CarbonResources
             m_collection.clear();
         }
 
-        size_t GetSize()
+        size_t GetSize() const
         {
 			return m_collection.size();
         }

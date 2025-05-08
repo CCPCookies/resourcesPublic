@@ -1,5 +1,6 @@
 
 #include "BundleStreamOut.h"
+#include "ResourceTools.h"
 
 
 namespace ResourceTools
@@ -55,13 +56,62 @@ namespace ResourceTools
       }
       else
       {
+          
+
           // Copy chunk amount out of cache
-		  std::string& dataRef = *data.data;
+		  //std::string& dataRef = *data.data;
 
-          dataRef = m_cache.substr( 0, m_chunkSize );
+          //dataRef = m_cache.substr( 0, m_chunkSize );
 
-		  m_cache.erase( 0, m_chunkSize );
+          int numberOfChunksConsumed = 0;
+
+          std::string uncompressedData;
+          std::string compressedData;
+
+          bool chunkSizeAchieved = false;
+
+          while (compressedData.size() < m_chunkSize)
+          {
+			  uncompressedData.append(m_cache.substr( numberOfChunksConsumed * m_chunkSize, m_chunkSize ));
+
+			  // Compress data
+              if (!ResourceTools::GZipCompressData(uncompressedData, compressedData))
+              {
+				  return false;
+              }
+
+              if( compressedData.size() >= m_chunkSize )
+              {
+                  // Chunk size achieved after compression
+				  chunkSizeAchieved = true;
+
+				  break;
+              }
+
+              numberOfChunksConsumed++;
+
+              if (numberOfChunksConsumed * m_chunkSize > m_cache.size())
+              {
+                  // Chunk not achieved, not enough data in cache to create chunk of requested size
+				  break;
+              }
+          }
+          
+
+          if (chunkSizeAchieved)
+          {
+              // Remove the data from the cache and return the resulting uncompressed data
+
+              std::string& dataRef = *data.data;
+
+			  dataRef = m_cache.substr( 0, m_chunkSize * numberOfChunksConsumed );
+
+			  m_cache.erase( 0, m_chunkSize * numberOfChunksConsumed );
+          }
+		  
       }
+
+      return true;
 
   }
 

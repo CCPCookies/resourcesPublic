@@ -36,9 +36,12 @@ public:
 
 private:
 
-	bool CreatePatch( const CarbonResources::ResourceGroupImportFromFileParams& previousResourceGroupParams, const CarbonResources::ResourceGroupImportFromFileParams& nextResourceGroupParams, const CarbonResources::PatchCreateParams& createPatchParams ) const;
+    void PrintStartBanner( const CarbonResources::ResourceGroupImportFromFileParams& previousResourceGroupParams, const CarbonResources::ResourceGroupImportFromFileParams& nextResourceGroupParams, CarbonResources::PatchCreateParams& createPatchParams ) const;
+
+	bool CreatePatch( CarbonResources::ResourceGroupImportFromFileParams& previousResourceGroupParams, CarbonResources::ResourceGroupImportFromFileParams& nextResourceGroupParams, CarbonResources::PatchCreateParams& createPatchParams ) const;
 
 private:
+
 	std::string m_previousResourceGroupPathArgumentId;
 
 	std::string m_nextResourceGroupPathArgumentId;

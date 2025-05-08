@@ -28,29 +28,29 @@ CreatePatchCliOperation::CreatePatchCliOperation() :
 
     AddRequiredPositionalArgument( m_nextResourceGroupPathArgumentId, "Filename to next resourceGroup." );
 
-    AddArgument( m_resourceGroupRelativePathArgumentId, "-rg", "Relative path for output resourceGroup which will contain the diff between the supplied previous ResourceGroup and next ResourceGroup.", true, "ResourceGroup.yaml" );
+    AddArgument( m_resourceGroupRelativePathArgumentId, "Relative path for output resourceGroup which will contain the diff between the supplied previous ResourceGroup and next ResourceGroup.", true, "ResourceGroup.yaml" );
 
-    AddArgument( m_patchResourceGroupRelativePathArgumentId, "-pg", "Relative path for output PatchResourceGroup which will contain all the patches produced.", true, "PatchResourceGroup.yaml" );
+    AddArgument( m_patchResourceGroupRelativePathArgumentId, "Relative path for output PatchResourceGroup which will contain all the patches produced.", true, "PatchResourceGroup.yaml" );
 
-    AddArgument( m_resourceSourceTypePreviousArgumentId, "-rtp", "Represents the type of repository to source resources for previous.", true, "LOCAL_RELATIVE" );
+    AddArgument( m_resourceSourceTypePreviousArgumentId, "Represents the type of repository to source resources for previous.", true, "LOCAL_RELATIVE" );
 
-    AddArgument( m_resourceSourceBasePathPreviousArgumentId, "-rbp", "Represents the base path to source resources for previous.", true, "" );
+    AddArgument( m_resourceSourceBasePathPreviousArgumentId, "Represents the base path to source resources for previous.", true, "" );
 
-    AddArgument( m_resourceSourceTypeNextArgumentId, "-rtn", "Represents the type of repository to source resources for next.", true, "LOCAL_RELATIVE" );
+    AddArgument( m_resourceSourceTypeNextArgumentId, "Represents the type of repository to source resources for next.", true, "LOCAL_RELATIVE" );
 
-	AddArgument( m_resourceSourceBasePathNextArgumentId, "-rbn", "Represents the base path to source resources for next.", true, "" );
+	AddArgument( m_resourceSourceBasePathNextArgumentId, "Represents the base path to source resources for next.", true, "" );
 
-    AddArgument( m_patchBinaryDestinationTypeArgumentId, "-bt", "Represents the type of repository where binary patches will be saved.", true, "LOCAL_RELATIVE" );
+    AddArgument( m_patchBinaryDestinationTypeArgumentId, "Represents the type of repository where binary patches will be saved.", true, "LOCAL_RELATIVE" );
 
-	AddArgument( m_patchBinaryDestinationBasePathArgumentId, "-bb", "Represents the base path where binary patches will be saved.", true, "" );
+	AddArgument( m_patchBinaryDestinationBasePathArgumentId, "Represents the base path where binary patches will be saved.", true, "" );
 
-    AddArgument( m_patchResourceGroupDestinationTypeArgumentId, "-bt", "Represents the type of repository where the patch ResourceGroup will be saved.", true, "LOCAL_RELATIVE" );
+    AddArgument( m_patchResourceGroupDestinationTypeArgumentId, "Represents the type of repository where the patch ResourceGroup will be saved.", true, "LOCAL_RELATIVE" );
 
-	AddArgument( m_patchResourceGroupDestinationBasePathArgumentId, "-bb", "Represents the base path where the patch ResourceGroup will be saved.", true, "" );
+	AddArgument( m_patchResourceGroupDestinationBasePathArgumentId, "Represents the base path where the patch ResourceGroup will be saved.", true, "" );
 
-    AddArgument( m_patchFileRelativePathPrefix, "-pp", "Relative path prefix for produced patch binaries. Default is “Patches/Patch” which will produce patches such as Patches/Patch.1 …", false, "Patches/Patch" );
+    AddArgument( m_patchFileRelativePathPrefix, "Relative path prefix for produced patch binaries. Default is “Patches/Patch” which will produce patches such as Patches/Patch.1 …", false, "Patches/Patch" );
 
-    AddArgument( m_patchFileRelativePathPrefix, "-c", "Files are processed in chunks, maxInputFileChunkSize indicate the size of this chunk. Files smaller than chunk will be processed in one pass.", false, "100000000" );
+    AddArgument( m_maxInputChunkSize, "Files are processed in chunks, maxInputFileChunkSize indicate the size of this chunk. Files smaller than chunk will be processed in one pass.", false, "100000000" );
 
 }
 
@@ -66,113 +66,199 @@ bool CreatePatchCliOperation::Execute() const
 
     CarbonResources::PatchCreateParams createPatchParams;
 
-    createPatchParams.resourceGroupRelativePath = m_argumentParser->get<std::string>( m_resourceGroupRelativePathArgumentId );
+    if (m_argumentParser->is_used(m_resourceGroupRelativePathArgumentId))
+    {
+		createPatchParams.resourceGroupRelativePath = m_argumentParser->get<std::string>( m_resourceGroupRelativePathArgumentId );
+    }
+    
+    if (m_argumentParser->is_used(m_patchResourceGroupRelativePathArgumentId))
+    {
+		createPatchParams.resourceGroupPatchRelativePath = m_argumentParser->get<std::string>( m_patchResourceGroupRelativePathArgumentId );
+    }
+    
+    if (m_argumentParser->is_used(m_resourceSourceTypePreviousArgumentId))
+    {
+		std::string resourceSourceTypePrevious = m_argumentParser->get<std::string>( m_resourceSourceTypePreviousArgumentId );
 
-    createPatchParams.resourceGroupPatchRelativePath = m_argumentParser->get<std::string>( m_patchResourceGroupRelativePathArgumentId );
+		if( resourceSourceTypePrevious == "LOCAL_CDN" )
+		{
+			createPatchParams.resourceSourceSettingsFrom.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
+		}
+		else if( resourceSourceTypePrevious == "REMOTE_CDN" )
+		{
+			createPatchParams.resourceSourceSettingsFrom.sourceType = CarbonResources::ResourceSourceType::REMOTE_CDN;
+		}
+		else if( resourceSourceTypePrevious == "LOCAL_RELATIVE" )
+		{
+			createPatchParams.resourceSourceSettingsFrom.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
+		}
+		else
+		{
+			return false;
+		}
+    }
+    
+    if (m_argumentParser->is_used(m_resourceSourceBasePathPreviousArgumentId))
+    {
+		createPatchParams.resourceSourceSettingsFrom.basePath = m_argumentParser->get<std::string>( m_resourceSourceBasePathPreviousArgumentId );
+    }
+    
+    if (m_argumentParser->is_used(m_resourceSourceTypeNextArgumentId))
+    {
+		std::string resourceSourceTypeNext = m_argumentParser->get<std::string>( m_resourceSourceTypeNextArgumentId );
 
-    std::string resourceSourceTypePrevious = m_argumentParser->get<std::string>( m_resourceSourceTypePreviousArgumentId );
+		if( resourceSourceTypeNext == "LOCAL_CDN" )
+		{
+			createPatchParams.resourceSourceSettingsTo.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
+		}
+		else if( resourceSourceTypeNext == "REMOTE_CDN" )
+		{
+			createPatchParams.resourceSourceSettingsTo.sourceType = CarbonResources::ResourceSourceType::REMOTE_CDN;
+		}
+		else if( resourceSourceTypeNext == "LOCAL_RELATIVE" )
+		{
+			createPatchParams.resourceSourceSettingsTo.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
+		}
+		else
+		{
+			return false;
+		}
+    }
+    
+    if (m_argumentParser->is_used(m_resourceSourceBasePathNextArgumentId))
+    {
+		createPatchParams.resourceSourceSettingsTo.basePath = m_argumentParser->get<std::string>( m_resourceSourceBasePathNextArgumentId );
+    }
 	
-    if( resourceSourceTypePrevious == "LOCAL_CDN" )
+    if (m_argumentParser->is_used(m_patchBinaryDestinationTypeArgumentId))
     {
-		createPatchParams.resourceSourceSettingsFrom.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
+		std::string patchBinaryDestinationType = m_argumentParser->get<std::string>( m_patchBinaryDestinationTypeArgumentId );
+
+		if( patchBinaryDestinationType == "LOCAL_CDN" )
+		{
+			createPatchParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
+		}
+		else if( patchBinaryDestinationType == "REMOTE_CDN" )
+		{
+			createPatchParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::REMOTE_CDN;
+		}
+		else if( patchBinaryDestinationType == "LOCAL_RELATIVE" )
+		{
+			createPatchParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
+		}
+		else
+		{
+			return false;
+		}
     }
-	else if( resourceSourceTypePrevious == "REMOTE_CDN" )
-	{
-		createPatchParams.resourceSourceSettingsFrom.sourceType = CarbonResources::ResourceSourceType::REMOTE_CDN;
-	}
-	else if( resourceSourceTypePrevious == "LOCAL_RELATIVE" )
-	{
-		createPatchParams.resourceSourceSettingsFrom.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
-	}
-    else
+    
+    if (m_argumentParser->is_used(m_patchBinaryDestinationBasePathArgumentId))
     {
-		return false;
+		createPatchParams.resourcePatchBinaryDestinationSettings.basePath = m_argumentParser->get<std::string>( m_patchBinaryDestinationBasePathArgumentId );
+    }
+	
+    if (m_argumentParser->is_used(m_patchResourceGroupDestinationTypeArgumentId))
+    {
+		std::string patchResourceGroupDestinationType = m_argumentParser->get<std::string>( m_patchResourceGroupDestinationTypeArgumentId );
+
+		if( patchResourceGroupDestinationType == "LOCAL_CDN" )
+		{
+			createPatchParams.resourcePatchResourceGroupDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
+		}
+		else if( patchResourceGroupDestinationType == "REMOTE_CDN" )
+		{
+			createPatchParams.resourcePatchResourceGroupDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::REMOTE_CDN;
+		}
+		else if( patchResourceGroupDestinationType == "LOCAL_RELATIVE" )
+		{
+			createPatchParams.resourcePatchResourceGroupDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
+		}
+		else
+		{
+			return false;
+		}
+    }
+    
+    if (m_argumentParser->is_used(m_patchResourceGroupDestinationBasePathArgumentId))
+    {
+		createPatchParams.resourcePatchResourceGroupDestinationSettings.basePath = m_argumentParser->get<std::string>( m_patchResourceGroupDestinationBasePathArgumentId );
     }
 
-    createPatchParams.resourceSourceSettingsFrom.basePath = m_argumentParser->get<std::string>( m_resourceSourceBasePathPreviousArgumentId );
+    if( m_argumentParser->is_used( m_patchFileRelativePathPrefix ) )
+    {
+		createPatchParams.patchFileRelativePathPrefix = m_argumentParser->get<std::string>( m_patchFileRelativePathPrefix );
+    }
 
-    std::string resourceSourceTypeNext = m_argumentParser->get<std::string>( m_resourceSourceTypeNextArgumentId );
+    if (m_argumentParser->is_used(m_maxInputChunkSize))
+    {
+		createPatchParams.maxInputFileChunkSize = m_argumentParser->get<uintmax_t>( m_maxInputChunkSize );
+    }
 
-	if( resourceSourceTypeNext == "LOCAL_CDN" )
-	{
-		createPatchParams.resourceSourceSettingsTo.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
-	}
-	else if( resourceSourceTypeNext == "REMOTE_CDN" )
-	{
-		createPatchParams.resourceSourceSettingsTo.sourceType = CarbonResources::ResourceSourceType::REMOTE_CDN;
-	}
-	else if( resourceSourceTypeNext == "LOCAL_RELATIVE" )
-	{
-		createPatchParams.resourceSourceSettingsTo.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
-	}
-	else
-	{
-		return false;
-	}
-
-	createPatchParams.resourceSourceSettingsTo.basePath = m_argumentParser->get<std::string>( m_resourceSourceBasePathNextArgumentId );
-
-
-    std::string patchBinaryDestinationType = m_argumentParser->get<std::string>( m_patchBinaryDestinationTypeArgumentId );
-
-	if( patchBinaryDestinationType == "LOCAL_CDN" )
-	{
-		createPatchParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
-	}
-	else if( patchBinaryDestinationType == "REMOTE_CDN" )
-	{
-		createPatchParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::REMOTE_CDN;
-	}
-	else if( patchBinaryDestinationType == "LOCAL_RELATIVE" )
-	{
-		createPatchParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
-	}
-	else
-	{
-		return false;
-	}
-
-	createPatchParams.resourcePatchBinaryDestinationSettings.basePath = m_argumentParser->get<std::string>( m_patchBinaryDestinationBasePathArgumentId );
-
-
-
-
-    std::string patchResourceGroupDestinationType = m_argumentParser->get<std::string>( m_patchResourceGroupDestinationTypeArgumentId );
-
-	if( patchResourceGroupDestinationType == "LOCAL_CDN" )
-	{
-		createPatchParams.resourcePatchResourceGroupDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
-	}
-	else if( patchResourceGroupDestinationType == "REMOTE_CDN" )
-	{
-		createPatchParams.resourcePatchResourceGroupDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::REMOTE_CDN;
-	}
-	else if( patchResourceGroupDestinationType == "LOCAL_RELATIVE" )
-	{
-		createPatchParams.resourcePatchResourceGroupDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
-	}
-	else
-	{
-		return false;
-	}
-
-	createPatchParams.resourcePatchResourceGroupDestinationSettings.basePath = m_argumentParser->get<std::string>( m_patchResourceGroupDestinationBasePathArgumentId );
-
-    createPatchParams.patchFileRelativePathPrefix = m_argumentParser->get<std::string>( m_patchFileRelativePathPrefix );
-
-	createPatchParams.maxInputFileChunkSize = m_argumentParser->get<uintmax_t>( m_maxInputChunkSize );
+    if (s_verbosity > 0)
+    {
+		PrintStartBanner( previousResourceGroupParams, nextResourceGroupParams, createPatchParams );
+    }
 
 	return CreatePatch( previousResourceGroupParams, nextResourceGroupParams, createPatchParams );
 }
 
-bool CreatePatchCliOperation::CreatePatch( const CarbonResources::ResourceGroupImportFromFileParams& previousResourceGroupParams, const CarbonResources::ResourceGroupImportFromFileParams& nextResourceGroupParams, const CarbonResources::PatchCreateParams& createPatchParams ) const
+void CreatePatchCliOperation::PrintStartBanner( const CarbonResources::ResourceGroupImportFromFileParams& previousResourceGroupParams, const CarbonResources::ResourceGroupImportFromFileParams& nextResourceGroupParams, CarbonResources::PatchCreateParams& createPatchParams ) const
 {
+	std::cout << "---Running Patch Creation---" << std::endl;
+
+    PrintCommonOperationHeaderInformation();
+
+	std::cout << "Previous Resource Group: " << previousResourceGroupParams.filename << std::endl;
+
+	std::cout << "Next Resource Group: " << nextResourceGroupParams.filename << std::endl;
+
+	std::cout << "Max Input File Chunk Size: " << createPatchParams.maxInputFileChunkSize << std::endl;
+
+	std::cout << "Resource Group Relative Path: " << createPatchParams.resourceGroupRelativePath << std::endl;
+
+	std::cout << "Resource Group Patch Relative Path: " << createPatchParams.resourceGroupPatchRelativePath << std::endl;
+
+	std::cout << "Patch File Relative Path Prefix: " << createPatchParams.patchFileRelativePathPrefix << std::endl;
+
+	std::cout << "Resource Source Settings From Base Path: " << createPatchParams.resourceSourceSettingsFrom.basePath << std::endl;
+
+	std::cout << "Resource Source Settings From Source Type: " << SourceTypeToString( createPatchParams.resourceSourceSettingsFrom.sourceType ) << std::endl;
+
+	std::cout << "Resource Source Settings To Base Path: " << createPatchParams.resourceSourceSettingsTo.basePath << std::endl;
+
+	std::cout << "Resource Source Settings To Source Type: " << SourceTypeToString( createPatchParams.resourceSourceSettingsTo.sourceType ) << std::endl;
+
+	std::cout << "Resource Patch Binary Destination Settings Base Path: " << createPatchParams.resourcePatchBinaryDestinationSettings.basePath << std::endl;
+
+	std::cout << "Resource Patch Binary Destination Settings Destination Type: " << DestinationTypeToString( createPatchParams.resourcePatchBinaryDestinationSettings.destinationType ) << std::endl;
+
+	std::cout << "Resource Patch Resource Group Destination Settings Base Path: " << createPatchParams.resourcePatchResourceGroupDestinationSettings.basePath << std::endl;
+
+	std::cout << "Resource Patch Resource Group Destination Settings Destination Type: " << DestinationTypeToString( createPatchParams.resourcePatchResourceGroupDestinationSettings.destinationType ) << std::endl;
+
+	std::cout << "----------------------------\n" << std::endl;
+}
+
+bool CreatePatchCliOperation::CreatePatch( CarbonResources::ResourceGroupImportFromFileParams& previousResourceGroupParams, CarbonResources::ResourceGroupImportFromFileParams& nextResourceGroupParams, CarbonResources::PatchCreateParams& createPatchParams ) const
+{
+	CarbonResources::StatusCallback statusCallback = GetStatusCallback();
+
+    // Get status callback relevant to verbosity level
+	createPatchParams.statusCallback = statusCallback;
+
 	// Previous ResourceGroup
+	if( createPatchParams.statusCallback )
+	{
+		createPatchParams.statusCallback( 0, 0, "Loading previous resource group." );
+	}
+
 	CarbonResources::ResourceGroup resourceGroupPrevious;
+
+    previousResourceGroupParams.statusCallback = statusCallback;
 
 	CarbonResources::Result importPreviousFromFileResult = resourceGroupPrevious.ImportFromFile( previousResourceGroupParams );
 
-	if( importPreviousFromFileResult != CarbonResources::Result::SUCCESS )
+	if( importPreviousFromFileResult.type != CarbonResources::ResultType::SUCCESS )
 	{
 		PrintCarbonResourcesError( importPreviousFromFileResult );
 
@@ -180,23 +266,45 @@ bool CreatePatchCliOperation::CreatePatch( const CarbonResources::ResourceGroupI
 	}
 
 	// Latest ResourceGroup
+	if( createPatchParams.statusCallback )
+	{
+		createPatchParams.statusCallback( 0, 50, "Loading latest resource group." );
+	}
+
 	CarbonResources::ResourceGroup resourceGroupLatest;
+
+    nextResourceGroupParams.statusCallback = statusCallback;
 
 	CarbonResources::Result importNextFromFileResult = resourceGroupLatest.ImportFromFile( nextResourceGroupParams );
 
-	if( importNextFromFileResult != CarbonResources::Result::SUCCESS )
+	if( importNextFromFileResult.type != CarbonResources::ResultType::SUCCESS )
 	{
 		PrintCarbonResourcesError( importPreviousFromFileResult );
 
 		return false;
 	}
 
+    createPatchParams.previousResourceGroup = &resourceGroupPrevious;
+
+    // Create Patch
+	if( createPatchParams.statusCallback )
+	{
+		createPatchParams.statusCallback( 0, 75, "Creating Patch." );
+	}
+
 	CarbonResources::Result createPatchResult = resourceGroupLatest.CreatePatch( createPatchParams );
 
-	if( createPatchResult != CarbonResources::Result::SUCCESS )
+	if( createPatchResult.type != CarbonResources::ResultType::SUCCESS )
 	{
 		PrintCarbonResourcesError( createPatchResult );
 
 		return false;
 	}
+
+    if( createPatchParams.statusCallback )
+	{
+		createPatchParams.statusCallback( 0, 100, "Patch created succesfully." );
+	}
+
+    return true;
 }

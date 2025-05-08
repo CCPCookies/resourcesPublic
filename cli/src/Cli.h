@@ -46,6 +46,10 @@ public:
 
 private:
 
+    void PrintCliHeader();
+
+private:
+
 	argparse::ArgumentParser* m_argumentParser;
 
 	std::vector<const CliOperation*> m_operations;

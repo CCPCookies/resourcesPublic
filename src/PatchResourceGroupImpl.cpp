@@ -56,7 +56,7 @@ namespace CarbonResources
 
 		Result importFromYamlResult = patchResource->ImportFromYaml( resource, m_versionParameter.GetValue() );
 
-		if( importFromYamlResult != Result::SUCCESS )
+		if( importFromYamlResult.type != ResultType::SUCCESS )
 		{
 			delete patchResource;
 
@@ -66,7 +66,7 @@ namespace CarbonResources
 		{
 			resourceOut = patchResource;
 
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 
 	}
@@ -81,7 +81,7 @@ namespace CarbonResources
 
             Result createResourceFromYaml = ResourceGroupImpl::CreateResourceFromYaml( resourceGroupNode, resource );
 
-            if (createResourceFromYaml != Result::SUCCESS)
+            if (createResourceFromYaml.type != ResultType::SUCCESS)
             {
 				return createResourceFromYaml;
             }
@@ -100,11 +100,11 @@ namespace CarbonResources
 			}
 			else
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 		}
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
     }
 
     Result PatchResourceGroupImpl::ExportGroupSpecialisedYaml( YAML::Emitter& out, VersionInternal outputDocumentVersion ) const
@@ -126,14 +126,14 @@ namespace CarbonResources
 		{
 			if( !m_maxInputChunkSize.HasValue() )
 			{
-				return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+				return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
 			}
 
 			out << YAML::Key << m_maxInputChunkSize.GetTag();
 			out << YAML::Value << m_maxInputChunkSize.GetValue();
 		}
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
     }
 
 
@@ -143,7 +143,7 @@ namespace CarbonResources
 
 		Result resourceRelativePathResult = resource->GetRelativePath( resourceRelativePath );
 
-        if( resourceRelativePathResult != Result::SUCCESS )
+        if( resourceRelativePathResult.type != ResultType::SUCCESS )
         {
 			return resourceRelativePathResult;
         }
@@ -156,7 +156,7 @@ namespace CarbonResources
 
 			Result getPatchTargetResource = patch->GetTargetResourceRelativePath( patchTargetResource );
 
-			if( getPatchTargetResource != Result::SUCCESS )
+			if( getPatchTargetResource.type != ResultType::SUCCESS )
 			{
 				return getPatchTargetResource;
 			}
@@ -167,7 +167,7 @@ namespace CarbonResources
             }
         }
 
-        return Result::SUCCESS;
+        return Result{ ResultType::SUCCESS };
     }
 
     Result PatchResourceGroupImpl::Apply( const PatchApplyParams& params )
@@ -189,7 +189,7 @@ namespace CarbonResources
 
         Result resourceGroupGetDataResult = m_resourceGroupParameter.GetValue()->GetData( resourceGroupDataParams );
 
-        if (resourceGroupGetDataResult != Result::SUCCESS)
+        if (resourceGroupGetDataResult.type != ResultType::SUCCESS)
         {
 			return resourceGroupGetDataResult;
         }
@@ -200,7 +200,7 @@ namespace CarbonResources
 
         Result resourceGroupImportFromDataResult = resourceGroup.ImportFromData( resourceGroupData );
 
-        if( resourceGroupImportFromDataResult != Result::SUCCESS )
+        if( resourceGroupImportFromDataResult.type != ResultType::SUCCESS )
         {
 			return resourceGroupImportFromDataResult;
         }
@@ -213,7 +213,7 @@ namespace CarbonResources
 
             Result getTargetResourcePatchesResult = GetTargetResourcePatches(resource, patchesForResource);
 
-            if (getTargetResourcePatchesResult != Result::SUCCESS)
+            if (getTargetResourcePatchesResult.type != ResultType::SUCCESS)
             {
 				return getTargetResourcePatchesResult;
             }
@@ -224,7 +224,7 @@ namespace CarbonResources
 
 			if( !temporaryResourceDataStreamOut.StartWrite( params.temporaryFilePath ) )
 			{
-				return Result::FAILED_TO_OPEN_FILE;
+				return Result{ ResultType::FAILED_TO_OPEN_FILE };
 			}
 
 			// Incrementally calculate checksum for temporary patch file
@@ -245,7 +245,7 @@ namespace CarbonResources
 
 				Result getResourceDataStream = resource->GetDataStream( resourceDataStreamParams );
 
-                if (getResourceDataStream != Result::SUCCESS)
+                if (getResourceDataStream.type != ResultType::SUCCESS)
                 {
 					return getResourceDataStream;
                 }
@@ -267,7 +267,7 @@ namespace CarbonResources
 
 					std::string location;
 					Result patchGetLocationResult = patch->GetLocation( location );
-					if( patchGetLocationResult != Result::SUCCESS )
+					if( patchGetLocationResult.type != ResultType::SUCCESS )
 					{
 						return patchGetLocationResult;
 					}
@@ -277,7 +277,7 @@ namespace CarbonResources
 					{
 						Result getPatchDataResult = patch->GetData( patchGetDataParams );
 
-						if( getPatchDataResult != Result::SUCCESS )
+						if( getPatchDataResult.type != ResultType::SUCCESS )
 						{
 							return getPatchDataResult;
 						}
@@ -288,13 +288,13 @@ namespace CarbonResources
 					uintmax_t sourceOffset;
 					Result getPatchDataOffset = patch->GetDataOffset( dataOffset );
 
-                    if (getPatchDataOffset != Result::SUCCESS)
+                    if (getPatchDataOffset.type != ResultType::SUCCESS)
                     {
 						return getPatchDataOffset;
                     }
 
 					Result getPatchSourceOffset = patch->GetSourceOffset( sourceOffset );
-					if (getPatchSourceOffset != Result::SUCCESS)
+					if (getPatchSourceOffset.type != ResultType::SUCCESS)
 					{
 						return getPatchSourceOffset;
 					}
@@ -306,7 +306,7 @@ namespace CarbonResources
 
 					Result getPreviousUncompressedSize = resource->GetUncompressedSize( previousUncompressedSize );
 
-                    if (getPreviousUncompressedSize != Result::SUCCESS)
+                    if (getPreviousUncompressedSize.type != ResultType::SUCCESS)
                     {
 						return getPreviousUncompressedSize;
                     }
@@ -323,23 +323,23 @@ namespace CarbonResources
 							{
 								if( !resourceDataStreamIn.ReadBytes( remaining, dataChunk ) )
 								{
-									return Result::FAILED_TO_READ_FROM_STREAM;
+									return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
 								}
 							}
                             else if (!(resourceDataStreamIn >> dataChunk))
                             {
-								return Result::FAILED_TO_READ_FROM_STREAM;
+								return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
                             }
 
                             if( !( temporaryResourceDataStreamOut << dataChunk ) )
                             {
-								return Result::FAILED_TO_WRITE_TO_STREAM;
+								return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
                             }
 
                             // Add to incremental checksum calculation
 							if( !( patchedFileChecksumStream << dataChunk ) )
                             {
-								return Result::FAILED_TO_GENERATE_CHECKSUM;
+								return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
                             }
                         	previousSourcePosition += dataChunk.size();
                         }
@@ -359,22 +359,22 @@ namespace CarbonResources
                     		resourceDataStreamIn.Seek(sourceOffset);
                     		if( !( resourceDataStreamIn >> previousResourceData ) )
                     		{
-                    			return Result::FAILED_TO_READ_FROM_STREAM;
+								return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
                     		}
                     		if( !ResourceTools::ApplyPatch( previousResourceData, patchData, patchedResourceData ) )
                     		{
-                    			return Result::FAILED_TO_APPLY_PATCH;
+								return Result{ ResultType::FAILED_TO_APPLY_PATCH };
                     		}
                     		// Write the patch result to file
                     		if( !( temporaryResourceDataStreamOut << patchedResourceData ) )
                     		{
-                    			return Result::FAILED_TO_WRITE_TO_STREAM;
+								return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
                     		}
 
                     		// Add to incremental checksum calculation
                     		if( !( patchedFileChecksumStream << patchedResourceData ) )
                     		{
-                    			return Result::FAILED_TO_GENERATE_CHECKSUM;
+								return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
                     		}
                     	}
                     	else
@@ -382,23 +382,23 @@ namespace CarbonResources
 							ResourceTools::FileDataStreamIn sourceDataStreamIn(m_maxInputChunkSize.GetValue());
                     		std::filesystem::path sourceLocation;
                     		Result getLocationResult = resource->GetRelativePath( sourceLocation );
-                    		if (getLocationResult != Result::SUCCESS)
+                    		if (getLocationResult.type != ResultType::SUCCESS)
                     		{
                     			return getLocationResult;
                     		}
                     		if( !sourceDataStreamIn.StartRead(  params.resourcesToPatchSourceSettings.basePath / sourceLocation ) )
                     		{
-                    			return Result::FAILED_TO_READ_FROM_STREAM;
+								return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
                     		}
                     		uintmax_t sourceOffset{0};
                     		Result getSourceOffsetResult = patch->GetSourceOffset( sourceOffset );
-                    		if( getSourceOffsetResult != Result::SUCCESS )
+                    		if( getSourceOffsetResult.type != ResultType::SUCCESS )
                     		{
 								return getSourceOffsetResult;
                     		}
                     		uintmax_t unCompressedSize{0};
                     		Result getUncompressedSizeResult = patch->GetUncompressedSize( unCompressedSize );
-                    		if( getUncompressedSizeResult != Result::SUCCESS )
+                    		if( getUncompressedSizeResult.type != ResultType::SUCCESS )
                     		{
                     			return getUncompressedSizeResult;
                     		}
@@ -417,7 +417,7 @@ namespace CarbonResources
 
                     			if( sourceData.empty() )
                     			{
-                    				return Result::FAILED_TO_READ_FROM_STREAM;
+									return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
                     			}
                     			resourceDataStreamIn >> previousResourceData;
                     			if( sourceData.size() > unCompressedSize )
@@ -429,13 +429,13 @@ namespace CarbonResources
                     			// Write the data from the source file
                     			if( !( temporaryResourceDataStreamOut << sourceData ) )
                     			{
-                    				return Result::FAILED_TO_WRITE_TO_STREAM;
+									return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
                     			}
 
                     			// Add to incremental checksum calculation
                     			if( !( patchedFileChecksumStream << sourceData ) )
                     			{
-                    				return Result::FAILED_TO_GENERATE_CHECKSUM;
+									return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
                     			}
                     		}
 
@@ -446,13 +446,13 @@ namespace CarbonResources
                         // New data, append on to end
 						if( !( temporaryResourceDataStreamOut << previousResourceData ) )
 						{
-							return Result::FAILED_TO_WRITE_TO_STREAM;
+							return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
 						}
 
                         // Add to incremental checksum calculation
 						if( !( patchedFileChecksumStream << previousResourceData ) )
 						{
-							return Result::FAILED_TO_GENERATE_CHECKSUM;
+							return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
 						}
 
                     }
@@ -464,7 +464,7 @@ namespace CarbonResources
 
                 Result getResourceUncompressedSizeResult = resource->GetUncompressedSize( expectedResourceSize );
 
-                if (getResourceUncompressedSizeResult != Result::SUCCESS)
+                if (getResourceUncompressedSizeResult.type != ResultType::SUCCESS)
                 {
 					return getResourceUncompressedSizeResult;
                 }
@@ -486,7 +486,7 @@ namespace CarbonResources
 
 				Result resourceGetDataResult = resource->GetDataStream( resourceGetDataParams );
 
-                if (resourceGetDataResult != Result::SUCCESS)
+                if (resourceGetDataResult.type != ResultType::SUCCESS)
                 {
 					return resourceGetDataResult;
                 }
@@ -497,18 +497,18 @@ namespace CarbonResources
 
                     if (!(resourceStreamIn >> resourceData))
                     {
-						return Result::FAILED_TO_READ_FROM_STREAM;
+						return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
                     }
 
                     if (!(temporaryResourceDataStreamOut << resourceData))
                     {
-						return Result::FAILED_TO_WRITE_TO_STREAM;
+						return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
                     }
 
                     // Add to incremental checksum calculation
 					if( !( patchedFileChecksumStream << resourceData ) )
 					{
-						return Result::FAILED_TO_GENERATE_CHECKSUM;
+						return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
 					}
                 }
 
@@ -522,7 +522,7 @@ namespace CarbonResources
 
 			Result getChecksumResult = resource->GetChecksum( destinationExpectedChecksum );
 
-			if( getChecksumResult != Result::SUCCESS )
+			if( getChecksumResult.type != ResultType::SUCCESS )
 			{
 				return getChecksumResult;
 			}
@@ -531,12 +531,12 @@ namespace CarbonResources
 
 			if( !patchedFileChecksumStream.FinishAndRetrieve( patchedFileChecksum ) )
 			{
-				return Result::FAILED_TO_GENERATE_CHECKSUM;
+				return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
 			}
 
 			if( patchedFileChecksum != destinationExpectedChecksum )
 			{
-				return Result::UNEXPECTED_PATCH_CHECKSUM_RESULT;
+				return Result{ ResultType::UNEXPECTED_PATCH_CHECKSUM_RESULT };
 			}
 
 
@@ -553,7 +553,7 @@ namespace CarbonResources
 
 			Result putResourceDataStreamResult = resource->PutDataStream( patchedResourceResourcePutDataStreamParams );
 
-			if( putResourceDataStreamResult != Result::SUCCESS )
+			if( putResourceDataStreamResult.type != ResultType::SUCCESS )
 			{
 				return putResourceDataStreamResult;
 			}
@@ -564,7 +564,7 @@ namespace CarbonResources
 
             if (!tempPatchedResourceIn.StartRead(params.temporaryFilePath))
             {
-				return Result::FAILED_TO_READ_FROM_STREAM;
+				return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
             }
 
             while (!tempPatchedResourceIn.IsFinished())
@@ -573,19 +573,19 @@ namespace CarbonResources
 
                 if (!(tempPatchedResourceIn >> data))
                 {
-					return Result::FAILED_TO_READ_FROM_STREAM;
+					return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
                 }
 
                 if (!(resourceStreamOut << data))
                 {
-					return Result::FAILED_TO_WRITE_TO_STREAM;
+					return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
                 }
             }
 
             resourceStreamOut.Finish();
         }
 
-        return Result::SUCCESS;
+        return Result{ ResultType::SUCCESS };
 
 
     }

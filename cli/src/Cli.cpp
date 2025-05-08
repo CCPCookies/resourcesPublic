@@ -2,9 +2,9 @@
 
 #include <argparse/argparse.hpp>
 
-Cli::Cli( const std::string& name, const std::string& version ) :
-	m_argumentParser( nullptr )
+Cli::Cli( const std::string& name, const std::string& version )
 {
+	m_argumentParser = new argparse::ArgumentParser( name );
 }
 
 Cli::~Cli()
@@ -56,12 +56,29 @@ bool Cli::ProcessCommandLine( int argc, char** argv )
 	return true;
 }
 
+void Cli::PrintCliHeader()
+{
+	std::cout << "====================" << std::endl;
+	std::cout << "carbon-resources-cli" << std::endl;
+
+    std::stringstream ss;
+
+	ss << CarbonResources::S_LIBRARY_VERSION.major << "." << CarbonResources::S_LIBRARY_VERSION.minor << "." << CarbonResources::S_LIBRARY_VERSION.patch;
+
+	std::cout << "carbon-resources version: " << ss.str() << std::endl;
+
+    std::cout << "====================\n" << std::endl;
+
+}
+
 bool Cli::Execute()
 {
 	for( const CliOperation* operation : m_operations )
 	{
 		if( m_argumentParser->is_subcommand_used( *operation->GetParser() ) )
 		{
+			PrintCliHeader();
+
 			return operation->Execute();
 		}
 	}

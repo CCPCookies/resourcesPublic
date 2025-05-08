@@ -23,7 +23,7 @@ namespace CarbonResources
 
 		if( !ResourceTools::GenerateFowlerNollVoChecksum( relativePath.string(), relativePathChecksum ) )
 		{
-			return Result::FAILED_TO_GENERATE_RELATIVE_PATH_CHECKSUM;
+			return Result{ ResultType::FAILED_TO_GENERATE_RELATIVE_PATH_CHECKSUM };
 		}
 
 		std::stringstream ss2;// TODO naming and pull out of here
@@ -35,7 +35,7 @@ namespace CarbonResources
 
 		location = ss2.str();
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
     }
 
 
@@ -65,13 +65,13 @@ namespace CarbonResources
 	{
 		if( !m_binaryOperation.HasValue() )
 		{
-			return Result::RESOURCE_VALUE_NOT_SET;
+			return Result{ ResultType::RESOURCE_VALUE_NOT_SET };
 		}
 		else
 		{
 			binaryOperation = m_binaryOperation.GetValue();
 
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 	}
 
@@ -79,13 +79,13 @@ namespace CarbonResources
     {
         if (!m_relativePath.HasValue())
         {
-			return Result::RESOURCE_VALUE_NOT_SET;
+			return Result{ ResultType::RESOURCE_VALUE_NOT_SET };
         }
         else
         {
 			relativePath = m_relativePath.GetValue();
 
-            return Result::SUCCESS;
+            return Result{ ResultType::SUCCESS };
         }
     }
 
@@ -98,13 +98,13 @@ namespace CarbonResources
     {
 		if( !m_location.HasValue() )
 		{
-			return Result::RESOURCE_VALUE_NOT_SET;
+			return Result{ ResultType::RESOURCE_VALUE_NOT_SET };
 		}
 		else
 		{
 			location = m_location.GetValue().ToString();
 
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
     }
 
@@ -112,13 +112,13 @@ namespace CarbonResources
     {
 		if( !m_type.HasValue() )
 		{
-			return Result::RESOURCE_VALUE_NOT_SET;
+			return Result{ ResultType::RESOURCE_VALUE_NOT_SET };
 		}
 		else
 		{
 			type = m_type.GetValue();
 
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
     }
 
@@ -126,13 +126,13 @@ namespace CarbonResources
     {
 		if( !m_checksum.HasValue() )
 		{
-			return Result::RESOURCE_VALUE_NOT_SET;
+			return Result{ ResultType::RESOURCE_VALUE_NOT_SET };
 		}
 		else
 		{
 			checksum = m_checksum.GetValue();
 
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
     }
 
@@ -140,13 +140,13 @@ namespace CarbonResources
     {
 		if( !m_uncompressedSize.HasValue() )
 		{
-			return Result::RESOURCE_VALUE_NOT_SET;
+			return Result{ ResultType::RESOURCE_VALUE_NOT_SET };
 		}
 		else
 		{
 			uncompressedSize = m_uncompressedSize.GetValue();
 
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
     }
 
@@ -154,13 +154,13 @@ namespace CarbonResources
     {
 		if( !m_compressedSize.HasValue() )
 		{
-			return Result::RESOURCE_VALUE_NOT_SET;
+			return Result{ ResultType::RESOURCE_VALUE_NOT_SET };
 		}
 		else
 		{
 			compressedSize = m_compressedSize.GetValue();
 
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
     }
 
@@ -168,7 +168,7 @@ namespace CarbonResources
     {
 		if( !params.dataStream )
 		{
-			return Result::FAILED_TO_SAVE_FILE;
+			return Result{ ResultType::FAILED_TO_SAVE_FILE };
 		}
 
         switch( params.resourceDestinationSettings.destinationType )
@@ -188,10 +188,10 @@ namespace CarbonResources
         case ResourceDestinationType::REMOTE_CDN:
 
             // TODO Requires chunked compression that is not yet implemented
-            return Result::FAILED_TO_SAVE_FILE;
+			return Result{ ResultType::FAILED_TO_SAVE_FILE };
 
 		default:
-			return Result::FAILED_TO_SAVE_FILE;
+			return Result{ ResultType::FAILED_TO_SAVE_FILE };
 		}
     }
    
@@ -199,7 +199,7 @@ namespace CarbonResources
     {
         if (!params.data)
         {
-			return Result::FAILED_TO_SAVE_FILE;
+			return Result{ ResultType::FAILED_TO_SAVE_FILE };
         }
 
         switch (params.resourceDestinationSettings.destinationType)
@@ -223,7 +223,7 @@ namespace CarbonResources
 			break;
 
 		default:
-			return Result::FAILED_TO_SAVE_FILE;
+			return Result{ ResultType::FAILED_TO_SAVE_FILE };
 
         }
 
@@ -239,11 +239,11 @@ namespace CarbonResources
 
         if (res)
         {
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
         }
         else
         {
-			return Result::FAILED_TO_SAVE_FILE;
+			return Result{ ResultType::FAILED_TO_SAVE_FILE };
         }
 
     }
@@ -259,18 +259,18 @@ namespace CarbonResources
 
         if (!ResourceTools::GZipCompressData(data, compressedData))
         {
-			return Result::FAILED_TO_COMPRESS_DATA;
+			return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
         }
 
         bool res = ResourceTools::SaveFile( dataPath, compressedData );
 
 		if( res )
 		{
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 		else
 		{
-			return Result::FAILED_TO_SAVE_FILE;
+			return Result{ ResultType::FAILED_TO_SAVE_FILE };
 		}
     }
 
@@ -285,11 +285,11 @@ namespace CarbonResources
 
 		if( res )
 		{
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 		else
 		{
-			return Result::FAILED_TO_SAVE_FILE;
+			return Result{ ResultType::FAILED_TO_SAVE_FILE };
 		}
 
     }
@@ -302,11 +302,11 @@ namespace CarbonResources
 
 		if( res )
 		{
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 		else
 		{
-			return Result::FAILED_TO_SAVE_FILE;
+			return Result{ ResultType::FAILED_TO_SAVE_FILE };
 		}
     }
 
@@ -319,11 +319,11 @@ namespace CarbonResources
 
 		if( res )
 		{
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 		else
 		{
-			return Result::FAILED_TO_SAVE_FILE;
+			return Result{ ResultType::FAILED_TO_SAVE_FILE };
 		}
     }
 
@@ -332,7 +332,7 @@ namespace CarbonResources
     {
 		if( !params.dataStream )
 		{
-			return Result::FAILED_TO_OPEN_FILE;
+			return Result{ ResultType::FAILED_TO_OPEN_FILE, "Data Stream not provided." };
 		}
 
 		switch( params.resourceSourceSettings.sourceType )
@@ -356,7 +356,7 @@ namespace CarbonResources
 			break;
 
 		default:
-			return Result::FAILED_TO_OPEN_FILE;
+			return Result{ ResultType::FAILED_TO_OPEN_FILE };
 		}
     }
 
@@ -364,7 +364,7 @@ namespace CarbonResources
     {
         if (params.data == nullptr)
         {
-			return Result::FAILED_TO_OPEN_FILE;
+			return Result{ ResultType::FAILED_TO_OPEN_FILE };
         }
 
         switch (params.resourceSourceSettings.sourceType)
@@ -388,7 +388,7 @@ namespace CarbonResources
 			break;
 
 		default:
-			return Result::FAILED_TO_OPEN_FILE;
+			return Result{ ResultType::FAILED_TO_OPEN_FILE };
         }
 
     }
@@ -403,11 +403,11 @@ namespace CarbonResources
 
 		if( res )
 		{
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 		else
 		{
-			return Result::FAILED_TO_OPEN_FILE;
+			return Result{ ResultType::FAILED_TO_OPEN_FILE };
 		}
     }
 
@@ -422,11 +422,11 @@ namespace CarbonResources
 
         if (res)
         {
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
         }
         else
         {
-			return Result::FAILED_TO_OPEN_FILE;
+			return Result{ ResultType::FAILED_TO_OPEN_FILE };
         }
     }
 
@@ -445,7 +445,7 @@ namespace CarbonResources
 
         if (!downloadFileResult)
         {
-			return Result::FAILED_TO_DOWNLOAD_FILE;
+			return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE };
         }
 
         if( params.expectedChecksum != "" )
@@ -474,11 +474,11 @@ namespace CarbonResources
 
 		if( res )
 		{
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 		else
 		{
-			return Result::FAILED_TO_OPEN_FILE_STREAM;
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
 		}
     }
 
@@ -491,11 +491,11 @@ namespace CarbonResources
 
 		if( res )
 		{
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 		else
 		{
-			return Result::FAILED_TO_OPEN_FILE_STREAM;
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
 		}
     }
 
@@ -513,7 +513,11 @@ namespace CarbonResources
 
 		if( !downloadFileResult )
 		{
-			return Result::FAILED_TO_DOWNLOAD_FILE;
+			std::stringstream ss;
+
+            ss << "Failed to download file \nfrom remote url: " << url << "\nto local path: " << tempPath.string();
+
+			return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
 		}
 
 		if( params.expectedChecksum != "" )
@@ -542,7 +546,7 @@ namespace CarbonResources
     		}
     		else
     		{
-    			return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
     		}
     	}
 
@@ -554,7 +558,7 @@ namespace CarbonResources
             }
             else
             {
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
             }
 		}
 
@@ -566,7 +570,7 @@ namespace CarbonResources
 			}
 			else
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 		}
 
@@ -578,7 +582,7 @@ namespace CarbonResources
 			}
 			else
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 		}
 
@@ -590,7 +594,7 @@ namespace CarbonResources
 			}
 			else
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 		}
 
@@ -602,7 +606,7 @@ namespace CarbonResources
 			}
 			else
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 		}
 
@@ -614,13 +618,13 @@ namespace CarbonResources
 			}
 			else
 			{
-				return Result::MALFORMED_RESOURCE_INPUT;
+				return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
 			}
 
 		}
 
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
 	}
 
     std::string ResourceInfo::TypeId()
@@ -632,7 +636,7 @@ namespace CarbonResources
     {
         if (!other)
         {
-			return Result::FAIL;
+			return Result{ ResultType::FAIL };
         }
 
         if (m_relativePath.IsParameterExpectedInDocumentVersion(documentVersion))
@@ -641,7 +645,7 @@ namespace CarbonResources
 
 			Result getRelativePathResult = other->GetRelativePath( relativePath );
 
-			if( getRelativePathResult != Result::SUCCESS )
+			if( getRelativePathResult.type != ResultType::SUCCESS )
 			{
 				return getRelativePathResult;
 			}
@@ -655,7 +659,7 @@ namespace CarbonResources
 
 			Result getLocationResult = other->GetLocation( location );
 
-			if( getLocationResult != Result::SUCCESS )
+			if( getLocationResult.type != ResultType::SUCCESS )
 			{
 				return getLocationResult;
 			}
@@ -669,7 +673,7 @@ namespace CarbonResources
 
 			Result getChecksumResult = other->GetChecksum( checksum );
 
-			if( getChecksumResult != Result::SUCCESS )
+			if( getChecksumResult.type != ResultType::SUCCESS )
 			{
 				return getChecksumResult;
 			}
@@ -683,7 +687,7 @@ namespace CarbonResources
 
 			Result getUncompressedSizeResult = other->GetUncompressedSize( uncompressedSize );
 
-			if( getUncompressedSizeResult != Result::SUCCESS )
+			if( getUncompressedSizeResult.type != ResultType::SUCCESS )
 			{
 				return getUncompressedSizeResult;
 			}
@@ -697,7 +701,7 @@ namespace CarbonResources
 
 			Result getCompressedSizeResult = other->GetCompressedSize( compressedSize );
 
-			if( getCompressedSizeResult != Result::SUCCESS )
+			if( getCompressedSizeResult.type != ResultType::SUCCESS )
 			{
 				return getCompressedSizeResult;
 			}
@@ -711,7 +715,7 @@ namespace CarbonResources
 
     		Result getBinaryOperationResult = other->GetBinaryOperation( binaryOperation );
 
-    		if( getBinaryOperationResult != Result::SUCCESS )
+    		if( getBinaryOperationResult.type != ResultType::SUCCESS )
     		{
     			return getBinaryOperationResult;
     		}
@@ -719,7 +723,7 @@ namespace CarbonResources
     		m_binaryOperation = binaryOperation;
     	}
 
-        return Result::SUCCESS;
+        return Result{ ResultType::SUCCESS };
     }
 
     bool ResourceInfo::operator == ( const ResourceInfo* other ) const
@@ -742,7 +746,7 @@ namespace CarbonResources
 
 		if( !ResourceTools::GenerateMd5Checksum( data, checksum ) )
 		{
-			return Result::FAILED_TO_GENERATE_CHECKSUM;
+			return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
 		}
 
         m_checksum = checksum;
@@ -751,7 +755,7 @@ namespace CarbonResources
 
         Result getTypeResult = GetType( type );
 
-        if( getTypeResult != Result::SUCCESS )
+        if( getTypeResult.type != ResultType::SUCCESS )
         {
 			return getTypeResult;
         }
@@ -760,7 +764,7 @@ namespace CarbonResources
 
         Result getRelativePathResult = GetRelativePath( relativePath );
 
-        if( getRelativePathResult != Result::SUCCESS )
+        if( getRelativePathResult.type != ResultType::SUCCESS )
         {
 			return getRelativePathResult;
         }
@@ -769,7 +773,7 @@ namespace CarbonResources
 
 		Result setLocationResult = l.SetFromRelativePathAndDataChecksum( relativePath, checksum );
 
-        if (setLocationResult != Result::SUCCESS)
+        if (setLocationResult.type != ResultType::SUCCESS)
         {
 			return setLocationResult;
         }
@@ -780,14 +784,14 @@ namespace CarbonResources
 
         if (!ResourceTools::GZipCompressData(data, compressedData))
         {
-			return Result::FAILED_TO_COMPRESS_DATA;
+			return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
         }
 
         m_compressedSize = compressedData.size();
 
         m_uncompressedSize = data.size();
 
-        return Result::SUCCESS;
+        return Result{ ResultType::SUCCESS };
         
     }
 
@@ -811,19 +815,19 @@ namespace CarbonResources
     		matchSize -= chunkSize;
     		if(!chunkSize)
     		{
-    			return Result::FAILED_TO_GENERATE_CHECKSUM;
+				return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
     		}
     	}
 
     	if (!md5ChecksumStream.FinishAndRetrieve(checksum))
     	{
     		stream.Seek( start );
-    		return Result::FAILED_TO_GENERATE_CHECKSUM;
+			return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
     	}
 
     	m_checksum = checksum;
     	stream.Seek( start );
-    	return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
 	}
 
     Result ResourceInfo::ExportToYaml( YAML::Emitter& out, const VersionInternal& documentVersion )
@@ -833,14 +837,14 @@ namespace CarbonResources
 		{
 			if( !m_relativePath.HasValue() )
 			{
-				return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+				return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
 			}
 
             std::filesystem::path relativePath;
 
             Result getRelativePathResult = GetRelativePath( relativePath );
 
-            if (getRelativePathResult != Result::SUCCESS)
+            if (getRelativePathResult.type != ResultType::SUCCESS)
             {
 				return getRelativePathResult;
             }
@@ -857,7 +861,7 @@ namespace CarbonResources
 		{
 			if( !m_type.HasValue() )
 			{
-				return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+				return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
 			}
 
 			out << YAML::Key << m_type.GetTag();
@@ -869,7 +873,7 @@ namespace CarbonResources
 		{
 			if( !m_location.HasValue() )
 			{
-				return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+				return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
 			}
 
 			out << YAML::Key << m_location.GetTag();
@@ -881,7 +885,7 @@ namespace CarbonResources
 		{
 			if( !m_checksum.HasValue() )
 			{
-				return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+				return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
 			}
 
 			out << YAML::Key << m_checksum.GetTag();
@@ -892,7 +896,7 @@ namespace CarbonResources
 		{
 			if( !m_uncompressedSize.HasValue() )
 			{
-				return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+				return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
 			}
 
 			out << YAML::Key << m_uncompressedSize.GetTag();
@@ -904,7 +908,7 @@ namespace CarbonResources
 		{
 			if( !m_compressedSize.HasValue() )
 			{
-				return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+				return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
 			}
 
 			out << YAML::Key << m_compressedSize.GetTag();
@@ -916,7 +920,7 @@ namespace CarbonResources
     	{
     		if( !m_binaryOperation.HasValue() )
     		{
-    			return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
+				return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
     		}
 
     		out << YAML::Key << m_binaryOperation.GetTag();
@@ -939,7 +943,7 @@ namespace CarbonResources
 		}
         */
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
 	}
 
 }

@@ -55,7 +55,7 @@ namespace CarbonResources
 
 		Result resourceGroupGetDataResult = m_resourceGroupParameter.GetValue()->GetData( resourceGroupDataParams );
 
-		if( resourceGroupGetDataResult != Result::SUCCESS )
+		if( resourceGroupGetDataResult.type != ResultType::SUCCESS )
 		{
 			return resourceGroupGetDataResult;
 		}
@@ -64,7 +64,7 @@ namespace CarbonResources
 
 		Result resourceGroupImportFromDataResult = resourceGroup.ImportFromData( resourceGroupData );
 
-		if( resourceGroupImportFromDataResult != Result::SUCCESS )
+		if( resourceGroupImportFromDataResult.type != ResultType::SUCCESS )
 		{
 			return resourceGroupImportFromDataResult;
 		}
@@ -82,7 +82,7 @@ namespace CarbonResources
 
             Result getUncompressedDataSizeResult = resource->GetUncompressedSize( resourceFileUncompressedSize );
 
-            if (getUncompressedDataSizeResult != Result::SUCCESS)
+            if (getUncompressedDataSizeResult.type != ResultType::SUCCESS)
             {
 				return getUncompressedDataSizeResult;
             }
@@ -98,7 +98,7 @@ namespace CarbonResources
 
             Result resourcePutDataStreamResult = resource->PutDataStream( resourcePutDataStreamParams );
 
-            if (resourcePutDataStreamResult != Result::SUCCESS)
+            if (resourcePutDataStreamResult.type != ResultType::SUCCESS)
             {
 				return resourcePutDataStreamResult;
             }
@@ -127,7 +127,7 @@ namespace CarbonResources
 
 					Result getChunkDataResult = chunk->GetData( resourceGetDataParams );
 
-					if( getChunkDataResult != Result::SUCCESS )
+					if( getChunkDataResult.type != ResultType::SUCCESS )
 					{
 						return getChunkDataResult;
 					}
@@ -135,14 +135,14 @@ namespace CarbonResources
 					// Add to chunk stream
 					if( !( bundleStream << chunkData ) )
 					{
-						return Result::FAIL;    //TODO make more descriptive
+						return Result{ ResultType::FAIL }; //TODO make more descriptive
 					}
                 }
                 else
                 {
                     if (bundleStream.GetCacheSize() == 0)
                     {
-						return Result::UNEXPECTED_END_OF_CHUNKS;
+						return Result{ ResultType::UNEXPECTED_END_OF_CHUNKS };
                     }
                 }
 
@@ -156,17 +156,17 @@ namespace CarbonResources
                 // for this resource, extra is cached for next resource
                 if (!(bundleStream >> file))
                 {
-					return Result::FAILED_TO_RETRIEVE_CHUNK_DATA;
+					return Result{ ResultType::FAILED_TO_RETRIEVE_CHUNK_DATA };
                 }
 
                 if( !( resourceChecksumStream << resourceChunkData ) )
                 {
-					return Result::FAILED_TO_GENERATE_CHECKSUM;
+					return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
                 }
 
                 if( !( resourceDataStreamOut << resourceChunkData ) )
                 {
-					return Result::FAILED_TO_SAVE_TO_STREAM;
+					return Result{ ResultType::FAILED_TO_SAVE_TO_STREAM };
                 }
 
                 if( chunkIterator != m_resourcesParameter.end() )
@@ -181,7 +181,7 @@ namespace CarbonResources
 
             if (!resourceChecksumStream.FinishAndRetrieve(recreatedResourceChecksum))
             {
-				return Result::FAILED_TO_GENERATE_CHECKSUM;
+				return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
             }
 
            
@@ -189,14 +189,14 @@ namespace CarbonResources
 
             Result getChecksumResult = resource->GetChecksum( resourceChecksum );
 
-            if (getChecksumResult != Result::SUCCESS)
+            if (getChecksumResult.type != ResultType::SUCCESS)
             {
 				return getChecksumResult;
             }
 
             if (recreatedResourceChecksum != resourceChecksum)
             {
-				return Result::UNEXPECTED_CHUNK_CHECKSUM_RESULT;
+				return Result{ ResultType::UNEXPECTED_CHUNK_CHECKSUM_RESULT };
             }
 
             /*
@@ -217,7 +217,7 @@ namespace CarbonResources
 
 		}
 
-        return Result::SUCCESS;
+        return Result{ ResultType::SUCCESS };
 
     }
 
@@ -237,7 +237,7 @@ namespace CarbonResources
 
 		Result importFromYamlResult = bundleResourceInfo->ImportFromYaml( resource, m_versionParameter.GetValue() );
 
-		if( importFromYamlResult != Result::SUCCESS )
+		if( importFromYamlResult.type != ResultType::SUCCESS )
 		{
 			delete bundleResourceInfo;
 
@@ -247,7 +247,7 @@ namespace CarbonResources
 		{
 			resourceOut = bundleResourceInfo;
 
-			return Result::SUCCESS;
+			return Result{ ResultType::SUCCESS };
 		}
 
 	}
@@ -262,7 +262,7 @@ namespace CarbonResources
 
 			Result createResourceFromYaml = ResourceGroupImpl::CreateResourceFromYaml( resourceGroupNode, resource );
 
-			if( createResourceFromYaml != Result::SUCCESS )
+			if( createResourceFromYaml.type != ResultType::SUCCESS )
 			{
 				return createResourceFromYaml;
 			}
@@ -278,7 +278,7 @@ namespace CarbonResources
 			m_chunkSize = resourceGroupFile[m_chunkSize.GetTag()].as<uintmax_t>();
         }
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
     }
 
     Result BundleResourceGroupImpl::ExportGroupSpecialisedYaml( YAML::Emitter& out, VersionInternal outputDocumentVersion ) const
@@ -301,7 +301,7 @@ namespace CarbonResources
 			out << YAML::Value << m_chunkSize.GetValue();
 		}
 
-		return Result::SUCCESS;
+		return Result{ ResultType::SUCCESS };
     }
 
 }
