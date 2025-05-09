@@ -42,25 +42,13 @@ int bs_read_chunked(const struct bspatch_stream * stream, void * buffer,
 	gc.data = &data;
 	while( remaining )
 	{
-		if( remaining < chunkSize)
+		size_t toRead = std::min( remaining, chunkSize );
+		if( !cs->ReadBytes( toRead, data ) )
 		{
-			if( !cs->ReadBytes( remaining, data ) )
-			{
-				return -1;
-			}
-			out += data;
-			break;
+			return -1;
 		}
-		if( !(*cs >> gc) )
-		{
-			gc.clearCache = true;
-			if( !(*cs >> gc) )
-			{
-				return -1;
-			}
-		}
-		remaining -= gc.data->size();
-		out.append( *gc.data );
+		out += data;
+		remaining -= toRead;
 	}
 
 	if(out.size() < length)

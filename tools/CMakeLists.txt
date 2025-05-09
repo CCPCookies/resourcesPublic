@@ -40,6 +40,10 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}"
         FILES ${_SOURCES}
 )
 
+if(WIN32)
+    target_compile_definitions(carbon-resources-tools PRIVATE NOMINMAX) # Do not define min/max macros.
+endif()
+
 target_link_libraries(carbon-resources-tools PRIVATE cryptopp::cryptopp CURL::libcurl ZLIB::ZLIB static_bsdiff)
 
 target_include_directories(carbon-resources-tools PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
