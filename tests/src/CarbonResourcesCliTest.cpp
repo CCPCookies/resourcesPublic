@@ -18,7 +18,6 @@ TEST_F( CarbonResourcesCliTest, CreateResourceGroupFromDirectory )
 	EXPECT_TRUE( BundleIsValid() );
 }
 
-//TODO: Implement
 TEST_F( CarbonResourcesCliTest, CreateBundle )
 {
 	std::string output;
@@ -27,11 +26,39 @@ TEST_F( CarbonResourcesCliTest, CreateBundle )
 
     arguments.push_back( "create-bundle" );
 
-	arguments.push_back( "PATH_TO_RESOURCELIST_TO_BUNDLE" );
+	arguments.push_back( "-VVV" );
+
+	arguments.push_back( GetTestFileFileAbsolutePath( "Bundle/resfileindexShort.txt" ).string() );
+
+	arguments.push_back( "--resource-source-path" );
+	arguments.push_back( GetTestFileFileAbsolutePath( "Bundle/Res" ).string() );
+
+	arguments.push_back( "--bundle-resourcegroup-relative-path" );
+	arguments.push_back( "BundleResourceGroup.yaml" );
+
+	arguments.push_back( "--bundle-resourcegroup-destination-type" );
+	arguments.push_back( "LOCAL_RELATIVE" );
+
+	arguments.push_back( "--chunk-destination-path" );
+	arguments.push_back( "CreateBundleOut" );
+
+	arguments.push_back( "--chunk-destination-type" );
+	arguments.push_back( "LOCAL_CDN" );
+
+	arguments.push_back( "--chunk-size");
+	arguments.push_back( "1000" );
+
 
 	int res = RunCli( arguments, output );
 
-    EXPECT_TRUE( BundleIsValid() );
+	EXPECT_EQ( res, 0 );
+
+	// Check expected outcome
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateBundle/BundleResourceGroup.yaml" );
+	EXPECT_TRUE( FilesMatch( goldFile, "BundleOut/BundleResourceGroup.yaml" ) );
+
+	std::filesystem::path goldDirectory = GetTestFileFileAbsolutePath( "CreateBundle/CreateBundleOut" );
+	EXPECT_TRUE( DirectoryIsSubset( goldDirectory, "CreateBundleOut" ) );
 }
 
 TEST_F( CarbonResourcesCliTest, CreatePatch )
