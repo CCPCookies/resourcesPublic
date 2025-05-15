@@ -5,6 +5,18 @@
 #include <thread>
 
 int s_activeDownloaders{ 0 };
+std::set<int> s_curl_retry_errors{
+	CURLE_AGAIN,
+	CURLE_COULDNT_RESOLVE_PROXY,
+	CURLE_COULDNT_RESOLVE_HOST,
+	CURLE_COULDNT_CONNECT,
+	CURLE_RECV_ERROR,
+	CURLE_SEND_ERROR,
+	CURLE_OPERATION_TIMEDOUT
+};
+
+// Retry curl operation for up to 2 minutes.
+std::chrono::seconds RETRY_PERIOD_SECONDS{120};
 
 bool InitializeCurl()
 {
@@ -69,8 +81,28 @@ bool Downloader::DownloadFile( const std::string& url, const std::filesystem::pa
 	curl_easy_setopt( m_curlHandle, CURLOPT_WRITEDATA, &out );
 	curl_easy_setopt( m_curlHandle, CURLOPT_WRITEFUNCTION, WriteToFileStreamCallback );
 	curl_easy_setopt( m_curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip" );
-	CURLcode cc = curl_easy_perform( m_curlHandle );
-	return cc == CURLE_OK;
+	CURLcode cc{CURLE_OK};
+	std::chrono::seconds sleepSeconds{1};
+	auto startTime = std::chrono::steady_clock::now();
+	do
+	{
+		auto duration = std::chrono::duration_cast<std::chrono::seconds>( ( std::chrono::steady_clock::now() - startTime ) );
+		auto remaining = RETRY_PERIOD_SECONDS - duration;
+		cc = curl_easy_perform( m_curlHandle );
+		if( duration >= RETRY_PERIOD_SECONDS || s_curl_retry_errors.find( cc ) == s_curl_retry_errors.end() )
+		{
+			return cc == CURLE_OK;
+		}
+		if( remaining < sleepSeconds )
+		{
+			std::this_thread::sleep_for( remaining );
+		}
+		else
+		{
+			std::this_thread::sleep_for( sleepSeconds );
+		}
+		sleepSeconds *= 2;
+	} while( true );
 }
 
 }
