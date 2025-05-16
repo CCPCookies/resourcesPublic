@@ -234,6 +234,8 @@ namespace CarbonResources
 		Version outputDocumentVersion = S_DOCUMENT_VERSION;
 
         StatusCallback statusCallback = nullptr;
+
+		std::string resourcePrefix;
 	};
 
     class ResourceGroupImpl;    // TODO remove these from public API

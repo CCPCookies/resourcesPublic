@@ -77,6 +77,8 @@ namespace CarbonResources
 
                 	resourceParams.binaryOperation = ResourceTools::CalculateBinaryOperation( entry.path() );
 
+                	resourceParams.prefix = params.resourcePrefix;
+
 				    ResourceInfo* resource = new ResourceInfo( resourceParams );
 
                     std::string resourceData;
@@ -405,9 +407,11 @@ namespace CarbonResources
             // Split filename and prefix
 			std::string resourcePrefixDelimiter = ":/";
 			std::string filename = value.substr( value.find(resourcePrefixDelimiter) + resourcePrefixDelimiter.size() );
-			std::string resourceType = value.substr( 0, value.find( ":" ) );
+			std::string resourcePrefix = value.substr( 0, value.find( ":" ) );
 
 			resourceParams.relativePath = filename;
+
+			resourceParams.prefix = resourcePrefix;
 
 			if( !std::getline( ss, value, delimiter ) )
 			{

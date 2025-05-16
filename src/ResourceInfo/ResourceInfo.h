@@ -239,6 +239,8 @@ namespace CarbonResources
 		uintmax_t uncompressedSize = 0;
 
     	unsigned int binaryOperation = 0;
+
+    	std::string prefix;
 	};
 
     struct ResourceGetDataStreamParams
@@ -367,6 +369,8 @@ namespace CarbonResources
 		DocumentParameter<uintmax_t> m_uncompressedSize = DocumentParameter<uintmax_t>( UNCOMPRESSED_SIZE, TypeId() );
 
     	DocumentParameter<unsigned int> m_binaryOperation = DocumentParameter<unsigned int>( BINARY_OPERATION, TypeId() );
+
+    	DocumentParameter<std::string> m_prefix = DocumentParameter<std::string>( PREFIX, TypeId() );
     };
 
 	inline Result SetParameterFromYamlNodeData(YAML::Node& node, DocumentParameter<std::filesystem::path>& parameter)

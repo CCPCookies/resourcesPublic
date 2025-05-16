@@ -54,6 +54,8 @@ namespace CarbonResources
 		m_uncompressedSize = params.uncompressedSize;
 
     	m_binaryOperation = params.binaryOperation;
+
+    	m_prefix = params.prefix;
     }
 
     ResourceInfo::~ResourceInfo()
@@ -956,6 +958,11 @@ namespace CarbonResources
     Result ResourceInfo::ExportToCsv( std::string& out, const VersionInternal& documentVersion )
     {
     	std::stringstream result;
+
+    	if( m_prefix.HasValue() )
+    	{
+    		result << m_prefix.GetValue() << ":/";
+    	}
 
     	// Relative path
 		if( !m_relativePath.HasValue() )

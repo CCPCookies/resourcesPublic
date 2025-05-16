@@ -8,13 +8,15 @@ CreateResourceGroupCliOperation::CreateResourceGroupCliOperation() :
 	CliOperation( "create-group", "Create a resource group from a given directory." ),
 	m_createResourceGroupPathArgumentId( "input-directory" ),
 	m_createResourceGroupOutputFileArgumentId( "--output-file" ),
-	m_createResourceGroupDocumentVersionArgumentId( "--document-version" )
+	m_createResourceGroupDocumentVersionArgumentId( "--document-version" ),
+	m_createResourceGroupResourcePrefixArgumentId("--resource-prefix")
 {
 
 	AddRequiredPositionalArgument( m_createResourceGroupPathArgumentId, "Base directory to create resource group from." );
 
 	AddArgument( m_createResourceGroupOutputFileArgumentId, "Filename for created resource group.", false, "ResourceGroup.yaml" );
 	AddArgument( m_createResourceGroupDocumentVersionArgumentId, "Document version for created resource group.", false, "0.1.0" );
+	AddArgument( m_createResourceGroupResourcePrefixArgumentId, R"(Blue resource path prefix, such as "res" or "app")", false, "" );
 }
 
 bool ParseDocumentVersion( const std::string& version, CarbonResources::Version& documentVersion )
@@ -46,9 +48,11 @@ bool CreateResourceGroupCliOperation::Execute() const
 
 	std::string version = m_argumentParser->get( m_createResourceGroupDocumentVersionArgumentId );
 
+	std::string resourcePrefix = m_argumentParser->get( m_createResourceGroupResourcePrefixArgumentId );
+
 	CarbonResources::Version documentVersion;
 
-	PrintStartBanner( inputDirectory, outputFile, version );
+	PrintStartBanner( inputDirectory, outputFile, version, resourcePrefix );
 
 	bool versionIsValid = ParseDocumentVersion( version, documentVersion);
 	if( !versionIsValid )
@@ -56,10 +60,10 @@ bool CreateResourceGroupCliOperation::Execute() const
 		std::cout << "Invalid Document Version: " << version << std::endl;
 		return false;
 	}
-	return CreateResourceGroup( inputDirectory, outputFile, documentVersion );
+	return CreateResourceGroup( inputDirectory, outputFile, documentVersion, resourcePrefix );
 }
 
-void CreateResourceGroupCliOperation::PrintStartBanner( const std::filesystem::path& inputDirectory, const std::filesystem::path& outputFile, const std::string& version ) const
+void CreateResourceGroupCliOperation::PrintStartBanner( const std::filesystem::path& inputDirectory, const std::filesystem::path& outputFile, const std::string& version, const std::string& resourcePrefix ) const
 {
 	if( !s_verbosity )
 	{
@@ -76,10 +80,15 @@ void CreateResourceGroupCliOperation::PrintStartBanner( const std::filesystem::p
 
 	std::cout << "Output Document Version: " << version << std::endl;
 
+	if( !resourcePrefix.empty() )
+	{
+		std::cout << "Resource Prefix: " << resourcePrefix << std::endl;
+	}
+
 	std::cout << "----------------------------\n" << std::endl;
 }
 
-bool CreateResourceGroupCliOperation::CreateResourceGroup( const std::filesystem::path& inputDirectory, const std::filesystem::path& resourceGroupOutputFile, CarbonResources::Version documentVersion ) const
+bool CreateResourceGroupCliOperation::CreateResourceGroup( const std::filesystem::path& inputDirectory, const std::filesystem::path& resourceGroupOutputFile, CarbonResources::Version documentVersion, const std::string& resourcePrefix ) const
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
@@ -88,6 +97,8 @@ bool CreateResourceGroupCliOperation::CreateResourceGroup( const std::filesystem
 	createResourceGroupParams.directory = inputDirectory;
 
 	createResourceGroupParams.outputDocumentVersion = documentVersion;
+
+	createResourceGroupParams.resourcePrefix = resourcePrefix;
 
 	createResourceGroupParams.statusCallback = GetStatusCallback();
 
