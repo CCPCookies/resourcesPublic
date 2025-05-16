@@ -770,6 +770,19 @@ namespace CarbonResources
 
     	std::string out;
 
+
+    	auto resourceInfos = m_resourcesParameter.GetValue();
+    	std::sort(
+    		resourceInfos->begin(),
+    		resourceInfos->end(),
+    		[] (ResourceInfo* a, ResourceInfo* b) {
+    			std::filesystem::path ap;
+    			std::filesystem::path bp;
+    			a->GetRelativePath( ap );
+    			b->GetRelativePath( bp );
+    			return ap < bp;
+    		} );
+
     	int i{0};
 		for (ResourceInfo* r : m_resourcesParameter)
         {
