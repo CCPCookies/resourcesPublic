@@ -11,6 +11,7 @@ Resources:
     UncompressedSize: 9117
     CompressedSize: 3259
     BinaryOperation: 0
+    Prefix: res
   - RelativePath: videocardcategories.yaml
     Type: Resource
     Location: 14/14c712837859ba7f_90d25dac9f4ed3233c5fda72bee3dfe6
@@ -18,6 +19,7 @@ Resources:
     UncompressedSize: 32815
     CompressedSize: 5003
     BinaryOperation: 0
+    Prefix: res
   - RelativePath: testresource2.txt
     Type: Resource
     Location: 06/0649f60a478bf633_271c8036e4eae5515053e924a0a39e0f
@@ -25,3 +27,4 @@ Resources:
     UncompressedSize: 29
     CompressedSize: 97
     BinaryOperation: 0
+    Prefix: res

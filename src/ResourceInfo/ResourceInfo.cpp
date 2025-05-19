@@ -633,6 +633,15 @@ namespace CarbonResources
 
 		}
 
+    	if( m_prefix.IsParameterExpectedInDocumentVersion( documentVersion ) )
+    	{
+    		YAML::Node parameter = resource[m_prefix.GetTag()];
+    		if( parameter.IsDefined() )
+    		{
+    			m_prefix = parameter.as<std::string>();
+    		}
+    	}
+
 
 		return Result{ ResultType::SUCCESS };
 	}
@@ -939,6 +948,16 @@ namespace CarbonResources
     		{
     			out << YAML::Key << m_binaryOperation.GetTag();
     			out << YAML::Value << m_binaryOperation.GetValue();
+    		}
+    	}
+
+    	if( m_prefix.IsParameterExpectedInDocumentVersion( documentVersion ) )
+    	{
+    		// This is an optional field
+    		if( m_prefix.HasValue() )
+    		{
+    			out << YAML::Key << m_prefix.GetTag();
+    			out << YAML::Value << m_prefix.GetValue();
     		}
     	}
 

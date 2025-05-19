@@ -6,10 +6,10 @@ TotalResourcesSizeUnCompressed: 41961
 ResourceGroupResource:
   RelativePath: ResourceGroup.yaml
   Type: ResourceGroup
-  Location: cc/cc00d34500ea7a31_ba991c7cefab7e1eb0932ed63c72661b
-  Checksum: ba991c7cefab7e1eb0932ed63c72661b
-  UncompressedSize: 872
-  CompressedSize: 367
+  Location: cc/cc00d34500ea7a31_e9c772290f4796b68e3812887f233cd5
+  Checksum: e9c772290f4796b68e3812887f233cd5
+  UncompressedSize: 920
+  CompressedSize: 380
 ChunkSize: 1000
 Resources:
   - RelativePath: CreateBundleOut/ResourceGroup0.chunk
