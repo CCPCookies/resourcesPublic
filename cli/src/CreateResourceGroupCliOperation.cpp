@@ -12,7 +12,7 @@ CreateResourceGroupCliOperation::CreateResourceGroupCliOperation() :
 
 	AddRequiredPositionalArgument( m_createResourceGroupPathArgumentId, "Base directory to create resource group from." );
 
-	AddArgument( m_createResourceGroupOutputFileArgumentId, "Filename for created resource group.", false, "ResourceGroup.yaml" );
+	AddArgument( m_createResourceGroupOutputFileArgumentId, "Filename for created resource group.", false, false, "ResourceGroup.yaml" );
 }
 
 bool CreateResourceGroupCliOperation::Execute() const

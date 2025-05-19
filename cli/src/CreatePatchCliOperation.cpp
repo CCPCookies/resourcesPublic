@@ -28,29 +28,29 @@ CreatePatchCliOperation::CreatePatchCliOperation() :
 
     AddRequiredPositionalArgument( m_nextResourceGroupPathArgumentId, "Filename to next resourceGroup." );
 
-    AddArgument( m_resourceGroupRelativePathArgumentId, "Relative path for output resourceGroup which will contain the diff between the supplied previous ResourceGroup and next ResourceGroup.", false, "ResourceGroup.yaml" );
+    AddArgument( m_resourceGroupRelativePathArgumentId, "Relative path for output resourceGroup which will contain the diff between the supplied previous ResourceGroup and next ResourceGroup.", false, false, "ResourceGroup.yaml" );
 
-    AddArgument( m_patchResourceGroupRelativePathArgumentId, "Relative path for output PatchResourceGroup which will contain all the patches produced.", false, "PatchResourceGroup.yaml" );
+    AddArgument( m_patchResourceGroupRelativePathArgumentId, "Relative path for output PatchResourceGroup which will contain all the patches produced.", false, false, "PatchResourceGroup.yaml" );
 
-    AddArgument( m_resourceSourceTypePreviousArgumentId, "Represents the type of repository to source resources for previous.", false, "LOCAL_RELATIVE" );
+    AddArgument( m_resourceSourceTypePreviousArgumentId, "Represents the type of repository to source resources for previous.", false, false, "LOCAL_RELATIVE" );
 
-    AddArgument( m_resourceSourceBasePathPreviousArgumentId, "Represents the base path to source resources for previous.", false, "" );
+    AddArgument( m_resourceSourceBasePathPreviousArgumentId, "Represents the base path to source resources for previous.", false, true, "" );
 
-    AddArgument( m_resourceSourceTypeNextArgumentId, "Represents the type of repository to source resources for next.", false, "LOCAL_RELATIVE" );
+    AddArgument( m_resourceSourceTypeNextArgumentId, "Represents the type of repository to source resources for next.", false, false, "LOCAL_RELATIVE" );
 
-	AddArgument( m_resourceSourceBasePathNextArgumentId, "Represents the base path to source resources for next.", false, "" );
+	AddArgument( m_resourceSourceBasePathNextArgumentId, "Represents the base path to source resources for next.", false, true, "" );
 
-    AddArgument( m_patchBinaryDestinationTypeArgumentId, "Represents the type of repository where binary patches will be saved.", false, "LOCAL_RELATIVE" );
+    AddArgument( m_patchBinaryDestinationTypeArgumentId, "Represents the type of repository where binary patches will be saved.", false, false, "LOCAL_RELATIVE" );
 
-	AddArgument( m_patchBinaryDestinationBasePathArgumentId, "Represents the base path where binary patches will be saved.", false, "." );
+	AddArgument( m_patchBinaryDestinationBasePathArgumentId, "Represents the base path where binary patches will be saved.", false, false, "." );
 
-    AddArgument( m_patchResourceGroupDestinationTypeArgumentId, "Represents the type of repository where the patch ResourceGroup will be saved.", false, "LOCAL_RELATIVE" );
+    AddArgument( m_patchResourceGroupDestinationTypeArgumentId, "Represents the type of repository where the patch ResourceGroup will be saved.", false, false, "LOCAL_RELATIVE" );
 
-	AddArgument( m_patchResourceGroupDestinationBasePathArgumentId, "Represents the base path where the patch ResourceGroup will be saved.", false, "." );
+	AddArgument( m_patchResourceGroupDestinationBasePathArgumentId, "Represents the base path where the patch ResourceGroup will be saved.", false, false, "." );
 
-    AddArgument( m_patchFileRelativePathPrefix, "Relative path prefix for produced patch binaries. Default is “Patches/Patch” which will produce patches such as Patches/Patch.1 …", false, "Patches/Patch" );
+    AddArgument( m_patchFileRelativePathPrefix, "Relative path prefix for produced patch binaries. Default is “Patches/Patch” which will produce patches such as Patches/Patch.1 …", false, false, "Patches/Patch" );
 
-    AddArgument( m_maxInputChunkSize, "Files are processed in chunks, maxInputFileChunkSize indicate the size of this chunk. Files smaller than chunk will be processed in one pass.", false, "100000000" );
+    AddArgument( m_maxInputChunkSize, "Files are processed in chunks, maxInputFileChunkSize indicate the size of this chunk. Files smaller than chunk will be processed in one pass.", false, false, "100000000" );
 }
 
 bool CreatePatchCliOperation::Execute() const
@@ -88,7 +88,10 @@ bool CreatePatchCliOperation::Execute() const
 		return false;
 	}
 
-	createPatchParams.resourceSourceSettingsFrom.basePath = m_argumentParser->get<std::string>( m_resourceSourceBasePathPreviousArgumentId );
+    for (std::string basePath : m_argumentParser->get<std::vector<std::string>>(m_resourceSourceBasePathPreviousArgumentId))
+    {
+		createPatchParams.resourceSourceSettingsFrom.basePaths.push_back( basePath );
+    }
 
 	std::string resourceSourceTypeNext = m_argumentParser->get<std::string>( m_resourceSourceTypeNextArgumentId );
 
@@ -109,7 +112,10 @@ bool CreatePatchCliOperation::Execute() const
 		return false;
 	}
 
-	createPatchParams.resourceSourceSettingsTo.basePath = m_argumentParser->get<std::string>( m_resourceSourceBasePathNextArgumentId );
+    for (std::string basePath : m_argumentParser->get<std::vector<std::string>>(m_resourceSourceBasePathNextArgumentId))
+    {
+		createPatchParams.resourceSourceSettingsTo.basePaths.push_back( basePath );
+    }
 
 	std::string patchBinaryDestinationType = m_argumentParser->get<std::string>( m_patchBinaryDestinationTypeArgumentId );
 
@@ -194,11 +200,17 @@ void CreatePatchCliOperation::PrintStartBanner( const CarbonResources::ResourceG
 
 	std::cout << "Patch File Relative Path Prefix: " << createPatchParams.patchFileRelativePathPrefix << std::endl;
 
-	std::cout << "Resource Source Settings From Base Path: " << createPatchParams.resourceSourceSettingsFrom.basePath << std::endl;
+    for( std::filesystem::path basePath : createPatchParams.resourceSourceSettingsFrom.basePaths )
+	{
+		std::cout << "Resource Source Settings From Base Path: " << basePath << std::endl;
+	}
 
 	std::cout << "Resource Source Settings From Source Type: " << SourceTypeToString( createPatchParams.resourceSourceSettingsFrom.sourceType ) << std::endl;
 
-	std::cout << "Resource Source Settings To Base Path: " << createPatchParams.resourceSourceSettingsTo.basePath << std::endl;
+    for( std::filesystem::path basePath : createPatchParams.resourceSourceSettingsTo.basePaths )
+	{
+		std::cout << "Resource Source Settings To Base Path: " << basePath << std::endl;
+	}
 
 	std::cout << "Resource Source Settings To Source Type: " << SourceTypeToString( createPatchParams.resourceSourceSettingsTo.sourceType ) << std::endl;
 

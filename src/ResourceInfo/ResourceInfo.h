@@ -160,10 +160,15 @@ namespace CarbonResources
 			return false;
         }
 
+        void Erase( typename std::vector<T>::const_iterator attributeIterator )
+		{
+			m_collection.erase( attributeIterator );
+		}
+
 	    void Remove( typename std::vector<T>::const_iterator attributeIterator )
 	    {
-			delete ( *attributeIterator );
-
+			delete( *attributeIterator );
+			
 		    m_collection.erase( attributeIterator );
 	    }
 
@@ -327,17 +332,17 @@ namespace CarbonResources
         static std::string TypeId();
 
     private:
-	    Result GetDataLocalRelative( ResourceGetDataParams& params ) const;
+	    Result GetDataLocalRelative( ResourceGetDataParams& params, const int basePathId ) const;
 
-	    Result GetDataLocalCdn( ResourceGetDataParams& params ) const;
+	    Result GetDataLocalCdn( ResourceGetDataParams& params, const int basePathId ) const;
 
-	    Result GetDataRemoteCdn( ResourceGetDataParams& params ) const;
+	    Result GetDataRemoteCdn( ResourceGetDataParams& params, const int basePathId ) const;
 
-        Result GetDataStreamLocalRelative( ResourceGetDataStreamParams& params ) const;
+        Result GetDataStreamLocalRelative( ResourceGetDataStreamParams& params, const int basePathId ) const;
 
-		Result GetDataStreamLocalCdn( ResourceGetDataStreamParams& params ) const;
+		Result GetDataStreamLocalCdn( ResourceGetDataStreamParams& params, const int basePathId ) const;
 
-		Result GetDataStreamRemoteCdn( ResourceGetDataStreamParams& params ) const;
+		Result GetDataStreamRemoteCdn( ResourceGetDataStreamParams& params, const int basePathId ) const;
 
         Result PutDataLocalRelative( ResourcePutDataParams& params ) const;
 

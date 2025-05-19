@@ -335,69 +335,145 @@ namespace CarbonResources
 			return Result{ ResultType::FAILED_TO_OPEN_FILE, "Data Stream not provided." };
 		}
 
-		switch( params.resourceSourceSettings.sourceType )
+        // GetDataStream attempts to retrieve resources from arbitary size number of base paths.
+        // Each failure adds to the error string
+        // If function ultimately ends in failure then all information of attempted locations are displayed
+        std::string errorString = "";
+
+        for( int i = 0; i < params.resourceSourceSettings.basePaths.size(); i++ )
 		{
-		case ResourceSourceType::LOCAL_RELATIVE:
 
-			return GetDataStreamLocalRelative( params );
+			switch( params.resourceSourceSettings.sourceType )
+			{
+			case ResourceSourceType::LOCAL_RELATIVE: 
+            {
+				Result getDataStreamLocalRelativeResult = GetDataStreamLocalRelative( params, i );
 
-			break;
+                if( getDataStreamLocalRelativeResult.type == ResultType::SUCCESS )
+				{
+					return getDataStreamLocalRelativeResult;
+				}
 
-		case ResourceSourceType::LOCAL_CDN:
+                errorString += getDataStreamLocalRelativeResult.info;
+				errorString += "\n";
 
-			return GetDataStreamLocalCdn( params );
+				break;
+			}
+			case ResourceSourceType::LOCAL_CDN: 
+            {
+				Result getDataStreamLocalCdnResult = GetDataStreamLocalCdn( params, i );
 
-			break;
+                if( getDataStreamLocalCdnResult.type == ResultType::SUCCESS )
+				{
+					return getDataStreamLocalCdnResult;
+				}
 
-		case ResourceSourceType::REMOTE_CDN:
+                errorString += getDataStreamLocalCdnResult.info;
+				errorString += "\n";
 
-			return GetDataStreamRemoteCdn( params );
+				break;
+			}
 
-			break;
+			case ResourceSourceType::REMOTE_CDN:
+            {
+				Result getDataStreamRemoteCdnResult = GetDataStreamRemoteCdn( params, i );
 
-		default:
-			return Result{ ResultType::FAILED_TO_OPEN_FILE };
+                if( getDataStreamRemoteCdnResult.type == ResultType::SUCCESS )
+				{
+					return getDataStreamRemoteCdnResult;
+				}
+
+                errorString += getDataStreamRemoteCdnResult.info;
+				errorString += "\n";
+
+				break;
+            }
+			default:
+
+				return Result{ ResultType::FAILED_TO_OPEN_FILE };
+			}
 		}
+
+        return Result{ ResultType::FAILED_TO_OPEN_FILE, errorString };
     }
 
 	Result ResourceInfo::GetData( ResourceGetDataParams& params ) const
     {
-        if (params.data == nullptr)
-        {
+		if( params.data == nullptr )
+		{
 			return Result{ ResultType::FAILED_TO_OPEN_FILE };
+		}
+
+        // GetDataStream attempts to retrieve resources from arbitary size number of base paths.
+		// Each failure adds to the error string
+		// If function ultimately ends in failure then all information of attempted locations are displayed
+		std::string errorString = "";
+
+        for( int i = 0; i < params.resourceSourceSettings.basePaths.size(); i++ )
+        {
+			switch( params.resourceSourceSettings.sourceType )
+			{
+			case ResourceSourceType::LOCAL_RELATIVE:
+            {
+				Result getDataLocalRelativeResult = GetDataLocalRelative( params, i );
+
+                if (getDataLocalRelativeResult.type == ResultType::SUCCESS)
+                {
+					return getDataLocalRelativeResult;
+                }
+
+                errorString += getDataLocalRelativeResult.info;
+				errorString += "\n";
+
+				break;
+            }
+			case ResourceSourceType::LOCAL_CDN:
+            {
+				Result getDataLocalCdnResult = GetDataLocalCdn( params, i );
+
+                if( getDataLocalCdnResult.type == ResultType::SUCCESS )
+				{
+					return getDataLocalCdnResult;
+				}
+
+                errorString += getDataLocalCdnResult.info;
+				errorString += "\n";
+
+				break;
+            }
+			case ResourceSourceType::REMOTE_CDN:
+            {
+				Result getDataRemoteCdn = GetDataRemoteCdn( params, i );
+
+                if( getDataRemoteCdn.type == ResultType::SUCCESS )
+				{
+					return getDataRemoteCdn;
+				}
+
+				errorString += getDataRemoteCdn.info;
+				errorString += "\n";
+
+				break;
+			}
+			default:
+				return Result{ ResultType::FAILED_TO_OPEN_FILE };
+			}
         }
 
-        switch (params.resourceSourceSettings.sourceType)
-        {
-		case ResourceSourceType::LOCAL_RELATIVE:
-
-			return GetDataLocalRelative( params );
-
-			break;
-
-		case ResourceSourceType::LOCAL_CDN:
-
-            return GetDataLocalCdn( params );
-
-			break;
-
-		case ResourceSourceType::REMOTE_CDN:
-
-            return GetDataRemoteCdn( params );
-
-			break;
-
-		default:
-			return Result{ ResultType::FAILED_TO_OPEN_FILE };
-        }
+        return Result{ ResultType::FAILED_TO_OPEN_FILE, errorString };
 
     }
 
-    Result ResourceInfo::GetDataLocalRelative( ResourceGetDataParams& params ) const
+    Result ResourceInfo::GetDataLocalRelative( ResourceGetDataParams& params, const int basePathId ) const
     {
+        if (basePathId >= params.resourceSourceSettings.basePaths.size())
+        {
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM, "Internal component error" };
+        }
+
 		std::string& data = *params.data;
 
-        std::filesystem::path dataPath = params.resourceSourceSettings.basePath / m_relativePath.GetValue();
+        std::filesystem::path dataPath = params.resourceSourceSettings.basePaths.at( basePathId ) / m_relativePath.GetValue();
 
 		bool res = ResourceTools::GetLocalFileData( dataPath, data );
 
@@ -407,16 +483,25 @@ namespace CarbonResources
 		}
 		else
 		{
-			return Result{ ResultType::FAILED_TO_OPEN_FILE };
+			std::stringstream ss;
+
+			ss << "Failed to open file at: " << dataPath;
+
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM, ss.str() };
 		}
     }
 
-    Result ResourceInfo::GetDataLocalCdn( ResourceGetDataParams& params ) const
+    Result ResourceInfo::GetDataLocalCdn( ResourceGetDataParams& params, const int basePathId ) const
     {
+		if( basePathId >= params.resourceSourceSettings.basePaths.size() )
+		{
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM, "Internal component error" };
+		}
+
 		std::string& data = *params.data;
 
         // Construct path
-        std::filesystem::path path = params.resourceSourceSettings.basePath / m_location.GetValue().ToString();
+        std::filesystem::path path = params.resourceSourceSettings.basePaths.at( basePathId ) / m_location.GetValue().ToString();
 
 		bool res = ResourceTools::GetLocalFileData( path, data );
 
@@ -426,14 +511,24 @@ namespace CarbonResources
         }
         else
         {
-			return Result{ ResultType::FAILED_TO_OPEN_FILE };
+			std::stringstream ss;
+
+			ss << "Failed to open file at: " << path << "\n Relative Path: " << m_relativePath.GetValue();
+
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM, ss.str() };
+
         }
     }
 
     // TODO this is where retry logic should reside
-	Result ResourceInfo::GetDataRemoteCdn( ResourceGetDataParams& params ) const
+	Result ResourceInfo::GetDataRemoteCdn( ResourceGetDataParams& params, const int basePathId ) const
     {
-		std::filesystem::path path = params.resourceSourceSettings.basePath / m_location.GetValue().ToString();
+		if( basePathId >= params.resourceSourceSettings.basePaths.size() )
+		{
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM, "Internal component error" };
+		}
+
+		std::filesystem::path path = params.resourceSourceSettings.basePaths.at( basePathId ) / m_location.GetValue().ToString();
 
         std::filesystem::path tempPath = params.cacheBasePath / m_location.GetValue().ToString();
 
@@ -446,7 +541,11 @@ namespace CarbonResources
 
         if (!downloadFileResult)
         {
-			return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE };
+			std::stringstream ss;
+
+			ss << "Failed to download file \nfrom remote url: " << url << "\nto local path: " << tempPath.string();
+
+			return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
         }
 
         if( params.expectedChecksum != "" )
@@ -459,17 +558,24 @@ namespace CarbonResources
 
         localParams.resourceSourceSettings.sourceType = ResourceSourceType::LOCAL_CDN;
 
-        localParams.resourceSourceSettings.basePath = params.cacheBasePath;
+        localParams.resourceSourceSettings.basePaths.clear();
+
+        localParams.resourceSourceSettings.basePaths.push_back( params.cacheBasePath );
 
         // Attempt locally now it has been downloaded
-		return GetDataLocalCdn( localParams );
+		return GetDataLocalCdn( localParams, 0 );
         
 
     }
 
-    Result ResourceInfo::GetDataStreamLocalRelative( ResourceGetDataStreamParams& params ) const
+    Result ResourceInfo::GetDataStreamLocalRelative( ResourceGetDataStreamParams& params, const int basePathId ) const
     {
-		std::filesystem::path dataPath = params.resourceSourceSettings.basePath / m_relativePath.GetValue();
+		if( basePathId >= params.resourceSourceSettings.basePaths.size() )
+		{
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM, "Internal component error" };
+		}
+
+		std::filesystem::path dataPath = params.resourceSourceSettings.basePaths.at( basePathId ) / m_relativePath.GetValue();
 
 		bool res = params.dataStream->StartRead( dataPath );
 
@@ -479,14 +585,23 @@ namespace CarbonResources
 		}
 		else
 		{
-			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
+			std::stringstream ss;
+
+			ss << "Failed to open file at: " << dataPath;
+
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM, ss.str() };
 		}
     }
 
-    Result ResourceInfo::GetDataStreamLocalCdn( ResourceGetDataStreamParams& params ) const
+    Result ResourceInfo::GetDataStreamLocalCdn( ResourceGetDataStreamParams& params, const int basePathId ) const
     {
+		if( basePathId >= params.resourceSourceSettings.basePaths.size() )
+		{
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM, "Internal component error" };
+		}
+
 		// Construct path
-		std::filesystem::path path = params.resourceSourceSettings.basePath / m_location.GetValue().ToString();
+		std::filesystem::path path = params.resourceSourceSettings.basePaths.at( basePathId ) / m_location.GetValue().ToString();
 
 		bool res = params.dataStream->StartRead( path );
 
@@ -496,13 +611,22 @@ namespace CarbonResources
 		}
 		else
 		{
-			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
+			std::stringstream ss;
+
+			ss << "Failed to open file at: " << path << "\n Relative Path: " << m_relativePath.GetValue();
+
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM, ss.str() };
 		}
     }
 
-    Result ResourceInfo::GetDataStreamRemoteCdn( ResourceGetDataStreamParams& params ) const
+    Result ResourceInfo::GetDataStreamRemoteCdn( ResourceGetDataStreamParams& params, const int basePathId ) const
     {
-		std::filesystem::path path = params.resourceSourceSettings.basePath / m_location.GetValue().ToString();
+		if( basePathId >= params.resourceSourceSettings.basePaths.size() )
+		{
+			return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM, "Internal component error" };
+		}
+
+		std::filesystem::path path = params.resourceSourceSettings.basePaths.at( basePathId ) / m_location.GetValue().ToString();
 
 		std::filesystem::path tempPath = params.cacheBasePath / m_location.GetValue().ToString();
 
@@ -532,9 +656,11 @@ namespace CarbonResources
 
         localCdnParams.resourceSourceSettings.sourceType = ResourceSourceType::LOCAL_CDN;
 
-        localCdnParams.resourceSourceSettings.basePath = params.cacheBasePath;
+        localCdnParams.resourceSourceSettings.basePaths.clear();
 
-        return GetDataStreamLocalCdn( localCdnParams );
+        localCdnParams.resourceSourceSettings.basePaths.push_back( params.cacheBasePath );
+
+        return GetDataStreamLocalCdn( localCdnParams, 0 );
 
     }
 

@@ -216,7 +216,7 @@ TEST_F( CarbonResourcesLibraryTest, UnpackBundle )
 	
 	bundleUnpackParams.chunkSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
 
-	bundleUnpackParams.chunkSourceSettings.basePath = GetTestFileFileAbsolutePath( "Bundle/LocalRemoteChunks/" );
+	bundleUnpackParams.chunkSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Bundle/LocalRemoteChunks/" ) };
 
 	bundleUnpackParams.resourceDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
 
@@ -249,7 +249,7 @@ TEST_F( CarbonResourcesLibraryTest, CreateBundle )
 
 	bundleCreateParams.resourceSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-    bundleCreateParams.resourceSourceSettings.basePath = GetTestFileFileAbsolutePath( "Bundle/Res/" );
+    bundleCreateParams.resourceSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Bundle/Res/" ) };
 
     bundleCreateParams.chunkDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
 
@@ -285,15 +285,15 @@ TEST_F( CarbonResourcesLibraryTest, ApplyPatch )
 
     patchApplyParams.newBuildResourcesSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchApplyParams.newBuildResourcesSourceSettings.basePath = GetTestFileFileAbsolutePath( "Patch/NextBuildResources/" );
+	patchApplyParams.newBuildResourcesSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Patch/NextBuildResources/" ) };
 
     patchApplyParams.patchBinarySourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
 
-    patchApplyParams.patchBinarySourceSettings.basePath = GetTestFileFileAbsolutePath( "Patch/LocalCDNPatches/" );
+    patchApplyParams.patchBinarySourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Patch/LocalCDNPatches/" ) };
 
     patchApplyParams.resourcesToPatchSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-    patchApplyParams.resourcesToPatchSourceSettings.basePath = GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources/" );
+    patchApplyParams.resourcesToPatchSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources/" ) };
 
     patchApplyParams.resourcesToPatchDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
 
@@ -341,11 +341,11 @@ TEST_F( CarbonResourcesLibraryTest, CreatePatch )
 
     patchCreateParams.resourceSourceSettingsFrom.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-    patchCreateParams.resourceSourceSettingsFrom.basePath = GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources" );
+    patchCreateParams.resourceSourceSettingsFrom.basePaths = { GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources" ) };
 
     patchCreateParams.resourceSourceSettingsTo.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-    patchCreateParams.resourceSourceSettingsTo.basePath = GetTestFileFileAbsolutePath( "Patch/NextBuildResources" );
+    patchCreateParams.resourceSourceSettingsTo.basePaths = { GetTestFileFileAbsolutePath( "Patch/NextBuildResources" ) };
 
     patchCreateParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
 
@@ -389,15 +389,15 @@ TEST_F( CarbonResourcesLibraryTest, ApplyPatchWithChunking )
 
 	patchApplyParams.newBuildResourcesSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchApplyParams.newBuildResourcesSourceSettings.basePath = GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/" );
+	patchApplyParams.newBuildResourcesSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/" ) };
 
 	patchApplyParams.patchBinarySourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
 
-	patchApplyParams.patchBinarySourceSettings.basePath = GetTestFileFileAbsolutePath( "PatchWithInputChunk/LocalCDNPatches/" );
+	patchApplyParams.patchBinarySourceSettings.basePaths = { GetTestFileFileAbsolutePath( "PatchWithInputChunk/LocalCDNPatches/" ) };
 
 	patchApplyParams.resourcesToPatchSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchApplyParams.resourcesToPatchSourceSettings.basePath = GetTestFileFileAbsolutePath( "PatchWithInputChunk/PreviousBuildResources/" );
+	patchApplyParams.resourcesToPatchSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "PatchWithInputChunk/PreviousBuildResources/" ) };
 
 	patchApplyParams.resourcesToPatchDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
 
@@ -447,11 +447,11 @@ TEST_F( CarbonResourcesLibraryTest, CreatePatchWithChunking )
 
 	patchCreateParams.resourceSourceSettingsFrom.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsFrom.basePath = GetTestFileFileAbsolutePath( "PatchWithInputChunk/PreviousBuildResources" );
+	patchCreateParams.resourceSourceSettingsFrom.basePaths = { GetTestFileFileAbsolutePath( "PatchWithInputChunk/PreviousBuildResources" ) };
 
 	patchCreateParams.resourceSourceSettingsTo.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsTo.basePath = GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources" );
+	patchCreateParams.resourceSourceSettingsTo.basePaths = { GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources" ) };
 
 	patchCreateParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
 

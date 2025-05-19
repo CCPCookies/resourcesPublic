@@ -83,7 +83,7 @@ namespace CarbonResources
 
                     ResourceGetDataParams resourceGetDataParams;
 
-                    resourceGetDataParams.resourceSourceSettings.basePath = params.directory;
+                    resourceGetDataParams.resourceSourceSettings.basePaths = { params.directory };
 
                     resourceGetDataParams.resourceSourceSettings.sourceType = ResourceSourceType::LOCAL_RELATIVE;
 
@@ -1494,8 +1494,6 @@ namespace CarbonResources
 		}
 
 		DocumentParameterCollection<ResourceInfo*> subtractionResources = params.subtractResourceGroup->m_resourcesParameter;
-
-
         // Iterate through all resources
 
         // Value only required for status updates
@@ -1580,6 +1578,8 @@ namespace CarbonResources
 
 					params.result1->AddResource( resourceCopy2 );
                 }
+
+                subtractionResources.Erase( subtractionResourcesFindIter );
 			}
             else
             {
@@ -1616,6 +1616,8 @@ namespace CarbonResources
 				params.result1->AddResource( dummyResource );
 
             }
+
+            
             
         }
 

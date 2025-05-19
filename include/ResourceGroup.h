@@ -58,14 +58,14 @@ namespace CarbonResources
     *  @brief Parameters to represent where and how a resource is sourced.
     *  @var ResourceSourceSettings::sourceType
     *  Specifies the type of resource location. See ResourceSourceType for more info.
-    *  @var ResourceSourceSettings::basePath
-    *  The base path to locate resources.
+    *  @var ResourceSourceSettings::basePaths
+    *  The base paths to locate resources.
     */
     struct API ResourceSourceSettings
 	{
 		ResourceSourceType sourceType = ResourceSourceType::LOCAL_CDN;
 
-        std::filesystem::path basePath = "";
+        std::vector<std::filesystem::path> basePaths;
 	};
 
     /** @enum ResourceDestinationType
@@ -119,7 +119,7 @@ namespace CarbonResources
     */
     struct API BundleCreateParams
 	{
-		ResourceSourceSettings resourceSourceSettings = { CarbonResources::ResourceSourceType::LOCAL_CDN, "" };
+		ResourceSourceSettings resourceSourceSettings = { CarbonResources::ResourceSourceType::LOCAL_CDN };
 
         ResourceDestinationSettings chunkDestinationSettings = { CarbonResources::ResourceDestinationType::REMOTE_CDN, "BundleOut/Chunks/" };
 
@@ -171,9 +171,9 @@ namespace CarbonResources
 
         std::filesystem::path patchFileRelativePathPrefix = "Patches/Patch";
 
-		ResourceSourceSettings resourceSourceSettingsFrom = { CarbonResources::ResourceSourceType::REMOTE_CDN, "" };
+		ResourceSourceSettings resourceSourceSettingsFrom = { CarbonResources::ResourceSourceType::REMOTE_CDN };
 
-		ResourceSourceSettings resourceSourceSettingsTo = { CarbonResources::ResourceSourceType::LOCAL_RELATIVE, "" }; // TODO this is sometimes Previous/Next and sometimes From/To unify
+		ResourceSourceSettings resourceSourceSettingsTo = { CarbonResources::ResourceSourceType::LOCAL_RELATIVE }; // TODO this is sometimes Previous/Next and sometimes From/To unify
 
         ResourceDestinationSettings resourcePatchBinaryDestinationSettings = { CarbonResources::ResourceDestinationType::LOCAL_CDN, "PatchOut/Patches/" };
 ;

@@ -379,17 +379,22 @@ namespace CarbonResources
                     	}
                     	else
                     	{
-							ResourceTools::FileDataStreamIn sourceDataStreamIn(m_maxInputChunkSize.GetValue());
-                    		std::filesystem::path sourceLocation;
-                    		Result getLocationResult = resource->GetRelativePath( sourceLocation );
-                    		if (getLocationResult.type != ResultType::SUCCESS)
-                    		{
-                    			return getLocationResult;
-                    		}
-                    		if( !sourceDataStreamIn.StartRead(  params.resourcesToPatchSourceSettings.basePath / sourceLocation ) )
-                    		{
-								return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
-                    		}
+
+                            ResourceTools::FileDataStreamIn sourceDataStreamIn( m_maxInputChunkSize.GetValue() );
+
+                            ResourceGetDataStreamParams getDataStreamParams;
+
+                            getDataStreamParams.dataStream = &sourceDataStreamIn;
+
+                            getDataStreamParams.resourceSourceSettings = params.resourcesToPatchSourceSettings;
+
+							Result getDataStreamResult = resource->GetDataStream( getDataStreamParams );
+
+                            if (getDataStreamResult.type != ResultType::SUCCESS)
+                            {
+								return getDataStreamResult;
+                            }
+
                     		uintmax_t sourceOffset{0};
                     		Result getSourceOffsetResult = patch->GetSourceOffset( sourceOffset );
                     		if( getSourceOffsetResult.type != ResultType::SUCCESS )

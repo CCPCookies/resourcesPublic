@@ -20,23 +20,23 @@ CreateBundleCliOperation::CreateBundleCliOperation() :
 
 	AddRequiredPositionalArgument( m_inputResourceGroupPathArgumentId, "Path to ResourceGroup to bundle." );
 
-	AddArgument( m_resourceGroupRelativePathArgumentId, "Relative path to save a ResourceGroup the Bundle was based off", false, "ResourceGroup.yaml" );
+	AddArgument( m_resourceGroupRelativePathArgumentId, "Relative path to save a ResourceGroup the Bundle was based off", false, false, "ResourceGroup.yaml" );
 
-    AddArgument( m_bundleResourceGroupRelativePathArgumentId, "Relative path to save a Bundle ResourceGroup", false, "BundleResourceGroup.yaml" );
+    AddArgument( m_bundleResourceGroupRelativePathArgumentId, "Relative path to save a Bundle ResourceGroup", false, false, "BundleResourceGroup.yaml" );
 
-    AddArgument( m_resourceSourceTypeArgumentId, "Represents the type of repository where resources will be sourced.", false, "LOCAL_RELATIVE" );
+    AddArgument( m_resourceSourceTypeArgumentId, "Represents the type of repository where resources will be sourced.", false, false, "LOCAL_RELATIVE" );
 
-	AddArgument( m_resourceSourceBasePathArgumentId, "Represents the base path where the resources will be sourced.", false, "." );
+	AddArgument( m_resourceSourceBasePathArgumentId, "Represents the base path where the resources will be sourced.", false, true, "." );
 
-    AddArgument( m_chunkDestinationTypeArgumentId, "Represents the type of repository where chunks will be saved.", false, "LOCAL_RELATIVE" );
+    AddArgument( m_chunkDestinationTypeArgumentId, "Represents the type of repository where chunks will be saved.", false, false, "LOCAL_RELATIVE" );
 
-	AddArgument( m_chunkDestinationBasePathArgumentId, "Represents the base path where the chunks will be saved.", false, "BundleOut" );
+	AddArgument( m_chunkDestinationBasePathArgumentId, "Represents the base path where the chunks will be saved.", false, false, "BundleOut" );
 
-    AddArgument( m_bundleResourceGroupDestinationTypeArgumentId, "Represents the type of repository where the bundle ResourceGroup will be saved.", false, "LOCAL_RELATIVE" );
+    AddArgument( m_bundleResourceGroupDestinationTypeArgumentId, "Represents the type of repository where the bundle ResourceGroup will be saved.", false, false, "LOCAL_RELATIVE" );
 
-	AddArgument( m_bundleResourceGroupDestinationBasePathArgumentId, "Represents the base path where the bundle ResourceGroup will be saved.", false, "." );
+	AddArgument( m_bundleResourceGroupDestinationBasePathArgumentId, "Represents the base path where the bundle ResourceGroup will be saved.", false, false, "." );
 
-    AddArgument( m_chunkSizeArgumentId, "Represents the maximum size of the produced chunks in bytes.", false, "10000000" );
+    AddArgument( m_chunkSizeArgumentId, "Represents the maximum size of the produced chunks in bytes.", false, false, "10000000" );
 }
 
 bool CreateBundleCliOperation::Execute() const
@@ -70,7 +70,10 @@ bool CreateBundleCliOperation::Execute() const
 		return false;
 	}
 
-	bundleCreateParams.resourceSourceSettings.basePath = m_argumentParser->get<std::string>( m_resourceSourceBasePathArgumentId );
+    for (const std::string basePath : m_argumentParser->get<std::vector<std::string>>(m_resourceSourceBasePathArgumentId))
+    {
+		bundleCreateParams.resourceSourceSettings.basePaths.push_back(basePath);
+    }
 
 	std::string chunkDesinationType = m_argumentParser->get<std::string>( m_chunkDestinationTypeArgumentId );
 
@@ -150,7 +153,10 @@ void CreateBundleCliOperation::PrintStartBanner( const CarbonResources::Resource
 
     std::cout << "Resource Source Type: " << SourceTypeToString( bundleCreateParams.resourceSourceSettings.sourceType ) << std::endl;
 
-	std::cout << "Resource Source Base Path: " << bundleCreateParams.resourceSourceSettings.basePath << std::endl;
+    for (std::filesystem::path basePath : bundleCreateParams.resourceSourceSettings.basePaths)
+    {
+		std::cout << "Resource Source Base Path: " << basePath << std::endl;
+    }
 
     std::cout << "Chunk Destination Type: " << DestinationTypeToString( bundleCreateParams.chunkDestinationSettings.destinationType ) << std::endl;
 

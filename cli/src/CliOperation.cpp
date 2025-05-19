@@ -38,7 +38,7 @@ bool CliOperation::AddRequiredPositionalArgument( const std::string& argumentId,
 		.help( helpString );
 }
 
-bool CliOperation::AddArgument( const std::string& argumentId, const std::string& helpString, bool required /* = false*/, std::string defaultValue /*= ""*/ )
+bool CliOperation::AddArgument( const std::string& argumentId, const std::string& helpString, bool required /* = false*/, bool append /* = false*/, std::string defaultValue /*= ""*/ )
 {
 	if( !m_argumentParser )
 	{
@@ -52,6 +52,11 @@ bool CliOperation::AddArgument( const std::string& argumentId, const std::string
 	{
 		argument.required();
 	}
+
+    if (append)
+    {
+		argument.append();
+    }
 
 	if( !defaultValue.empty() )
 	{
