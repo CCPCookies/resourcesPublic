@@ -62,7 +62,7 @@ Downloader::~Downloader()
 	}
 }
 
-bool Downloader::DownloadFile( const std::string& url, const std::filesystem::path& outputPath )
+bool Downloader::DownloadFile( const std::string& url, const std::filesystem::path& outputPath, const std::chrono::seconds& retrySeconds )
 {
 	if( std::filesystem::exists( outputPath ) )
 	{
@@ -87,9 +87,9 @@ bool Downloader::DownloadFile( const std::string& url, const std::filesystem::pa
 	do
 	{
 		auto duration = std::chrono::duration_cast<std::chrono::seconds>( ( std::chrono::steady_clock::now() - startTime ) );
-		auto remaining = RETRY_PERIOD_SECONDS - duration;
+		auto remaining = retrySeconds - duration;
 		cc = curl_easy_perform( m_curlHandle );
-		if( duration >= RETRY_PERIOD_SECONDS || s_curl_retry_errors.find( cc ) == s_curl_retry_errors.end() )
+		if( duration >= retrySeconds || s_curl_retry_errors.find( cc ) == s_curl_retry_errors.end() )
 		{
 			return cc == CURLE_OK;
 		}

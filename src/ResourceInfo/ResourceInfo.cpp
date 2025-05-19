@@ -439,7 +439,6 @@ namespace CarbonResources
         }
     }
 
-    // TODO this is where retry logic should reside
 	Result ResourceInfo::GetDataRemoteCdn( ResourceGetDataParams& params ) const
     {
 		std::filesystem::path path = params.resourceSourceSettings.basePath / m_location.GetValue().ToString();
@@ -451,7 +450,7 @@ namespace CarbonResources
 		std::replace( url.begin(), url.end(), '\\', '/' );
 
     	ResourceTools::Downloader downloader;
-		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string() );
+		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadRetrySeconds );
 
         if (!downloadFileResult)
         {
@@ -520,7 +519,7 @@ namespace CarbonResources
         std::replace( url.begin(), url.end(), '\\', '/' );
 
     	ResourceTools::Downloader downloader;
-		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string() );
+		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadRetrySeconds );
 
 		if( !downloadFileResult )
 		{

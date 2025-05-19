@@ -902,6 +902,8 @@ namespace CarbonResources
 
             resourceGetDataParams.dataStream = &resourceDataStream;
 
+        	resourceGetDataParams.downloadRetrySeconds = params.downloadRetrySeconds;
+
 			Result resourceGetDataResult = resource->GetDataStream( resourceGetDataParams );
 
             if (resourceGetDataResult.type != ResultType::SUCCESS)
@@ -1084,6 +1086,7 @@ namespace CarbonResources
 
     	return Result{ ResultType::SUCCESS };
 	}
+
 	Result ResourceGroupImpl::CreatePatch( const PatchCreateParams& params ) const
     {
         // Update status
@@ -1205,6 +1208,8 @@ namespace CarbonResources
 				ResourceGetDataStreamParams previousResourceGetDataStreamParams;
 
 				previousResourceGetDataStreamParams.resourceSourceSettings = params.resourceSourceSettingsFrom;
+
+            	previousResourceGetDataStreamParams.downloadRetrySeconds = params.downloadRetrySeconds;
 
 				previousResourceGetDataStreamParams.dataStream = &previousFileDataStream;
 

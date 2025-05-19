@@ -253,6 +253,7 @@ namespace CarbonResources
 
 		std::string expectedChecksum = "";
 
+    	std::chrono::seconds downloadRetrySeconds{120};
 	};
 
     struct ResourceGetDataParams
@@ -264,6 +265,8 @@ namespace CarbonResources
         std::filesystem::path cacheBasePath = "cache";
 
         std::string expectedChecksum = "";
+
+    	std::chrono::seconds downloadRetrySeconds{120};
 	};
 
     struct ResourcePutDataStreamParams
