@@ -52,13 +52,15 @@ bool CliOperation::AddArgument( const std::string& argumentId, const std::string
 	{
 		argument.required();
 	}
+	else
+	{
+		argument.default_value( defaultValue );
+	}
 
     if (append)
     {
 		argument.append();
     }
-
-	argument.default_value( defaultValue );
 }
 
 argparse::ArgumentParser* CliOperation::GetParser() const
