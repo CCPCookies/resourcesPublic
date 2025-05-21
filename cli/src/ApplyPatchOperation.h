@@ -1,0 +1,24 @@
+#pragma once
+
+#include "CliOperation.h"
+#include <PatchResourceGroup.h>
+
+class ApplyPatchOperation : public CliOperation
+{
+public:
+	ApplyPatchOperation();
+	bool Execute() const final;
+private:
+	void PrintStartBanner(const CarbonResources::ResourceGroupImportFromFileParams& importParamsPrevious, const CarbonResources::PatchApplyParams patchApplyParams) const;
+	bool ApplyPatch(const CarbonResources::ResourceGroupImportFromFileParams& importParamsPrevious, const CarbonResources::PatchApplyParams patchApplyParams) const;
+	std::string m_patchResourceGroupPathArgumentId;
+	std::string m_patchBinariesBasePathArgumentId;
+	std::string m_patchBinariesSourceTypeArgumentId;
+	std::string m_resourcesToPatchBasePathArgumentId;
+	std::string m_resourcesToPatchSourceTypeArgumentId;
+	std::string m_nextResourcesBasePathArgumentId;
+	std::string m_nextResourcesSourceTypeArgumentId;
+	std::string m_outputBasePathArgumentId;
+	std::string m_outputDestinationTypeArgumentId;
+};
+

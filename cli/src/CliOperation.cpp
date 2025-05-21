@@ -278,3 +278,45 @@ std::string CliOperation::DestinationTypeToString( CarbonResources::ResourceDest
 		return "Unknown source type";
 	}
 }
+
+bool CliOperation::StringToResourceSourceType( const std::string& stringRepresentation, CarbonResources::ResourceSourceType& out ) const
+{
+	if( stringRepresentation == "LOCAL_CDN" )
+	{
+		out = CarbonResources::ResourceSourceType::LOCAL_CDN;
+	}
+	else if( stringRepresentation == "REMOTE_CDN" )
+	{
+		out = CarbonResources::ResourceSourceType::REMOTE_CDN;
+	}
+	else if( stringRepresentation == "LOCAL_RELATIVE" )
+	{
+		out = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
+
+bool CliOperation::StringToResourceDestinationType( const std::string& stringRepresentation, CarbonResources::ResourceDestinationType& out ) const
+{
+	if( stringRepresentation == "LOCAL_CDN" )
+	{
+		out = CarbonResources::ResourceDestinationType::LOCAL_CDN;
+	}
+	else if( stringRepresentation == "REMOTE_CDN" )
+	{
+		out = CarbonResources::ResourceDestinationType::REMOTE_CDN;
+	}
+	else if( stringRepresentation == "LOCAL_RELATIVE" )
+	{
+		out = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}

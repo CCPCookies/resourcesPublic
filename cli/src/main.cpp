@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "Cli.h"
+#include "ApplyPatchOperation.h"
 #include "CreateResourceGroupCliOperation.h"
 #include "CreatePatchCliOperation.h"
 #include "CreateBundleCliOperation.h"
@@ -34,6 +35,12 @@ int main( int argc, char** argv )
     CreateBundleCliOperation createBundleOperation;
 
 	cli.AddOperation( &createBundleOperation );
+
+#ifdef DEV_FEATURES
+	ApplyPatchOperation addPatchOperation;
+
+	cli.AddOperation( &addPatchOperation );
+#endif
 
     // Check no arguments
     if (argc == 1)
