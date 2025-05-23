@@ -23,6 +23,7 @@
 
 #include <Enums.h>
 
+#include <filesystem>
 #include <functional>
 
 namespace CarbonResources
@@ -72,6 +73,10 @@ protected:
 
     std::string DestinationTypeToString( CarbonResources::ResourceDestinationType type ) const;
 
+	bool StringToResourceSourceType( const std::string& stringRepresentation, CarbonResources::ResourceSourceType& out ) const;
+
+	bool StringToResourceDestinationType( const std::string& stringRepresentation, CarbonResources::ResourceDestinationType& out ) const;
+
 private:
 
     static void StatusUpdate( int layer, int progress, const std::string& info );
@@ -92,5 +97,7 @@ private:
 	static inline char s_currentBusyAnimationChar = '/';
 
 };
+
+std::string PathsToString( const std::vector<std::filesystem::path>& v );
 
 #endif // CliOperation_H

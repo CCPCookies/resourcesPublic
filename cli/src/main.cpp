@@ -6,9 +6,11 @@
 #include <filesystem>
 
 #include "Cli.h"
+#include "ApplyPatchCliOperation.h"
 #include "CreateResourceGroupCliOperation.h"
 #include "CreatePatchCliOperation.h"
 #include "CreateBundleCliOperation.h"
+#include "UnpackBundleCliOperation.h"
 
 std::string CalculateVersionString()
 {
@@ -34,6 +36,16 @@ int main( int argc, char** argv )
     CreateBundleCliOperation createBundleOperation;
 
     cli.AddOperation( &createBundleOperation );
+
+#ifdef DEV_FEATURES
+	ApplyPatchCliOperation addPatchOperation;
+
+	cli.AddOperation( &addPatchOperation );
+
+	UnpackBundleCliOperation unpackBundleCliOperation;
+
+	cli.AddOperation( &unpackBundleCliOperation );
+#endif
 
     // Check no arguments
     if (argc == 1)

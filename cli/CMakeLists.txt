@@ -4,6 +4,8 @@ project(carbon-resources-cli VERSION 1.0.0)
 find_package(argparse CONFIG REQUIRED)
 
 set(SRC_FILES
+    src/ApplyPatchCliOperation.h
+    src/ApplyPatchCliOperation.cpp
     src/Cli.cpp
     src/Cli.h
     src/CliOperation.cpp
@@ -15,6 +17,8 @@ set(SRC_FILES
     src/CreateResourceGroupCliOperation.cpp
     src/CreateResourceGroupCliOperation.h
     src/main.cpp
+    src/UnpackBundleCliOperation.cpp
+    src/UnpackBundleCliOperation.h
 )
 
 ccp_add_executable(carbon-resources-cli ${SRC_FILES})
@@ -26,6 +30,12 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}"
         PREFIX "Sources"
         FILES ${_SOURCES}
 )
+
+option(DEV_FEATURES "Expose unsupported features")
+
+if(DEV_FEATURES)
+    target_compile_definitions( carbon-resources-cli PRIVATE DEV_FEATURES )
+endif()
 
 set_target_properties(carbon-resources-cli PROPERTIES OUTPUT_NAME "carbon-resources")
 

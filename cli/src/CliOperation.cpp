@@ -54,13 +54,15 @@ bool CliOperation::AddArgument( const std::string& argumentId, const std::string
 	{
 		argument.required();
 	}
+	else
+	{
+		argument.default_value( defaultValue );
+	}
 
     if (append)
     {
 		argument.append();
     }
-
-	argument.default_value( defaultValue );
 }
 
 argparse::ArgumentParser* CliOperation::GetParser() const
@@ -279,7 +281,6 @@ std::string CliOperation::DestinationTypeToString( CarbonResources::ResourceDest
 	}
 }
 
-
 bool CliOperation::ProcessCommandLine( int argc, char** argv ) const
 {
 	try
@@ -307,4 +308,61 @@ bool CliOperation::ProcessCommandLine( int argc, char** argv ) const
 std::string CliOperation::GetName() const
 {
     return m_name;
+}
+bool CliOperation::StringToResourceSourceType( const std::string& stringRepresentation, CarbonResources::ResourceSourceType& out ) const
+{
+	if( stringRepresentation == "LOCAL_CDN" )
+	{
+		out = CarbonResources::ResourceSourceType::LOCAL_CDN;
+	}
+	else if( stringRepresentation == "REMOTE_CDN" )
+	{
+		out = CarbonResources::ResourceSourceType::REMOTE_CDN;
+	}
+	else if( stringRepresentation == "LOCAL_RELATIVE" )
+	{
+		out = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
+
+bool CliOperation::StringToResourceDestinationType( const std::string& stringRepresentation, CarbonResources::ResourceDestinationType& out ) const
+{
+	if( stringRepresentation == "LOCAL_CDN" )
+	{
+		out = CarbonResources::ResourceDestinationType::LOCAL_CDN;
+	}
+	else if( stringRepresentation == "REMOTE_CDN" )
+	{
+		out = CarbonResources::ResourceDestinationType::REMOTE_CDN;
+	}
+	else if( stringRepresentation == "LOCAL_RELATIVE" )
+	{
+		out = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
+
+std::string PathsToString( const std::vector<std::filesystem::path>& v )
+{
+	std::string result;
+	bool first{true};
+	for( const auto& s : v )
+	{
+		if(!first)
+		{
+			result += ",";
+		}
+		first = false;
+		result += s.string();
+	}
+	return result;
 }
