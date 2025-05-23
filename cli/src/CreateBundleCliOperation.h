@@ -37,6 +37,9 @@ private:
 	bool CreateBundle( const CarbonResources::ResourceGroupImportFromFileParams& resourceGroupParams, CarbonResources::BundleCreateParams bundleCreateParams ) const;
 
 private:
+	void CreateResourceGroupFromFileType();
+
+private:
 	std::string m_inputResourceGroupPathArgumentId;
 
 	std::string m_resourceGroupRelativePathArgumentId;
@@ -58,6 +61,8 @@ private:
     std::string m_chunkSizeArgumentId;
 
 	std::string m_downloadRetrySecondsArgumentId;
+
+    std::string m_resourceGroupType;
 };
 
 #endif // CreateBundleCliOperation_H

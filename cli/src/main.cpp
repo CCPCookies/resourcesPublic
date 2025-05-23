@@ -29,11 +29,11 @@ int main( int argc, char** argv )
 
     CreatePatchCliOperation createPatchOperation;
 
-	cli.AddOperation( &createPatchOperation );
+    cli.AddOperation( &createPatchOperation );
 
     CreateBundleCliOperation createBundleOperation;
 
-	cli.AddOperation( &createBundleOperation );
+    cli.AddOperation( &createBundleOperation );
 
     // Check no arguments
     if (argc == 1)
@@ -44,16 +44,10 @@ int main( int argc, char** argv )
     }
 
     // Process commandline
-    if (!cli.ProcessCommandLine(argc, argv))
-    {
+	if( !cli.ProcessCommandLine( argc, argv ) )
+	{
 		std::exit( 1 );
-    }
-
-    // Execute command
-    if (!cli.Execute())
-    {
-		std::exit( 1 );
-    }
+	}
 
     return 0;
 }

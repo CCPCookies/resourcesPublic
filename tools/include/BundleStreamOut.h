@@ -21,6 +21,7 @@
 #define BundleStreamOut_H
 
 #include <string>
+#include "GzipCompressionStream.h"
 
 namespace ResourceTools
 {
@@ -53,6 +54,12 @@ namespace ResourceTools
 		uintmax_t m_chunkSize;
 
         std::string m_cache;
+
+        std::string m_uncompressedData;
+
+        std::string m_compressedData;
+
+        GzipCompressionStream* m_compressionStream;
 
     };
  

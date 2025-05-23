@@ -891,9 +891,30 @@ namespace CarbonResources
 			params.statusCallback( 0, 0, "Generating Chunks" );
 		}
 
+        int i = 0;
         // Loop through all resources and send data for chunking
         for (ResourceInfo* resource : m_resourcesParameter)
         {
+			if( params.statusCallback )
+			{
+				std::filesystem::path relativePath;
+
+				Result getRelativePathResult = resource->GetRelativePath( relativePath );
+
+                if (getRelativePathResult.type != ResultType::SUCCESS)
+                {
+					return getRelativePathResult;
+                }
+
+				std::string message = "Processing: " + relativePath.string();
+
+				float percentComplete = ( 100.0 / m_resourcesParameter.GetSize() ) * i;
+
+                i++;
+
+				params.statusCallback( 1, percentComplete, message );
+			}
+
             ResourceTools::FileDataStreamIn resourceDataStream(params.fileReadChunkSize);
 
             ResourceGetDataStreamParams resourceGetDataParams;
@@ -934,12 +955,20 @@ namespace CarbonResources
 
                 while( bundleStream >> chunkFile )
 				{
-
 					std::stringstream ss;
 					ss << chunkBaseName << numberOfChunks << ".chunk";
 					std::string chunkName = ss.str();
 
 					std::filesystem::path chunkPath = params.chunkDestinationSettings.basePath / ss.str();
+
+                    if( params.statusCallback )
+					{
+						std::stringstream ss;
+
+						ss << "Generating Chunk: " << chunkPath;
+
+						params.statusCallback( 2, -1, ss.str() );
+					}
 
 					Result processChunkResult = ProcessChunk( chunkData, chunkPath, bundleResourceGroup, params.chunkDestinationSettings );
 
@@ -984,7 +1013,7 @@ namespace CarbonResources
 		// Update status
 		if( params.statusCallback )
 		{
-			params.statusCallback( 0, 0, "Exporting ResourceGroups" );
+			params.statusCallback( 0, 75, "Exporting ResourceGroups" );
 		}
 
 		std::string resourceGroupData;
@@ -1060,7 +1089,7 @@ namespace CarbonResources
         // Update status
 		if( params.statusCallback )
 		{
-			params.statusCallback( 0, 0, "Bundle Creation Complete." );
+			params.statusCallback( 0, 100, "Bundle Creation Complete." );
 		}
 
         return Result{ ResultType::SUCCESS };

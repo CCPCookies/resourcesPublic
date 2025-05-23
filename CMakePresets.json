@@ -12,7 +12,7 @@
       "binaryDir": "./.cmake-build-${generator}-${presetName}",
       "generator": "Visual Studio 17 2022",
       "toolset": {
-        "value": "v143"
+        "value": "v141"
       },
       "cacheVariables": {
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/triplets",

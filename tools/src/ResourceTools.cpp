@@ -347,6 +347,9 @@ namespace ResourceTools
 
   bool GZipCompressData( const std::string& dataToCompress, std::string& compressedData )
   {
+      // Ensure the input is cleared prior to calculating compression
+	  compressedData.clear();
+
 	  z_stream strm;
 	  constexpr int CHUNK = 16384; // 16kb
 	  unsigned char out[CHUNK];

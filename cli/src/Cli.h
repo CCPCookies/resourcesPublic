@@ -36,13 +36,11 @@ public:
 
 	~Cli();
 
-	bool AddOperation( const CliOperation* operation );
+	void AddOperation( const CliOperation* operation );
 
 	void PrintError();
 
 	bool ProcessCommandLine( int argc, char** argv );
-
-	bool Execute();
 
 private:
 
@@ -50,7 +48,7 @@ private:
 
 private:
 
-	argparse::ArgumentParser* m_argumentParser;
+    std::string m_version;
 
 	std::vector<const CliOperation*> m_operations;
 };

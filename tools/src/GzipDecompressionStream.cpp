@@ -1,5 +1,7 @@
 #include "GzipDecompressionStream.h"
 
+#include <algorithm>
+
 constexpr int CHUNK = 16384; // 16kb
 
 namespace ResourceTools

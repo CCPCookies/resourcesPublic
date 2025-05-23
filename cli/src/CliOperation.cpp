@@ -11,6 +11,8 @@ CliOperation::CliOperation( const std::string& name, const std::string& descript
 {
 	m_argumentParser = new argparse::ArgumentParser( name );
 
+    AddRequiredPositionalArgument( "Name", "Name of operation." );
+
 	m_argumentParser->add_argument( "-V", "--verbose" )
 		.action( [&]( const auto& ) { ++s_verbosity; } )
 		.append()
@@ -275,4 +277,34 @@ std::string CliOperation::DestinationTypeToString( CarbonResources::ResourceDest
 	default:
 		return "Unknown source type";
 	}
+}
+
+
+bool CliOperation::ProcessCommandLine( int argc, char** argv ) const
+{
+	try
+	{
+		m_argumentParser->parse_args( argc, argv );
+
+        std::string nameOfCommand = m_argumentParser->get<std::string>( "Name" );
+
+		if( nameOfCommand != m_name )
+		{
+			return false;
+		}
+
+	}
+	catch( const std::runtime_error& e )
+	{
+
+		return false;
+
+	}
+
+	return true;
+}
+
+std::string CliOperation::GetName() const
+{
+    return m_name;
 }

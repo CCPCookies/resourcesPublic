@@ -50,6 +50,10 @@ public:
 
 	virtual bool Execute() const = 0;
 
+    bool ProcessCommandLine( int argc, char** argv ) const;
+
+    std::string GetName() const;
+
 protected:
 
     void PrintCommonOperationHeaderInformation() const;

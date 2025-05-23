@@ -3,6 +3,7 @@
 #include <string>
 #include <argparse/argparse.hpp>
 #include <ResourceGroup.h>
+#include <PatchResourceGroup.h>
 
 CreateBundleCliOperation::CreateBundleCliOperation() :
 	CliOperation( "create-bundle", "Creates bundle from supplied ResourceGroup." ),
@@ -16,9 +17,9 @@ CreateBundleCliOperation::CreateBundleCliOperation() :
 	m_bundleResourceGroupDestinationTypeArgumentId( "--bundle-resourcegroup-destination-type" ),
 	m_bundleResourceGroupDestinationBasePathArgumentId( "--bundle-resourcegroup-destination-path" ),
 	m_chunkSizeArgumentId( "--chunk-size" ),
-	m_downloadRetrySecondsArgumentId( "--download-retry-seconds" )
+	m_downloadRetrySecondsArgumentId( "--download-retry-seconds" ),
+	m_resourceGroupType( "--resourcegroup-type" )
 {
-
 	AddRequiredPositionalArgument( m_inputResourceGroupPathArgumentId, "Path to ResourceGroup to bundle." );
 
 	AddArgument( m_resourceGroupRelativePathArgumentId, "Relative path to save a ResourceGroup the Bundle was based off", false, false, "ResourceGroup.yaml" );
@@ -40,6 +41,8 @@ CreateBundleCliOperation::CreateBundleCliOperation() :
     AddArgument( m_chunkSizeArgumentId, "Represents the maximum size of the produced chunks in bytes.", false, false, "10000000" );
 
 	AddArgument( m_downloadRetrySecondsArgumentId, "The number of seconds before attempt to download a resource fails with a network related error", false, false, "120");
+
+    AddArgument( m_resourceGroupType, "Type of resource group supplied", false, false, "ResourceGroup" );
 }
 
 bool CreateBundleCliOperation::Execute() const
@@ -183,9 +186,26 @@ void CreateBundleCliOperation::PrintStartBanner( const CarbonResources::Resource
 bool CreateBundleCliOperation::CreateBundle( const CarbonResources::ResourceGroupImportFromFileParams& resourceGroupParams, CarbonResources::BundleCreateParams bundleCreateParams ) const
 {
 	// Import ResourceGroup
-	CarbonResources::ResourceGroup resourceGroup;
+	std::string inputResourceGroupType = m_argumentParser->get<std::string>( m_resourceGroupType );
 
-    CarbonResources::Result importResourceGroupResult = resourceGroup.ImportFromFile( resourceGroupParams );
+    CarbonResources::ResourceGroup* resourceGroup;
+
+	// Note: This information could be ascertained directly from file
+    if (inputResourceGroupType == "ResourceGroup")
+    {
+		resourceGroup = new CarbonResources::ResourceGroup();
+    }
+    else if (inputResourceGroupType == "PatchResourceGroup")
+    {
+		resourceGroup = new CarbonResources::PatchResourceGroup();
+    }
+    else
+    {
+        // Unknown resource group type provided
+		return false;
+    }
+
+    CarbonResources::Result importResourceGroupResult = resourceGroup->ImportFromFile( resourceGroupParams );
 
     if (importResourceGroupResult.type != CarbonResources::ResultType::SUCCESS)
     {
@@ -196,7 +216,9 @@ bool CreateBundleCliOperation::CreateBundle( const CarbonResources::ResourceGrou
 
     bundleCreateParams.statusCallback = GetStatusCallback();
 
-    CarbonResources::Result createBundleResult = resourceGroup.CreateBundle( bundleCreateParams );
+    CarbonResources::Result createBundleResult = resourceGroup->CreateBundle( bundleCreateParams );
+
+    delete resourceGroup;
 
     if (createBundleResult.type != CarbonResources::ResultType::SUCCESS)
     {
