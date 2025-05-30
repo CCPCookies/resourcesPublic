@@ -1359,7 +1359,7 @@ namespace CarbonResources
                     	// in the chunk from the source file that we last used.
                     	// This should keep our patches pretty minimal, even if lots of data gets added early in the file causing offsets.
                     	// It should also handle small changes in moved parts of the file pretty well.
-                    	chunkMatchFound = ResourceTools::FindMatchingChunk(nextFileData, previousFileDataStream.GetPath(), patchSourceOffset);
+                    	chunkMatchFound = index.FindMatchingChunk(nextFileData, patchSourceOffset);
 
                     	if( chunkMatchFound )
                     	{
