@@ -10,7 +10,8 @@ TEST_F( CarbonResourcesCliTest, CreateResourceGroupFromDirectory )
 
 	arguments.push_back( "create-group" );
 
-	arguments.push_back( "-VVV" );
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
 
 	std::filesystem::path inputDirectory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 	arguments.push_back( inputDirectory.string() );
@@ -39,7 +40,8 @@ TEST_F( CarbonResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentForma
 
 	arguments.push_back( "create-group" );
 
-	arguments.push_back( "-VVV" );
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
 
 	std::filesystem::path inputDirectory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 	arguments.push_back( inputDirectory.string() );
@@ -71,7 +73,8 @@ TEST_F( CarbonResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentForma
 
 	arguments.push_back( "create-group" );
 
-	arguments.push_back( "-VVV" );
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
 
 	std::filesystem::path inputDirectory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 	arguments.push_back( inputDirectory.string() );
@@ -108,7 +111,8 @@ TEST_F( CarbonResourcesCliTest, CreateBundle )
 
     arguments.push_back( "create-bundle" );
 
-	arguments.push_back( "-VVV" );
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
 
 	arguments.push_back( GetTestFileFileAbsolutePath( "Bundle/resfileindexShort.txt" ).string() );
 
@@ -116,7 +120,10 @@ TEST_F( CarbonResourcesCliTest, CreateBundle )
 	arguments.push_back( GetTestFileFileAbsolutePath( "Bundle/Res" ).string() );
 
 	arguments.push_back( "--bundle-resourcegroup-relative-path" );
-	arguments.push_back( "BundleOut/BundleResourceGroup.yaml" );
+	arguments.push_back( "BundleResourceGroup.yaml" );
+
+    arguments.push_back( "--bundle-resourcegroup-destination-path" );
+	arguments.push_back( "BundleOut/" );
 
 	arguments.push_back( "--bundle-resourcegroup-destination-type" );
 	arguments.push_back( "LOCAL_RELATIVE" );
@@ -151,7 +158,8 @@ TEST_F( CarbonResourcesCliTest, CreatePatch )
 
 	arguments.push_back( "create-patch" );
 
-	arguments.push_back( "-VVV" );
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
 
 	std::string previousResourceGroupPath = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" ).string();
 
