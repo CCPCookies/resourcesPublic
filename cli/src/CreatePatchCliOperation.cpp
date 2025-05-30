@@ -59,7 +59,7 @@ CreatePatchCliOperation::CreatePatchCliOperation() :
 
 	AddArgument( m_downloadRetrySecondsArgumentId, "The number of seconds before attempt to download a resource fails with a network related error", false, false, SecondsToString( defaultParams.downloadRetrySeconds ) );
 
-	AddArgument( m_indexFolderArgumentId, "The folder in which to place indexes generated for patch files.", false, false, defaultParams.indexFolder );
+	AddArgument( m_indexFolderArgumentId, "The folder in which to place indexes generated for patch files.", false, false, defaultParams.indexFolder.string() );
 }
 
 bool CreatePatchCliOperation::Execute( std::string& returnErrorMessage ) const
