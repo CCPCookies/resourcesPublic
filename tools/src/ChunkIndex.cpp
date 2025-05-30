@@ -105,7 +105,10 @@ bool ChunkIndex::Generate()
  	{
  		if( !std::filesystem::create_directories( m_indexFolder ) )
  		{
-			m_statusCallback( 0, "Failed to create index directory: " + m_indexFolder.string() );
+ 			if( m_statusCallback )
+ 			{
+ 				m_statusCallback( 0, "Failed to create index directory: " + m_indexFolder.string() );
+ 			}
  			return false;
  		}
  	}
