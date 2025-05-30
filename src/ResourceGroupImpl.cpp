@@ -1280,15 +1280,22 @@ namespace CarbonResources
 					return getRelativePathResult;
             	}
 
-        		ResourceTools::ChunkIndex index(previousFileDataStream.GetPath(), params.maxInputFileChunkSize, params.statusCallback);
+            	std::function<void(unsigned int, const std::string&)> callback = [params](unsigned int percent, const std::string& msg) {
+            		if( params.statusCallback )
+            		{
+            			params.statusCallback( STATUS_LEVEL::DETAIL, STATUS_PROGRESS_TYPE::PERCENTAGE, percent, msg );
+            		}
+            	};
+        		ResourceTools::ChunkIndex index(previousFileDataStream.GetPath(), params.maxInputFileChunkSize, callback );
         		if( params.statusCallback )
         		{
         			std::string message = "Generating index for " + relativePath.string();
-        			params.statusCallback( 2, -1, message );
+        			params.statusCallback( STATUS_LEVEL::DETAIL , STATUS_PROGRESS_TYPE::PERCENTAGE, 0, message );
         		}
         		if( !index.Generate() )
         		{
-        			params.statusCallback(2, -1, "Index generation failed for " + relativePath.string());
+					std::string message = "Index generation failed for " + relativePath.string();
+					params.statusCallback(STATUS_LEVEL::DETAIL, STATUS_PROGRESS_TYPE::PERCENTAGE, 0, message);
         		}
 
             	int chunkNumber = 0;

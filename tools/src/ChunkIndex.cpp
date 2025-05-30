@@ -71,7 +71,7 @@ bool ChunkIndex::Flush( std::vector<std::pair<uint32_t, uint32_t>>& index )
 		{
 			std::stringstream ss;
 			ss << "Index generation failed. Failed to open path for writing: " << out;
-			m_statusCallback(2, 0, ss.str());
+			m_statusCallback(0, ss.str());
 		}
 		return false;
 	}
@@ -135,7 +135,7 @@ bool ChunkIndex::Generate()
 			{
 				if( m_statusCallback )
 				{
-					m_statusCallback( 3, 100 * currentIndexFile / indexFileCount, "Generating index" );
+					m_statusCallback( 100 * currentIndexFile / indexFileCount, "Generating index" );
 				}
 				Flush( chunkToOffsets );
 				++currentIndexFile;
@@ -152,12 +152,12 @@ bool ChunkIndex::Generate()
 	}
  	if( m_statusCallback )
  	{
- 		m_statusCallback( 3, currentIndexFile / indexFileCount, "Generating index" );
+ 		m_statusCallback( currentIndexFile / indexFileCount, "Generating index" );
  	}
 	Flush( chunkToOffsets );
  	if( m_statusCallback )
  	{
- 		m_statusCallback( 3, 100, "Index generated" );
+ 		m_statusCallback( 100, "Index generated" );
  	}
 	return true;
 }
