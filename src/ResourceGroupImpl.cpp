@@ -1394,7 +1394,7 @@ namespace CarbonResources
                     		dataOffset += matchSize - params.maxInputFileChunkSize;
                     		patchSourceOffset += matchSize;
 
-                    		if( nextStreamPosition == 0 )
+                    		if( nextStreamPosition == 0 && patchSourceOffset == 0 )
                     		{
                     			// This is the beginning of the file and it matches.
                     			// There is no need to write patch data.
