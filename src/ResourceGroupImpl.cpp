@@ -1358,9 +1358,15 @@ namespace CarbonResources
                     	// the data from the source file using the patch info. Consecutive patches should be collapsed into one big one.
                     	// If we can't find a matching chunk, we will base the current diff off the chunk in the source starting after the final byte
                     	// in the chunk from the source file that we last used.
-                    	// This should keep our patches pretty minimal, even if lots of data gets added early in the file causing offsets.
+                    	// These should keep our patches pretty minimal, even if lots of data gets added early in the file causing offsets.
                     	// It should also handle small changes in moved parts of the file pretty well.
-                    	chunkMatchFound = index.FindMatchingChunk(nextFileData, patchSourceOffset);
+                    	if( params.statusCallback )
+                    	{
+                    		size_t progress = dataOffset * 100 / nextUncompressedSize;
+                    		std::stringstream ss;
+                    		ss << "Generating patch files: " << relativePath.string();
+                    		params.statusCallback( STATUS_LEVEL::DETAIL, STATUS_PROGRESS_TYPE::PERCENTAGE, progress, ss.str() );
+                    	}
 
                     	if( chunkMatchFound )
                     	{

@@ -158,6 +158,8 @@ bool ChunkIndex::Generate()
  	chunkToOffsets.reserve( BLOCKS_PER_FILE );
  	size_t cachedChunks{0};
 
+ 	size_t onePercentOfFileSize = fileSize / 100;
+
 	while( streamIn >> fileData )
 	{
 		backlog += fileData;
@@ -170,6 +172,12 @@ bool ChunkIndex::Generate()
 			else
 			{
 				checksum = GenerateRollingAdlerChecksum( backlog, backlogOffset, backlogOffset + m_chunkSize, checksum );
+			}
+			if( m_statusCallback && !( (backlogOffset + fileOffset) % onePercentOfFileSize ) )
+			{
+				std::stringstream ss;
+				ss << "Generating index: " << GenerateIndexPath();
+				m_statusCallback( ( backlogOffset + fileOffset ) * 100 / fileSize, ss.str() );
 			}
 			if( !IsRelevant( checksum.checksum ) )
 			{
