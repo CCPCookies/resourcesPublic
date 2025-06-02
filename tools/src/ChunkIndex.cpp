@@ -343,12 +343,22 @@ bool ChunkIndex::FindMatchingChunk( const std::string& chunk, size_t& chunkOffse
  		}
  		if( !offsets.empty() )
  		{
+ 			std::ifstream chunkFile;
+			chunkFile.open( m_fileToIndex, std::ifstream::binary );
+ 			if( !chunkFile )
+ 			{
+ 				return false;
+ 			}
+
  			for( size_t offset : offsets )
  			{
- 				std::ifstream chunkFile;
+ 				std::string fileData;
+ 				fileData.resize( chunk.size() );
+ 				chunkFile.seekg( static_cast<std::streamoff>( offset ) );
+ 				chunkFile.read( fileData.data(), fileData.size() );
  				if( !sourceChecksumGenerated )
  				{
- 					if( !ResourceTools::GenerateMd5Checksum( chunk, sourceMD5 ) )
+ 					if( !ResourceTools::GenerateMd5Checksum( fileData, sourceMD5 ) )
  					{
  						return false;
  					}
