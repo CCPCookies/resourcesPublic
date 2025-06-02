@@ -85,6 +85,8 @@ namespace ResourceTools
 
       m_inputStream.seekg( 0, std::ios::end );
 
+      m_currentPosition = 0;
+
       m_fileSize = m_inputStream.tellg();
 
       m_inputStream.seekg( 0, std::ios::beg );
