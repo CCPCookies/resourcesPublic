@@ -1368,6 +1368,8 @@ namespace CarbonResources
                     		params.statusCallback( STATUS_LEVEL::DETAIL, STATUS_PROGRESS_TYPE::PERCENTAGE, progress, ss.str() );
                     	}
 
+                    	chunkMatchFound = index.FindMatchingChunk( nextFileData, patchSourceOffset );
+
                     	if( chunkMatchFound )
                     	{
                     		matchCount = 1;
