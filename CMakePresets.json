@@ -17,6 +17,9 @@
       "cacheVariables": {
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/triplets",
         "VCPKG_TARGET_TRIPLET": "x64-windows-carbon"
+      },
+      "environment": {
+        "X_VCPKG_REGISTRIES_CACHE": "${sourceDir}/vcpkg_registry_cache"
       }
     },
     {
@@ -27,6 +30,9 @@
       "cacheVariables": {
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/triplets",
         "VCPKG_TARGET_TRIPLET": "x64-windows-carbon"
+      },
+      "environment": {
+        "X_VCPKG_REGISTRIES_CACHE": "${sourceDir}/vcpkg_registry_cache"
       }
     },
     {
@@ -37,6 +43,9 @@
       "cacheVariables": {
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/triplets",
         "VCPKG_TARGET_TRIPLET": "arm64-osx-carbon"
+      },
+      "environment": {
+        "X_VCPKG_REGISTRIES_CACHE": "${sourceDir}/vcpkg_registry_cache"
       }
     }
   ]
