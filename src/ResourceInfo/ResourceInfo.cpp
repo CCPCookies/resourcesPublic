@@ -900,6 +900,20 @@ namespace CarbonResources
 		return ( m_relativePath.GetValue() == other->m_relativePath.GetValue() );
 	}
 
+	bool ResourceInfo::operator < ( const ResourceInfo& other ) const
+	{
+		if( !m_relativePath.HasValue() )
+		{
+			return other.m_relativePath.HasValue();
+		}
+		if( !other.m_relativePath.HasValue() )
+		{
+			return true;
+		}
+		// Equality is defined as having the same relative path, not same data
+		return m_relativePath.GetValue() < other.m_relativePath.GetValue();
+	}
+
     Result ResourceInfo::SetParametersFromData( const std::string& data )
     {
         std::string checksum;
