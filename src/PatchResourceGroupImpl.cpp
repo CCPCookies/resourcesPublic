@@ -133,6 +133,17 @@ namespace CarbonResources
 			out << YAML::Value << m_maxInputChunkSize.GetValue();
 		}
 
+    	if( m_removedResources.IsParameterExpectedInDocumentVersion( outputDocumentVersion ) )
+    	{
+    		out << YAML::Key << m_removedResources.GetTag();
+    		out << YAML::Value << YAML::BeginSeq;
+    		for( auto path : *m_removedResources.GetValue() )
+    		{
+    			out << path;
+    		}
+    		out << YAML::EndSeq;
+    	}
+
 		return Result{ ResultType::SUCCESS };
     }
 

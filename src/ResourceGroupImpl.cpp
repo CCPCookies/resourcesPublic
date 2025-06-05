@@ -1498,6 +1498,8 @@ namespace CarbonResources
 
         }
 
+    	patchResourceGroup.SetRemovedResourceRelativePaths( resourceGroupSubtractionParams.removedResources );
+
         // Update status
 		if( params.statusCallback )
 		{
@@ -1618,7 +1620,15 @@ namespace CarbonResources
 		return Result{ ResultType::SUCCESS };
     }
 
-    
+    Result PatchResourceGroupImpl::SetRemovedResourceRelativePaths( const std::vector<std::filesystem::path>& paths )
+    {
+    	for( auto path : paths )
+    	{
+    		m_removedResources.PushBack( path );
+    	}
+    	return Result{ ResultType::SUCCESS };
+    }
+
     Result ResourceGroupImpl::Diff( ResourceGroupSubtractionParams& params ) const
     {
 		if( params.statusCallback )
@@ -1766,6 +1776,17 @@ namespace CarbonResources
 			ResourceInfo* dummyResource = new ResourceInfo( dummyResourceParams );
 			params.result1->AddResource( dummyResource );
         }
+
+    	for( auto resource : removedResources )
+    	{
+    		std::filesystem::path path;
+    		auto result = resource->GetRelativePath( path );
+    		if( result.type != ResultType::SUCCESS )
+    		{
+    			return result;
+    		}
+    		params.removedResources.push_back( path );
+    	}
 
         if( params.statusCallback )
 		{

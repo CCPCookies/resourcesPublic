@@ -11,6 +11,8 @@ ResourceGroupResource:
   UncompressedSize: 1033
   CompressedSize: 402
 MaxInputChunkSize: 500
+RemovedResourceRelativePaths:
+  - testresource.txt
 Resources:
   - RelativePath: Patches/Patch1.0
     Type: BinaryPatch

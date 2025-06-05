@@ -45,6 +45,8 @@ namespace CarbonResources
 
 	    ResourceGroupImpl* result2 = nullptr;
 
+    	std::vector<std::filesystem::path> removedResources;
+
         StatusCallback statusCallback = nullptr;
     };
 
