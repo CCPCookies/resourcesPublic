@@ -1747,6 +1747,20 @@ namespace CarbonResources
             // This is a new resource, add it to target
             // Note: Could be made optional, perhaps it is desirable to only include patch updates
 			// Not new files, probably make as optional pass in setting
+    		if( params.statusCallback )
+    		{
+    			std::filesystem::path relativePath;
+				Result getRelativePathResult = resource->GetRelativePath( relativePath );
+                if (getRelativePathResult.type != ResultType::SUCCESS)
+                {
+					return getRelativePathResult;
+                }
+    			std::string message = "Processing new resource: " + relativePath.string();
+    			float percentComplete = ( 100.0 / m_resourcesParameter.GetSize() ) * i;
+    			params.statusCallback( CarbonResources::STATUS_LEVEL::DETAIL, CarbonResources::STATUS_PROGRESS_TYPE::PERCENTAGE, percentComplete, message );
+    			i++;
+    		}
+
 			ResourceInfo* resourceCopy1 = nullptr;
 
             Result createResourceFromResourceResult = CreateResourceFromResource( *resource, resourceCopy1 );
@@ -1779,6 +1793,19 @@ namespace CarbonResources
 
     	for( auto resource : removedResources )
     	{
+    		if( params.statusCallback )
+    		{
+    			std::filesystem::path relativePath;
+				Result getRelativePathResult = resource->GetRelativePath( relativePath );
+                if (getRelativePathResult.type != ResultType::SUCCESS)
+                {
+					return getRelativePathResult;
+                }
+    			std::string message = "Processing removed resource: " + relativePath.string();
+    			float percentComplete = ( 100.0 / m_resourcesParameter.GetSize() ) * i;
+    			params.statusCallback( CarbonResources::STATUS_LEVEL::DETAIL, CarbonResources::STATUS_PROGRESS_TYPE::PERCENTAGE, percentComplete, message );
+    			i++;
+    		}
     		std::filesystem::path path;
     		auto result = resource->GetRelativePath( path );
     		if( result.type != ResultType::SUCCESS )
