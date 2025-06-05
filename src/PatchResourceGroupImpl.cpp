@@ -104,6 +104,19 @@ namespace CarbonResources
 			}
 		}
 
+    	if( m_removedResources.IsParameterExpectedInDocumentVersion( m_versionParameter.GetValue() ) )
+    	{
+    		YAML::Node parameter = resourceGroupFile[m_removedResources.GetTag()];
+    		if( parameter.IsDefined() && parameter.IsSequence() )
+    		{
+    			for( size_t i = 0; i < parameter.size(); ++i )
+    			{
+    				std::filesystem::path path = parameter[i].as<std::string>();
+    				m_removedResources.PushBack( path );
+    			}
+    		}
+    	}
+
 		return Result{ ResultType::SUCCESS };
     }
 
@@ -625,6 +638,31 @@ namespace CarbonResources
 
             resourceStreamOut.Finish();
         }
+
+    	for( const auto& path : *m_removedResources.GetValue() )
+    	{
+    		auto toRemove = std::filesystem::absolute( params.resourcesToPatchDestinationSettings.basePath / path );
+    		std::error_code ec;
+    		if( std::filesystem::exists( toRemove ) )
+    		{
+    			bool removed = std::filesystem::remove( toRemove, ec );
+    			if( !removed && params.statusCallback )
+    			{
+    				params.statusCallback(STATUS_LEVEL::DETAIL, STATUS_PROGRESS_TYPE::UNBOUNDED, 0, "Failed to remove file " + toRemove.string());
+    			}
+    		}
+
+    		// Remove any empty directories left over
+    		toRemove = toRemove.parent_path();
+    		while( std::filesystem::is_directory( toRemove ) && std::filesystem::is_empty( toRemove ) )
+    		{
+    			bool removed = std::filesystem::remove( toRemove, ec );
+    			if( !removed && params.statusCallback )
+    			{
+    				params.statusCallback(STATUS_LEVEL::DETAIL, STATUS_PROGRESS_TYPE::UNBOUNDED, 0, "Failed to remove empty directory " + toRemove.string());
+    			}
+    		}
+    	}
 
         if( params.statusCallback )
 		{
