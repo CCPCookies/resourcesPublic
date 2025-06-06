@@ -48,6 +48,8 @@ namespace CarbonResources
 
         static std::string TypeId();
 
+    	Result SetRemovedResourceRelativePaths( const std::vector<std::filesystem::path>& paths );
+
     private:
 
         virtual Result CreateResourceFromYaml( YAML::Node& resource, ResourceInfo*& resourceOut ) override;
@@ -63,6 +65,8 @@ namespace CarbonResources
         DocumentParameter<uintmax_t> m_maxInputChunkSize = DocumentParameter<uintmax_t>( MAX_INPUT_CHUNK_SIZE, TypeId() );
 
         DocumentParameter<ResourceGroupInfo*> m_resourceGroupParameter = DocumentParameter<ResourceGroupInfo*>( RESOURCE_GROUP_RESOURCE, TypeId() );
+
+    	DocumentParameterCollection<std::filesystem::path> m_removedResources = DocumentParameterCollection<std::filesystem::path>( REMOVED_RESOURCE_RELATIVE_PATHS, TypeId() );
     };
 
 }

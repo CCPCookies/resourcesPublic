@@ -4,6 +4,12 @@ NumberOfResources: 3
 TotalResourcesSizeCompressed: 6715
 TotalResourcesSizeUnCompressed: 18571
 Resources:
+  - RelativePath: introMoviePrefixed.txt
+    Type: Resource
+    Location: f3/f3ad9148a0c5f06e_0fb2bed9d164ad014bcb060b95df7ba1
+    Checksum: 0fb2bed9d164ad014bcb060b95df7ba1
+    UncompressedSize: 9425
+    CompressedSize: 3409
   - RelativePath: intromovie.txt
     Type: Resource
     Location: a7/a7e3d1a9f1c5d99d_5e631fd37d3350e30095d1251b178f2c
@@ -16,9 +22,3 @@ Resources:
     Checksum: 271c8036e4eae5515053e924a0a39e0f
     UncompressedSize: 29
     CompressedSize: 47
-  - RelativePath: introMoviePrefixed.txt
-    Type: Resource
-    Location: f3/f3ad9148a0c5f06e_0fb2bed9d164ad014bcb060b95df7ba1
-    Checksum: 0fb2bed9d164ad014bcb060b95df7ba1
-    UncompressedSize: 9425
-    CompressedSize: 3409

@@ -301,6 +301,13 @@ TEST_F( CarbonResourcesLibraryTest, ApplyPatch )
 
     patchApplyParams.temporaryFilePath = "tempFile.resource";
 
+	if( std::filesystem::exists( patchApplyParams.resourcesToPatchDestinationSettings.basePath ) )
+	{
+		std::filesystem::remove_all( patchApplyParams.resourcesToPatchDestinationSettings.basePath );
+	}
+
+	std::filesystem::copy( patchApplyParams.resourcesToPatchSourceSettings.basePaths[0], patchApplyParams.resourcesToPatchDestinationSettings.basePath );
+
     EXPECT_EQ(patchResourceGroup.Apply( patchApplyParams ).type,CarbonResources::ResultType::SUCCESS);
 
     // Check Expected Outcome

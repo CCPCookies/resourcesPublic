@@ -336,6 +336,8 @@ namespace CarbonResources
 
         bool operator==( const ResourceInfo* other ) const;
 
+        bool operator<( const ResourceInfo& other ) const;
+
         static std::string TypeId();
 
     private:
