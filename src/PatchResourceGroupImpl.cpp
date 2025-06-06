@@ -198,7 +198,7 @@ namespace CarbonResources
     {
 		if( params.statusCallback )
 		{
-			params.statusCallback( CarbonResources::STATUS_LEVEL::PROCEDURE, CarbonResources::STATUS_PROGRESS_TYPE::PERCENTAGE, 0, "Applying Patch." );
+			params.statusCallback( CarbonResources::StatusLevel::PROCEDURE, CarbonResources::StatusProgressType::PERCENTAGE, 0, "Applying Patch." );
 		}
 
         // Will be removed when falls out of scope
@@ -252,7 +252,7 @@ namespace CarbonResources
 
 				std::string message = "Patching: " + relativePath.string();
 
-				params.statusCallback( CarbonResources::STATUS_LEVEL::DETAIL, CarbonResources::STATUS_PROGRESS_TYPE::PERCENTAGE, percentage, message );
+				params.statusCallback( CarbonResources::StatusLevel::DETAIL, CarbonResources::StatusProgressType::PERCENTAGE, percentage, message );
 
 				numProcessed++;
 			}
@@ -648,7 +648,7 @@ namespace CarbonResources
     			bool removed = std::filesystem::remove( toRemove, ec );
     			if( !removed && params.statusCallback )
     			{
-    				params.statusCallback(STATUS_LEVEL::DETAIL, STATUS_PROGRESS_TYPE::UNBOUNDED, 0, "Failed to remove file " + toRemove.string());
+    				params.statusCallback(StatusLevel::DETAIL, StatusProgressType::UNBOUNDED, 0, "Failed to remove file " + toRemove.string());
     			}
     		}
 
@@ -659,14 +659,14 @@ namespace CarbonResources
     			bool removed = std::filesystem::remove( toRemove, ec );
     			if( !removed && params.statusCallback )
     			{
-    				params.statusCallback(STATUS_LEVEL::DETAIL, STATUS_PROGRESS_TYPE::UNBOUNDED, 0, "Failed to remove empty directory " + toRemove.string());
+    				params.statusCallback(StatusLevel::DETAIL, StatusProgressType::UNBOUNDED, 0, "Failed to remove empty directory " + toRemove.string());
     			}
     		}
     	}
 
         if( params.statusCallback )
 		{
-			params.statusCallback( CarbonResources::STATUS_LEVEL::PROCEDURE, CarbonResources::STATUS_PROGRESS_TYPE::PERCENTAGE, 100, "Patches applied" );
+			params.statusCallback( CarbonResources::StatusLevel::PROCEDURE, CarbonResources::StatusProgressType::PERCENTAGE, 100, "Patches applied" );
 		}
 
         return Result{ ResultType::SUCCESS };
