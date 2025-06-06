@@ -648,7 +648,7 @@ namespace CarbonResources
     			bool removed = std::filesystem::remove( toRemove, ec );
     			if( !removed && params.statusCallback )
     			{
-    				params.statusCallback(STATUS_LEVEL::DETAIL, STATUS_PROGRESS_TYPE::UNBOUNDED, 0, "Failed to remove file " + toRemove.string());
+    				params.statusCallback(StatusLevel::DETAIL, StatusProgressType::UNBOUNDED, 0, "Failed to remove file " + toRemove.string());
     			}
     		}
 
@@ -659,7 +659,7 @@ namespace CarbonResources
     			bool removed = std::filesystem::remove( toRemove, ec );
     			if( !removed && params.statusCallback )
     			{
-    				params.statusCallback(STATUS_LEVEL::DETAIL, STATUS_PROGRESS_TYPE::UNBOUNDED, 0, "Failed to remove empty directory " + toRemove.string());
+    				params.statusCallback(StatusLevel::DETAIL, StatusProgressType::UNBOUNDED, 0, "Failed to remove empty directory " + toRemove.string());
     			}
     		}
     	}

@@ -1757,7 +1757,7 @@ namespace CarbonResources
                 }
     			std::string message = "Processing new resource: " + relativePath.string();
     			float percentComplete = ( 100.0 / m_resourcesParameter.GetSize() ) * i;
-    			params.statusCallback( CarbonResources::STATUS_LEVEL::DETAIL, CarbonResources::STATUS_PROGRESS_TYPE::PERCENTAGE, percentComplete, message );
+    			params.statusCallback( CarbonResources::StatusLevel::DETAIL, CarbonResources::StatusProgressType::PERCENTAGE, percentComplete, message );
     			i++;
     		}
 
@@ -1803,7 +1803,7 @@ namespace CarbonResources
                 }
     			std::string message = "Processing removed resource: " + relativePath.string();
     			float percentComplete = ( 100.0 / m_resourcesParameter.GetSize() ) * i;
-    			params.statusCallback( CarbonResources::STATUS_LEVEL::DETAIL, CarbonResources::STATUS_PROGRESS_TYPE::PERCENTAGE, percentComplete, message );
+    			params.statusCallback( CarbonResources::StatusLevel::DETAIL, CarbonResources::StatusProgressType::PERCENTAGE, percentComplete, message );
     			i++;
     		}
     		std::filesystem::path path;
