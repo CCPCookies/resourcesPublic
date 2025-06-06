@@ -28,7 +28,7 @@ These two commands will create two resource groups
 1. PreviousResourceGroup.yaml
 2. NextResourceGroup.yaml
 
-The resource group files are human readable yaml files and quite self explanitory. For more information see :doc:`../OverviewDocuments/filesystemDesign`
+The resource group files are human readable yaml files and quite self explanatory. For more information see :doc:`../OverviewDocuments/filesystemDesign`
 
 Creating a Patch from the Resource Groups
 -----------------------------------------
@@ -89,7 +89,7 @@ Conclusion
 ----------
 
 This document presented a method to take two builds that were locally on a system and produce a bundled patch which is ready for uploading to a CDN.
-There are many more exposed options than discussed here. For exhastive list refer to the CLI help
+There are many more exposed options than discussed here. For exhaustive list refer to the CLI help
 
 .. code::
 

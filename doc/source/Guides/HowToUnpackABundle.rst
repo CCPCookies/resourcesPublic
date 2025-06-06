@@ -8,7 +8,7 @@ Note: This document refers to filesystem types, see :doc:`../DesignDocuments/fil
 Unpacking a bundle using the library
 ------------------------------------
 
-Input directory structure rquired for example
+Input directory structure required for example
 
 Bundle
 - BundleResourceGroup.yaml : Bundle Resource Group containing Bundle meta data

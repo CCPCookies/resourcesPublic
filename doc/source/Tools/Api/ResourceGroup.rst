@@ -5,7 +5,7 @@ The ResourceGroup is the central component of the Resources system.
 
 ResourceGroups represent a collection of Resources.
 
-They can be saved/loaded from a filetype which superseeds resfileindex files.
+They can be saved/loaded from a filetype which supersedes resfileindex files.
 
 See :doc:`../../DesignDocuments/resourceGroupFileFormat` file specification for more details.
 

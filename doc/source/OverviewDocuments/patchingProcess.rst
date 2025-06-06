@@ -7,7 +7,7 @@ This document presents a graphical overview of patch creation and patch applicat
 
 For further practical examples refer to :doc:`../QuickStart/ExamplePatchCreationProcedure` and :doc:`../guides`
 
-*Note this is just one example usecase, carbon-resources is able to handle many usage scenarios.*
+*Note this is just one example use case, carbon-resources is able to handle many usage scenarios.*
 
 .. note::
     File uploading to CDN is outside the scope of carbon-resources currently.

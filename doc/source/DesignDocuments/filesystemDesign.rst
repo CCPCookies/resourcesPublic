@@ -7,7 +7,7 @@ carbon-resources works with 3 filesystem target types:
 2. ``LOCAL_CDN``
 3. ``REMOTE_CDN``
 
-Most operations allow the user to specify which filesystem type the source/target files adhear to.
+Most operations allow the user to specify which filesystem type the source/target files adhere to.
 
 Operations also allow lots of mixing and matching for different inputs. For example patches may source previous build resources using ``LOCAL_RELATIVE`` but source latest from ``REMOTE_CDN``.
 

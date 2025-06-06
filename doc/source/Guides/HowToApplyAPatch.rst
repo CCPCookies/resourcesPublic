@@ -8,7 +8,7 @@ Note: This document refers to filesystem types, see :doc:`../DesignDocuments/fil
 Appling a patch using the library
 ---------------------------------
 
-Input directory structure rquired for example
+Input directory structure required for example
 
 Patch
 - PatchResourceGroup.yaml : Patch Resource Group containing patch meta data
@@ -59,7 +59,7 @@ Patch
     }
 
 
-Reconsituted files will be placed in ``ApplyPatchOut/`` in ``LOCAL_RELATIVE`` filesystem format.
+Reconstituted files will be placed in ``ApplyPatchOut/`` in ``LOCAL_RELATIVE`` filesystem format.
 
 
 Appling a patch using the CLI

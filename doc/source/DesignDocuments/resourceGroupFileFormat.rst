@@ -3,9 +3,9 @@ Resource Group File Format
 
 Resource Groups are human readable Yaml files which encapsulate all data associated a group of resources.
 
-The word 'Resources' is used here, however the term is interchangable with 'file'.
+The word 'Resources' is used here, however the term is interchangeable with 'file'.
 
-Resource Groups are an evolution of the resfileindex.txt files used in EVE and Frontier. Many of the file mangement
+Resource Groups are an evolution of the resfileindex.txt files used in EVE and Frontier. Many of the file management
 concepts of carbon-resources originate there.
 
 Most operations require Resource Groups as inputs. Operations output may also contain generated ResourceGroups.

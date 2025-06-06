@@ -1,9 +1,9 @@
 Installation
 ============
 
-carbon-resources supports Windows amd macOS.
+carbon-resources supports Windows and macOS.
 
-Dependancies are sourced via `VCPKG <https://learn.microsoft.com/en-us/vcpkg/>`_
+Dependencies are sourced via `VCPKG <https://learn.microsoft.com/en-us/vcpkg/>`_
 
 
 Building
