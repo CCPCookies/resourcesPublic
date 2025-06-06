@@ -1498,6 +1498,8 @@ namespace CarbonResources
 
         }
 
+    	patchResourceGroup.SetRemovedResourceRelativePaths( resourceGroupSubtractionParams.removedResources );
+
         // Update status
 		if( params.statusCallback )
 		{
@@ -1618,8 +1620,15 @@ namespace CarbonResources
 		return Result{ ResultType::SUCCESS };
     }
 
-    
-    // TODO efficiency of this function can be improved by removing past searched and found items from the search group
+    Result PatchResourceGroupImpl::SetRemovedResourceRelativePaths( const std::vector<std::filesystem::path>& paths )
+    {
+    	for( auto path : paths )
+    	{
+    		m_removedResources.PushBack( path );
+    	}
+    	return Result{ ResultType::SUCCESS };
+    }
+
     Result ResourceGroupImpl::Diff( ResourceGroupSubtractionParams& params ) const
     {
 		if( params.statusCallback )
@@ -1632,8 +1641,33 @@ namespace CarbonResources
 
         // Value only required for status updates
 		int i = 0;
+    	std::vector<ResourceInfo*> sortedResourcesParameter( m_resourcesParameter.begin(), m_resourcesParameter.end() );
+    	std::vector<ResourceInfo*> sortedSubtractionResources( subtractionResources.begin(), subtractionResources.end() );
+    	std::sort(sortedResourcesParameter.begin(), sortedResourcesParameter.end(), [](const ResourceInfo* a, const ResourceInfo* b){return *a < *b;});
+    	std::sort( sortedSubtractionResources.begin(), sortedSubtractionResources.end(), [](const ResourceInfo* a, const ResourceInfo* b){return *a < *b;});
 
-        for (ResourceInfo* resource : m_resourcesParameter)
+    	std::vector<ResourceInfo*> addedResources;
+    	std::set_difference(
+    		sortedResourcesParameter.begin(), sortedResourcesParameter.end(),
+    		sortedSubtractionResources.begin(), sortedSubtractionResources.end(),
+    		std::back_inserter(addedResources ),
+    		[](const ResourceInfo* a, const ResourceInfo* b){ return *a < *b; });
+
+    	std::vector<ResourceInfo*> removedResources;
+    	std::set_difference(
+    		sortedSubtractionResources.begin(), sortedSubtractionResources.end(),
+    		sortedResourcesParameter.begin(), sortedResourcesParameter.end(),
+    		std::back_inserter( removedResources ),
+    		[](const ResourceInfo* a, const ResourceInfo* b){ return *a < *b; });
+
+    	std::vector<ResourceInfo*> potentiallyModifiedResources;
+    	std::set_intersection(
+    		sortedResourcesParameter.begin(), sortedResourcesParameter.end(),
+    		sortedSubtractionResources.begin(), sortedSubtractionResources.end(),
+    		std::back_inserter( potentiallyModifiedResources ),
+    		[](const ResourceInfo* a, const ResourceInfo* b){ return *a < *b; });
+
+        for (ResourceInfo* resource : potentiallyModifiedResources)
         {
 			if( params.statusCallback )
 			{
@@ -1655,105 +1689,131 @@ namespace CarbonResources
                 i++;
 			}
 
-            // Note: here we can also detect if a value is not present in the latest that was present in previous
-            // We could remove those files
-			auto subtractionResourcesFindIter = subtractionResources.Find( resource );
+        	ResourceInfo* resource2 = *std::lower_bound(
+        		sortedSubtractionResources.begin(), sortedSubtractionResources.end(),
+        		resource,
+        		[](const ResourceInfo* a, const ResourceInfo* b) { return *a < *b; } );
 
-            if( subtractionResourcesFindIter != subtractionResources.end() )
-			{
-				ResourceInfo* resource2 = ( *subtractionResourcesFindIter );
+            std::string resource1Checksum;
 
-                std::string resource1Checksum;
+            Result getResource1ChecksumResult = resource->GetChecksum( resource1Checksum );
 
-                Result getResource1ChecksumResult = resource->GetChecksum( resource1Checksum );
-
-                if (getResource1ChecksumResult.type != ResultType::SUCCESS)
-                {
-					return getResource1ChecksumResult;
-                }
-
-                std::string resource2Checksum;
-
-                Result getResource2ChecksumResult = resource2->GetChecksum( resource2Checksum );
-
-                if (getResource2ChecksumResult.type != ResultType::SUCCESS)
-                {
-					return getResource2ChecksumResult;
-                }
-
-                // Has this resource changed?
-				if( resource1Checksum != resource2Checksum )
-                {
-                    // The binary data has changed between versions, record an entry in both lists
-
-					// Create a copy of the resource to result 2 (Latest)
-					ResourceInfo* resourceCopy1 = nullptr;
-
-                    Result createResourceFromResource1Result = CreateResourceFromResource( *resource, resourceCopy1 );
-
-                    if (createResourceFromResource1Result.type != ResultType::SUCCESS)
-                    {
-						return createResourceFromResource1Result;
-                    }
-
-					params.result2->AddResource( resourceCopy1 );
-
-                    // Create a copy of resource to result 1 (Previous)
-					ResourceInfo* resource2 = ( *subtractionResourcesFindIter );
-
-                    ResourceInfo* resourceCopy2 = nullptr;
-
-                    Result createResourceFromResource2Result = CreateResourceFromResource( *resource2, resourceCopy2 );
-
-                    if( createResourceFromResource2Result.type != ResultType::SUCCESS )
-					{
-						return createResourceFromResource2Result;
-					}
-
-					params.result1->AddResource( resourceCopy2 );
-                }
-
-                subtractionResources.Erase( subtractionResourcesFindIter );
-			}
-            else
+            if (getResource1ChecksumResult.type != ResultType::SUCCESS)
             {
-                // This is a new resource, add it to target
-                // Note: Could be made optional, perhaps it is desirable to only include patch updates
-				// Not new files, probably make as optional pass in setting
+				return getResource1ChecksumResult;
+            }
+
+            std::string resource2Checksum;
+
+            Result getResource2ChecksumResult = resource2->GetChecksum( resource2Checksum );
+
+            if (getResource2ChecksumResult.type != ResultType::SUCCESS)
+            {
+				return getResource2ChecksumResult;
+            }
+
+            // Has this resource changed?
+			if( resource1Checksum != resource2Checksum )
+            {
+                // The binary data has changed between versions, record an entry in both lists
+
+				// Create a copy of the resource to result 2 (Latest)
 				ResourceInfo* resourceCopy1 = nullptr;
 
-                Result createResourceFromResourceResult = CreateResourceFromResource( *resource, resourceCopy1 );
+                Result createResourceFromResource1Result = CreateResourceFromResource( *resource, resourceCopy1 );
 
-                if (createResourceFromResourceResult.type != ResultType::SUCCESS)
+                if (createResourceFromResource1Result.type != ResultType::SUCCESS)
                 {
-					return createResourceFromResourceResult;
+					return createResourceFromResource1Result;
                 }
 
 				params.result2->AddResource( resourceCopy1 );
 
-                // Place in a dummy entry into result1 which shows that resource is new
-                // This ensures that both lists stay the same size which makes it easier
-                // To parse later
-				std::filesystem::path resourceRelativePath;
+                ResourceInfo* resourceCopy2 = nullptr;
 
-                Result getResourceRelativepathResult = resource->GetRelativePath( resourceRelativePath );
+                Result createResourceFromResource2Result = CreateResourceFromResource( *resource2, resourceCopy2 );
 
-                if (getResourceRelativepathResult.type != ResultType::SUCCESS)
+                if( createResourceFromResource2Result.type != ResultType::SUCCESS )
+				{
+					return createResourceFromResource2Result;
+				}
+
+				params.result1->AddResource( resourceCopy2 );
+			}
+        }
+
+    	for( auto resource : addedResources )
+        {
+            // This is a new resource, add it to target
+            // Note: Could be made optional, perhaps it is desirable to only include patch updates
+			// Not new files, probably make as optional pass in setting
+    		if( params.statusCallback )
+    		{
+    			std::filesystem::path relativePath;
+				Result getRelativePathResult = resource->GetRelativePath( relativePath );
+                if (getRelativePathResult.type != ResultType::SUCCESS)
                 {
-					return getResourceRelativepathResult;
+					return getRelativePathResult;
                 }
+    			std::string message = "Processing new resource: " + relativePath.string();
+    			float percentComplete = ( 100.0 / m_resourcesParameter.GetSize() ) * i;
+    			params.statusCallback( CarbonResources::STATUS_LEVEL::DETAIL, CarbonResources::STATUS_PROGRESS_TYPE::PERCENTAGE, percentComplete, message );
+    			i++;
+    		}
 
-				ResourceInfoParams dummyResourceParams;
-				dummyResourceParams.relativePath = resourceRelativePath;
+			ResourceInfo* resourceCopy1 = nullptr;
 
-				ResourceInfo* dummyResource = new ResourceInfo( dummyResourceParams );
-				params.result1->AddResource( dummyResource );
+            Result createResourceFromResourceResult = CreateResourceFromResource( *resource, resourceCopy1 );
 
+            if (createResourceFromResourceResult.type != ResultType::SUCCESS)
+            {
+				return createResourceFromResourceResult;
             }
 
-            
-            
+			params.result2->AddResource( resourceCopy1 );
+
+            // Place in a dummy entry into result1 which shows that resource is new
+            // This ensures that both lists stay the same size which makes it easier
+            // To parse later
+			std::filesystem::path resourceRelativePath;
+
+            Result getResourceRelativepathResult = resource->GetRelativePath( resourceRelativePath );
+
+            if (getResourceRelativepathResult.type != ResultType::SUCCESS)
+            {
+				return getResourceRelativepathResult;
+            }
+
+			ResourceInfoParams dummyResourceParams;
+			dummyResourceParams.relativePath = resourceRelativePath;
+
+			ResourceInfo* dummyResource = new ResourceInfo( dummyResourceParams );
+			params.result1->AddResource( dummyResource );
         }
+
+    	for( auto resource : removedResources )
+    	{
+    		if( params.statusCallback )
+    		{
+    			std::filesystem::path relativePath;
+				Result getRelativePathResult = resource->GetRelativePath( relativePath );
+                if (getRelativePathResult.type != ResultType::SUCCESS)
+                {
+					return getRelativePathResult;
+                }
+    			std::string message = "Processing removed resource: " + relativePath.string();
+    			float percentComplete = ( 100.0 / m_resourcesParameter.GetSize() ) * i;
+    			params.statusCallback( CarbonResources::STATUS_LEVEL::DETAIL, CarbonResources::STATUS_PROGRESS_TYPE::PERCENTAGE, percentComplete, message );
+    			i++;
+    		}
+    		std::filesystem::path path;
+    		auto result = resource->GetRelativePath( path );
+    		if( result.type != ResultType::SUCCESS )
+    		{
+    			return result;
+    		}
+    		params.removedResources.push_back( path );
+    	}
 
         if( params.statusCallback )
 		{
