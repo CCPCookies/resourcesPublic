@@ -552,7 +552,15 @@ namespace CarbonResources
 
     Result ResourceGroupImpl::ImportFromYaml( const std::string& data, StatusCallback statusCallback /* = nullptr */ )
     {
-        YAML::Node resourceGroupFile = YAML::Load( data );
+    	YAML::Node resourceGroupFile;
+    	try
+    	{
+    		resourceGroupFile = YAML::Load( data );
+    	}
+    	catch( YAML::ParserException& )
+    	{
+    		return Result{ ResultType::FAILED_TO_PARSE_YAML };
+    	}
 
 		YAML::Node typeNode = resourceGroupFile[m_type.GetTag()];
 		if( !typeNode.IsDefined() )
