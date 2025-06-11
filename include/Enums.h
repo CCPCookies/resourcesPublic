@@ -166,6 +166,7 @@ namespace CarbonResources
 		INPUT_DIRECTORY_DOESNT_EXIST,
 	    RESOURCE_TYPE_MISSMATCH,
     	MALFORMED_RESOURCE_GROUP,
+    	FAILED_TO_PARSE_YAML
         //NOTE: if adding to this enum, a complimentary entry must be added to resultToString.
     };
 

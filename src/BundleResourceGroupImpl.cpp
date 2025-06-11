@@ -71,6 +71,13 @@ namespace CarbonResources
 
 		if( resourceGroupImportFromDataResult.type != ResultType::SUCCESS )
 		{
+			std::stringstream ss;
+			ss << "Failed to import resource group data from the following paths:";
+			for( auto path : resourceGroupDataParams.resourceSourceSettings.basePaths )
+			{
+				ss << " \"" << path.string() << "\"";
+			}
+			resourceGroupImportFromDataResult.info = ss.str();
 			return resourceGroupImportFromDataResult;
 		}
 

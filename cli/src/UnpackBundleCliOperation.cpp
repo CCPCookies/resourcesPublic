@@ -129,7 +129,14 @@ bool UnpackBundleCliOperation::Unpack( CarbonResources::ResourceGroupImportFromF
 
     if( unpackResult.type != CarbonResources::ResultType::SUCCESS)
 	{
-		return false;
+    	std::string out;
+    	CarbonResources::ResultTypeToString( unpackResult.type, out );
+    	std::cerr << "Failed to unpack bundle: " << out << std::endl;
+    	if( s_verbosityLevel >= CarbonResources::StatusLevel::DETAIL && !unpackResult.info.empty() )
+    	{
+    		std::cerr << unpackResult.info;
+    	}
+    	exit(1);
 	}
 
     if( statusCallback )

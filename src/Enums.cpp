@@ -126,6 +126,9 @@ namespace CarbonResources
 	    case ResultType::MALFORMED_RESOURCE_GROUP:
 	    	output = "The resource group does not seem to contain the required parameters for this version.";
 	    	return true;
+	    case ResultType::FAILED_TO_PARSE_YAML:
+	    	output = "Provided data is not valid YAML.";
+	    	return true;
 	    }
 
 	    output = "Error code unrecognised. This is an internal library error which shouldn't be encountered. If you encounter this error contact API addministrators.";

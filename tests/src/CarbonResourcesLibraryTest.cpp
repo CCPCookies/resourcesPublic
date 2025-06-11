@@ -228,6 +228,45 @@ TEST_F( CarbonResourcesLibraryTest, UnpackBundle )
     
 
 }
+
+TEST_F( CarbonResourcesLibraryTest, UnpackRemoteBundleAsLocal )
+{
+	// Import ResourceGroup
+	CarbonResources::ResourceGroup resourceGroup;
+	CarbonResources::ResourceGroupImportFromFileParams importParams;
+	importParams.filename = GetTestFileFileAbsolutePath( "Bundle/resfileindexShort.txt" );
+	EXPECT_EQ( resourceGroup.ImportFromFile( importParams ).type, CarbonResources::ResultType::SUCCESS );
+
+    // Create a bundle from the ResourceGroup
+	CarbonResources::BundleCreateParams bundleCreateParams;
+    bundleCreateParams.resourceGroupRelativePath = "ResourceGroup.yaml";
+	bundleCreateParams.resourceGroupBundleRelativePath = "BundleResourceGroup.yaml";
+	bundleCreateParams.resourceSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
+    bundleCreateParams.resourceSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Bundle/Res/" ) };
+    bundleCreateParams.chunkDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::REMOTE_CDN;
+    bundleCreateParams.chunkDestinationSettings.basePath = "UnpackRemoteBundleAsLocal/Chunks";
+    bundleCreateParams.resourceBundleResourceGroupDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
+	bundleCreateParams.resourceBundleResourceGroupDestinationSettings.basePath = "UnpackRemoteBundleAsLocal";
+    bundleCreateParams.chunkSize = 1000000000;
+	EXPECT_EQ(resourceGroup.CreateBundle( bundleCreateParams ).type,CarbonResources::ResultType::SUCCESS);
+
+	// Load the bundle file
+	CarbonResources::BundleResourceGroup bundleResourceGroup;
+	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
+	importParamsPrevious.filename = "UnpackRemoteBundleAsLocal/BundleResourceGroup.yaml";
+	EXPECT_EQ( bundleResourceGroup.ImportFromFile( importParamsPrevious ).type, CarbonResources::ResultType::SUCCESS );
+
+    // Attempt to unpack the bundle
+	CarbonResources::BundleUnpackParams bundleUnpackParams;
+	bundleUnpackParams.chunkSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
+	bundleUnpackParams.chunkSourceSettings.basePaths = { "UnpackRemoteBundleAsLocal/Chunks/" };
+	bundleUnpackParams.resourceDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
+	bundleUnpackParams.resourceDestinationSettings.basePath = "UnpackRemoteBundleAsLocal/Unpacked";
+
+	// This should fail, since the chunks are unexpectedly gzipped.
+	EXPECT_EQ( bundleResourceGroup.Unpack( bundleUnpackParams ).type, CarbonResources::ResultType::FAILED_TO_PARSE_YAML );
+}
+
 TEST_F( CarbonResourcesLibraryTest, CreateBundle )
 {
 	// Import ResourceGroup
