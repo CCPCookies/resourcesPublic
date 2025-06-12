@@ -178,7 +178,7 @@ bool CreateBundleCliOperation::CreateBundle( CarbonResources::ResourceGroupImpor
 		YAML::Node root;
 		try
 		{
-			root = YAML::LoadFile( resourceGroupParams.filename );
+			root = YAML::LoadFile( resourceGroupParams.filename.string() );
 		}
 		catch( YAML::ParserException& )
 		{
