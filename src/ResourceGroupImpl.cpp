@@ -912,9 +912,30 @@ namespace CarbonResources
 		}
 
         int i = 0;
+
+		std::vector<ResourceInfo*> toBundle;
+
+		std::copy( m_resourcesParameter.begin(), m_resourcesParameter.end(), std::back_inserter( toBundle ) );
+
+		Result getGroupSpecificResourcesToBundleResult = GetGroupSpecificResourcesToBundle( toBundle );
+
+		if( getGroupSpecificResourcesToBundleResult.type != ResultType::SUCCESS )
+		{
+			return getGroupSpecificResourcesToBundleResult;
+		}
+
         // Loop through all resources and send data for chunking
-        for (ResourceInfo* resource : m_resourcesParameter)
+		for ( ResourceInfo* resource : toBundle )
         {
+			std::string location;
+
+			Result getLocationResult = resource->GetLocation( location );
+
+			if( getLocationResult.type != ResultType::SUCCESS )
+			{
+				return getLocationResult;
+			}
+
 			if( params.statusCallback )
 			{
 				std::filesystem::path relativePath;
@@ -926,13 +947,26 @@ namespace CarbonResources
 					return getRelativePathResult;
                 }
 
-				std::string message = "Processing: " + relativePath.string();
+				std::string message;
 
-				float percentComplete = ( 100.0 / m_resourcesParameter.GetSize() ) * i;
+				if( location.empty() )
+				{
+					message = "No file to process: " + relativePath.string();
+				}
+				else
+				{
+					message = "Processing: " + relativePath.string();
+				}
+
+				float percentComplete = ( 100.0 / toBundle.size() ) * i;
 
                 i++;
 
 				params.statusCallback( CarbonResources::StatusLevel::DETAIL, CarbonResources::StatusProgressType::PERCENTAGE, percentComplete, message );
+			}
+			if( location.empty() )
+			{
+				continue;
 			}
 
             ResourceTools::FileDataStreamIn resourceDataStream(params.fileReadChunkSize);
@@ -1869,5 +1903,11 @@ namespace CarbonResources
     {
 		return m_resourcesParameter.GetSize();
     }
+
+	Result ResourceGroupImpl::GetGroupSpecificResourcesToBundle( std::vector<ResourceInfo*>& toBundle ) const
+	{
+		return Result{ ResultType::SUCCESS };
+	}
+
 
 }

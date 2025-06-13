@@ -105,6 +105,8 @@ namespace CarbonResources
 
     	Result ImportFromYaml( YAML::Node& data, StatusCallback statusCallback = nullptr );
 
+		virtual Result GetGroupSpecificResourcesToBundle( std::vector<ResourceInfo*>& toBundle ) const;
+
     protected:
 
         virtual Result CreateResourceFromYaml( YAML::Node& resource, ResourceInfo*& resourceOut );
