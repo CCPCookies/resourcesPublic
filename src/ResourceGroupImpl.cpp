@@ -241,7 +241,7 @@ namespace CarbonResources
 		case DocumentType::CSV:
 			return ImportFromCSV( data );
 		case DocumentType::YAML:
-			return ImportFromYaml( data );
+			return ImportFromYamlString( data );
 		default:
 			return Result{ ResultType::UNSUPPORTED_FILE_FORMAT };
         }
@@ -282,11 +282,11 @@ namespace CarbonResources
         }
 		else if( extension == ".yml" )
         {
-			importResult = ImportFromYaml( data, params.statusCallback );
+			importResult = ImportFromYamlString( data, params.statusCallback );
         }
 		else if( extension == ".yaml" )
 		{
-			importResult = ImportFromYaml( data, params.statusCallback );
+			importResult = ImportFromYamlString( data, params.statusCallback );
 		}
         else
         {
@@ -550,9 +550,9 @@ namespace CarbonResources
 
 	}
 
-    Result ResourceGroupImpl::ImportFromYaml( const std::string& data, StatusCallback statusCallback /* = nullptr */ )
+    Result ResourceGroupImpl::ImportFromYamlString( const std::string& data, StatusCallback statusCallback /* = nullptr */ )
     {
-    	YAML::Node resourceGroupFile;
+	    YAML::Node resourceGroupFile;
     	try
     	{
     		resourceGroupFile = YAML::Load( data );
@@ -561,7 +561,11 @@ namespace CarbonResources
     	{
     		return Result{ ResultType::FAILED_TO_PARSE_YAML };
     	}
+    	return ImportFromYaml( resourceGroupFile, statusCallback );
+    }
 
+	Result ResourceGroupImpl::ImportFromYaml( YAML::Node& resourceGroupFile, StatusCallback statusCallback )
+	{
 		YAML::Node typeNode = resourceGroupFile[m_type.GetTag()];
 		if( !typeNode.IsDefined() )
 		{
@@ -908,9 +912,30 @@ namespace CarbonResources
 		}
 
         int i = 0;
+
+		std::vector<ResourceInfo*> toBundle;
+
+		std::copy( m_resourcesParameter.begin(), m_resourcesParameter.end(), std::back_inserter( toBundle ) );
+
+		Result getGroupSpecificResourcesToBundleResult = GetGroupSpecificResourcesToBundle( toBundle );
+
+		if( getGroupSpecificResourcesToBundleResult.type != ResultType::SUCCESS )
+		{
+			return getGroupSpecificResourcesToBundleResult;
+		}
+
         // Loop through all resources and send data for chunking
-        for (ResourceInfo* resource : m_resourcesParameter)
+		for ( ResourceInfo* resource : toBundle )
         {
+			std::string location;
+
+			Result getLocationResult = resource->GetLocation( location );
+
+			if( getLocationResult.type != ResultType::SUCCESS )
+			{
+				return getLocationResult;
+			}
+
 			if( params.statusCallback )
 			{
 				std::filesystem::path relativePath;
@@ -922,13 +947,26 @@ namespace CarbonResources
 					return getRelativePathResult;
                 }
 
-				std::string message = "Processing: " + relativePath.string();
+				std::string message;
 
-				float percentComplete = ( 100.0 / m_resourcesParameter.GetSize() ) * i;
+				if( location.empty() )
+				{
+					message = "No file to process: " + relativePath.string();
+				}
+				else
+				{
+					message = "Processing: " + relativePath.string();
+				}
+
+				float percentComplete = ( 100.0 / toBundle.size() ) * i;
 
                 i++;
 
 				params.statusCallback( CarbonResources::StatusLevel::DETAIL, CarbonResources::StatusProgressType::PERCENTAGE, percentComplete, message );
+			}
+			if( location.empty() )
+			{
+				continue;
 			}
 
             ResourceTools::FileDataStreamIn resourceDataStream(params.fileReadChunkSize);
@@ -1865,5 +1903,11 @@ namespace CarbonResources
     {
 		return m_resourcesParameter.GetSize();
     }
+
+	Result ResourceGroupImpl::GetGroupSpecificResourcesToBundle( std::vector<ResourceInfo*>& toBundle ) const
+	{
+		return Result{ ResultType::SUCCESS };
+	}
+
 
 }

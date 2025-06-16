@@ -50,6 +50,8 @@ namespace CarbonResources
 
     	Result SetRemovedResourceRelativePaths( const std::vector<std::filesystem::path>& paths );
 
+		virtual Result GetGroupSpecificResourcesToBundle(std::vector<ResourceInfo*>& toBundle) const final;
+
     private:
 
         virtual Result CreateResourceFromYaml( YAML::Node& resource, ResourceInfo*& resourceOut ) override;

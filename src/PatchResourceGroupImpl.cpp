@@ -674,4 +674,14 @@ namespace CarbonResources
 
     }
 
+	Result PatchResourceGroupImpl::GetGroupSpecificResourcesToBundle( std::vector<ResourceInfo*>& toBundle ) const
+	{
+		if( m_resourceGroupParameter.HasValue() )
+		{
+			toBundle.emplace_back( m_resourceGroupParameter.GetValue() );
+		}
+
+		return Result{ ResultType::SUCCESS };
+	}
+
 }

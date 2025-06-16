@@ -101,6 +101,12 @@ namespace CarbonResources
 
         size_t GetSize() const;
 
+	    Result ImportFromYamlString( const std::string& data, StatusCallback statusCallback = nullptr );
+
+    	Result ImportFromYaml( YAML::Node& data, StatusCallback statusCallback = nullptr );
+
+		virtual Result GetGroupSpecificResourcesToBundle( std::vector<ResourceInfo*>& toBundle ) const;
+
     protected:
 
         virtual Result CreateResourceFromYaml( YAML::Node& resource, ResourceInfo*& resourceOut );
@@ -115,8 +121,6 @@ namespace CarbonResources
 
     	[[deprecated( "Prefer yaml" )]]
 		virtual Result ImportFromCSV( const std::string& data, StatusCallback statusCallback = nullptr );
-
-	    Result ImportFromYaml( const std::string& data, StatusCallback statusCallback = nullptr );
 
 	    Result ExportYaml( const VersionInternal& outputDocumentVersion, std::string& data, StatusCallback statusCallback = nullptr ) const;
 

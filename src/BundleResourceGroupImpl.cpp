@@ -10,6 +10,8 @@
 
 #include <Md5ChecksumStream.h>
 
+#include "ResourceGroupFactory.h"
+
 namespace CarbonResources
 {
 
@@ -65,20 +67,18 @@ namespace CarbonResources
 			return resourceGroupGetDataResult;
 		}
 
-		ResourceGroupImpl resourceGroup;
-
-		Result resourceGroupImportFromDataResult = resourceGroup.ImportFromData( resourceGroupData );
-
-		if( resourceGroupImportFromDataResult.type != ResultType::SUCCESS )
-		{
+    	std::shared_ptr<ResourceGroupImpl> resourceGroup;
+    	Result createResult = CreateFromYamlString( resourceGroupData, resourceGroup );
+    	if( createResult.type != ResultType::SUCCESS )
+    	{
 			std::stringstream ss;
 			ss << "Failed to import resource group data from the following paths:";
 			for( auto path : resourceGroupDataParams.resourceSourceSettings.basePaths )
 			{
 				ss << " \"" << path.string() << "\"";
 			}
-			resourceGroupImportFromDataResult.info = ss.str();
-			return resourceGroupImportFromDataResult;
+			createResult.info = ss.str();
+			return createResult;
 		}
 
         // Create stream
@@ -92,11 +92,31 @@ namespace CarbonResources
 		}
 
         // Reconstitute the resources in the bundle
-		auto numResources = resourceGroup.GetSize();
+		auto numResources = resourceGroup->GetSize();
 		int numProcessed = 0;
-        
-        for( ResourceInfo* resource : resourceGroup )
+
+		std::vector<ResourceInfo*> toBundle;
+
+		std::copy( resourceGroup->begin(), resourceGroup->end(), std::back_inserter( toBundle ) );
+
+		Result getGroupSpecificResourcesToBundleResult = resourceGroup->GetGroupSpecificResourcesToBundle( toBundle );
+
+		if( getGroupSpecificResourcesToBundleResult.type != ResultType::SUCCESS )
 		{
+			return getGroupSpecificResourcesToBundleResult;
+		}
+
+		for( ResourceInfo* resource : toBundle )
+		{
+			std::string location;
+
+			Result getLocationResult = resource->GetLocation( location );
+
+			if( getLocationResult.type != ResultType::SUCCESS )
+			{
+				return getLocationResult;
+			}
+
 			if( params.statusCallback )
 			{
 				std::filesystem::path relativePath;
@@ -106,13 +126,27 @@ namespace CarbonResources
 					return Result{ ResultType::FAIL };
                 }
 
-                float percentage = ( 100.0 / numResources ) * numProcessed;
+				std::string message;
 
-                std::string message = "Rebuilding: " + relativePath.string();
+				if( location.empty() )
+				{
+					message = "Nothing to rebuild: " + relativePath.string();
+				}
+				else
+				{
+					message = "Rebuilding: " + relativePath.string();
+				}
+
+				float percentage = ( 100.0f / numResources ) * numProcessed;
 
 				params.statusCallback( CarbonResources::StatusLevel::DETAIL, CarbonResources::StatusProgressType::PERCENTAGE, percentage, message );
 
                 numProcessed++;
+			}
+
+			if( location.empty() )
+			{
+				continue;
 			}
 
             uintmax_t resourceFileUncompressedSize;

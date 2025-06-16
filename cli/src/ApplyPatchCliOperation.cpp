@@ -190,6 +190,10 @@ bool ApplyPatchCliOperation::ApplyPatch(CarbonResources::ResourceGroupImportFrom
     	std::string out;
     	CarbonResources::ResultTypeToString( applyPatchResult.type, out );
     	std::cerr << "Failed to apply patch: " << out << std::endl;
+    	if( s_verbosityLevel >= CarbonResources::StatusLevel::DETAIL && !applyPatchResult.info.empty() )
+    	{
+    		std::cerr << applyPatchResult.info;
+    	}
     	exit(1);
     }
 
