@@ -155,7 +155,7 @@ char CliOperation::GetBusyChar()
 		
 	    default:
         {
-		    '--';
+		    s_currentBusyAnimationChar = '-';
         }
 		
     }

@@ -71,7 +71,7 @@ bool CreateBundleCliOperation::Execute( std::string& returnErrorMessage ) const
 		return false;
     }
 
-    for (const std::string basePath : m_argumentParser->get<std::vector<std::string>>(m_resourceSourceBasePathArgumentId))
+    for (const std::string& basePath : m_argumentParser->get<std::vector<std::string>>(m_resourceSourceBasePathArgumentId))
     {
 		bundleCreateParams.resourceSourceSettings.basePaths.push_back(basePath);
     }

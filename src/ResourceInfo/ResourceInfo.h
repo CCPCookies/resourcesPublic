@@ -294,7 +294,7 @@ namespace CarbonResources
     public:
 	    ResourceInfo( const ResourceInfoParams& params );
 
-	    ~ResourceInfo();
+	    virtual ~ResourceInfo();
 
 	    void SetRelativePath( const std::filesystem::path& relativePath );
 

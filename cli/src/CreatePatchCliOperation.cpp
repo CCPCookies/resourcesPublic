@@ -133,12 +133,17 @@ bool CreatePatchCliOperation::Execute( std::string& returnErrorMessage ) const
 	
 	try
 	{
-		createPatchParams.maxInputFileChunkSize = std::stoul( m_argumentParser->get( m_maxInputChunkSizeArgumentId ) );
+		unsigned long in = std::stoul( m_argumentParser->get( m_maxInputChunkSizeArgumentId ) );
+		if( in > std::numeric_limits<uint32_t>::max() )
+		{
+			returnErrorMessage = "Invalid chunk size";
+			return false;
+		}
+		createPatchParams.maxInputFileChunkSize = static_cast<uint32_t>( in );
 	}
 	catch( std::invalid_argument& )
 	{
 		returnErrorMessage = "Invalid chunk size";
-
 		return false;
 	}
 	catch( std::out_of_range& )

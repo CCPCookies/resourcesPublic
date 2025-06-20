@@ -242,10 +242,15 @@ namespace CarbonResources
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4996 ) // Suppress deprecation warning.
+#elif __APPLE__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
 			return ImportFromCSV( data );
 #ifdef _MSC_VER
 #pragma warning ( pop )
+#elif __APPLE__
+#pragma clang diagnostic pop
 #endif
 		case DocumentType::YAML:
 			return ImportFromYamlString( data );
@@ -288,10 +293,15 @@ namespace CarbonResources
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4996 ) // Suppress deprecation warning.
+#elif __APPLE__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
 			importResult = ImportFromCSV( data, params.statusCallback );
 #ifdef _MSC_VER
 #pragma warning( pop )
+#elif __APPLE__
+#pragma clang diagnostic pop
 #endif
         }
 		else if( extension == ".yml" || extension == ".yaml" || extension.empty() )
@@ -446,7 +456,7 @@ namespace CarbonResources
 			}
 			else
 			{
-				resourceParams.binaryOperation = atol( value.c_str() );
+				resourceParams.binaryOperation = atoi( value.c_str() );
 			}
 
             // ResourceGroup gets upgraded to 0.1.0
@@ -1355,11 +1365,9 @@ namespace CarbonResources
 					params.statusCallback(StatusLevel::DETAIL, StatusProgressType::PERCENTAGE, 0, message);
         		}
 
-            	int chunkNumber = 0;
                 // Process one chunk at a time
 				for( uintmax_t dataOffset = 0; dataOffset < nextUncompressedSize; dataOffset += params.maxInputFileChunkSize )
                 {
-					++chunkNumber;
 					std::string previousFileData = "";
 
 					if( previousFileDataStream.IsFinished() )

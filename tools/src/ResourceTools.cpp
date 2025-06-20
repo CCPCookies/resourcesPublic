@@ -43,7 +43,7 @@ namespace ResourceTools
 
   bool GenerateFowlerNollVoChecksum(const std::string& input, std::string& checksum)
   {
-	  unsigned long long offset_bias = 14695981039346656037;
+	  unsigned long long offset_bias = 14695981039346656037U;
 
 	  unsigned long long prime = 1099511628211;
 
@@ -403,7 +403,7 @@ namespace ResourceTools
   }
 
 #if __APPLE__
-  int64_t CalculateBinaryOperation( const std::filesystem::path& path )
+  unsigned int CalculateBinaryOperation( const std::filesystem::path& path )
   {
   	  struct stat s;
 	  int err = lstat( path.c_str(), &s );

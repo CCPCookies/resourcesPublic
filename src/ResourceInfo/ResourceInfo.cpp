@@ -682,7 +682,7 @@ namespace CarbonResources
     	{
     		if( YAML::Node parameter = resource[m_binaryOperation.GetTag()] )
     		{
-    			m_binaryOperation = parameter.as<unsigned long>();
+    			m_binaryOperation = parameter.as<unsigned int>();
     		}
     		else
     		{
