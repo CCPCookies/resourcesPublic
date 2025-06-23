@@ -265,7 +265,7 @@ bool CreatePatchCliOperation::CreatePatch( CarbonResources::ResourceGroupImportF
 
 	if( importNextFromFileResult.type != CarbonResources::ResultType::SUCCESS )
 	{
-		PrintCarbonResourcesError( importPreviousFromFileResult );
+		PrintCarbonResourcesError( importNextFromFileResult );
 
 		return false;
 	}
