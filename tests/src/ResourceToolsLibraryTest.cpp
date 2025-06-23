@@ -32,6 +32,48 @@ TEST_F( ResourceToolsTest, Md5ChecksumGeneration )
     EXPECT_EQ( output, "bcf036b6f33e182d4705f4f5b1af13ac" );
 }
 
+TEST_F( ResourceToolsTest, FileMd5ChecksumGeneration )
+{
+	const char* testDataPathStr = TEST_DATA_BASE_PATH;
+
+	ASSERT_TRUE( testDataPathStr );
+
+	std::filesystem::path testDataPath( testDataPathStr );
+
+	std::filesystem::path sourcePath = testDataPath / "resourcesOnBranch" / "introMovie.txt";
+
+	std::string output;
+
+    EXPECT_TRUE( ResourceTools::GenerateMd5Checksum( sourcePath, output ) );
+
+    EXPECT_EQ( output, "e9fadf6f2d386a0a0786bc863f20fa34" );
+}
+
+TEST_F( ResourceToolsTest, FileMd5ChecksumMatches )
+{
+	const char* testDataPathStr = TEST_DATA_BASE_PATH;
+
+	ASSERT_TRUE( testDataPathStr );
+
+	std::filesystem::path testDataPath( testDataPathStr );
+
+	std::filesystem::path sourcePath = testDataPath / "resourcesOnBranch" / "introMovie.txt";
+
+	std::filesystem::path sourcePath2 = testDataPath / "resourcesOnBranch" / "videoCardCategories.yaml";
+
+	std::string output;
+
+	std::string expectedChecksum = "e9fadf6f2d386a0a0786bc863f20fa34";
+
+	std::string unexpectedChecksum = "e9fadf6f2d386a0a0786bc863f20fa35";
+
+    EXPECT_TRUE( ResourceTools::Md5ChecksumMatches( sourcePath, expectedChecksum ) );
+
+    EXPECT_FALSE( ResourceTools::Md5ChecksumMatches( sourcePath, unexpectedChecksum ) );
+
+    EXPECT_FALSE( ResourceTools::Md5ChecksumMatches( sourcePath2, expectedChecksum ) );
+}
+
 TEST_F( ResourceToolsTest, FowlerNollVoChecksumGeneration )
 {
 	std::string input = "res:/intromovie.txt";

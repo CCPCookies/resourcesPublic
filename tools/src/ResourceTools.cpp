@@ -22,7 +22,32 @@
 namespace ResourceTools
 {
 
+  bool GenerateMd5Checksum( const std::filesystem::path& path, std::string& checksum )
+  {
+	ResourceTools::Md5ChecksumStream md5Stream;
+	ResourceTools::FileDataStreamIn fileDataIn;
+	if( !fileDataIn.StartRead( path ) )
+	{
+		return false;
+	}
+	std::string temp;
+	while( fileDataIn >> temp )
+	{
+		md5Stream << temp;
+	}
+	md5Stream.FinishAndRetrieve( checksum );
+	return true;
+  }
 
+  bool Md5ChecksumMatches( const std::filesystem::path& path, std::string& checksum )
+  {
+  	std::string otherChecksum;
+  	if( !GenerateMd5Checksum( path, otherChecksum ) )
+  	{
+  		return false;
+  	}
+  	return otherChecksum == checksum;
+  }
 
   bool GenerateMd5Checksum( const std::string& data, std::string& checksum )
   {

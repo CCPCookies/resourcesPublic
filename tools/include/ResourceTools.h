@@ -53,7 +53,11 @@ namespace ResourceTools
 		uint64_t length;
 	};
 
+	bool GenerateMd5Checksum( const std::filesystem::path& path, std::string& checksum );
+
     bool GenerateMd5Checksum( const std::string& data, std::string& checksum );
+
+	bool Md5ChecksumMatches( const std::filesystem::path& path, std::string& checksum );
 
     bool GenerateFowlerNollVoChecksum( const std::string& input, std::string& checksum );
 
