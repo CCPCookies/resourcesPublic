@@ -60,6 +60,13 @@ namespace CarbonResources
 
 		resourceGroupDataParams.data = &resourceGroupData;
 
+		Result getChecksumResult = resourceGroupResource->GetChecksum( resourceGroupDataParams.expectedChecksum );
+
+		if( getChecksumResult.type != ResultType::SUCCESS )
+		{
+			return getChecksumResult;
+		}
+
 		Result resourceGroupGetDataResult = m_resourceGroupParameter.GetValue()->GetData( resourceGroupDataParams );
 
 		if( resourceGroupGetDataResult.type != ResultType::SUCCESS )
@@ -195,6 +202,13 @@ namespace CarbonResources
 					resourceGetDataParams.resourceSourceSettings = params.chunkSourceSettings;
 
 					resourceGetDataParams.data = &chunkData;
+
+					Result getChunkChecksumResult = chunk->GetChecksum( resourceGetDataParams.expectedChecksum );
+
+					if( getChunkChecksumResult.type != ResultType::SUCCESS )
+					{
+						return getChunkChecksumResult;
+					}
 
 					Result getChunkDataResult = chunk->GetData( resourceGetDataParams );
 

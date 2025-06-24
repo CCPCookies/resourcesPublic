@@ -548,22 +548,39 @@ namespace CarbonResources
 
 		std::replace( url.begin(), url.end(), '\\', '/' );
 
-    	ResourceTools::Downloader downloader;
-		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadRetrySeconds );
+		bool haveFileCached{false};
 
-        if (!downloadFileResult)
-        {
-			std::stringstream ss;
-
-			ss << "Failed to download file \nfrom remote url: " << url << "\nto local path: " << tempPath.string();
-
-			return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
-        }
-
-        if( params.expectedChecksum != "" )
+		if( std::filesystem::exists( tempPath ) )
 		{
-			// Calculate checksum of data matches expected.
-			// TODO
+			if( ResourceTools::Md5ChecksumMatches( tempPath, params.expectedChecksum ) )
+			{
+				haveFileCached = true;
+			}
+			else
+			{
+				std::filesystem::remove( tempPath );
+			}
+		}
+
+		if( !haveFileCached )
+		{
+			ResourceTools::Downloader downloader;
+
+			bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadRetrySeconds );
+
+			if (!downloadFileResult)
+			{
+				std::stringstream ss;
+
+				ss << "Failed to download file \nfrom remote url: " << url << "\nto local path: " << tempPath.string();
+
+				return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
+			}
+
+			if( !params.expectedChecksum.empty() && !ResourceTools::Md5ChecksumMatches( tempPath, params.expectedChecksum ) )
+			{
+				return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, "The downloaded file does not have the expected checksum" };
+			}
 		}
 
 		ResourceGetDataParams localParams = params;
@@ -645,23 +662,39 @@ namespace CarbonResources
         std::string url = path.string();
 
         std::replace( url.begin(), url.end(), '\\', '/' );
+		bool haveFileCached{false};
 
-    	ResourceTools::Downloader downloader;
-		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadRetrySeconds );
-
-		if( !downloadFileResult )
+		if( std::filesystem::exists( tempPath ) )
 		{
-			std::stringstream ss;
-
-            ss << "Failed to download file \nfrom remote url: " << url << "\nto local path: " << tempPath.string();
-
-			return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
+			if( ResourceTools::Md5ChecksumMatches( tempPath, params.expectedChecksum ) )
+			{
+				haveFileCached = true;
+			}
+			else
+			{
+				std::filesystem::remove( tempPath );
+			}
 		}
 
-		if( params.expectedChecksum != "" )
+		if( !haveFileCached )
 		{
-			// Calculate checksum of data matches expected.
-			// TODO
+			ResourceTools::Downloader downloader;
+
+			bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadRetrySeconds );
+
+			if (!downloadFileResult)
+			{
+				std::stringstream ss;
+
+				ss << "Failed to download file \nfrom remote url: " << url << "\nto local path: " << tempPath.string();
+
+				return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
+			}
+
+			if( !params.expectedChecksum.empty() && !ResourceTools::Md5ChecksumMatches( tempPath, params.expectedChecksum ) )
+			{
+				return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, "The downloaded file does not have the expected checksum" };
+			}
 		}
 
         ResourceGetDataStreamParams localCdnParams = params;
