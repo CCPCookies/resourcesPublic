@@ -246,7 +246,7 @@ TEST_F( ResourceToolsTest, ResourceChunking )
 
         std::string chunkPath = ss.str();
 
-    	std::filesystem::rename( chunk.uncompressedChunkIn->GetPath(), chunkPath );
+    	std::filesystem::copy_file( chunk.uncompressedChunkIn->GetPath(), chunkPath );
 
         numberOfChunks++;
     }
@@ -273,7 +273,12 @@ TEST_F( ResourceToolsTest, ResourceChunking )
 
 	std::string chunkPath = ss.str();
 
-	std::filesystem::rename( chunk.uncompressedChunkIn->GetPath(), chunkPath );
+	if( std::filesystem::exists( chunkPath ) )
+	{
+		std::filesystem::remove( chunkPath );
+	}
+
+	std::filesystem::copy_file( chunk.uncompressedChunkIn->GetPath(), chunkPath );
 
 	// Reconsitute the files
 	ResourceTools::BundleStreamIn chunkStreamReconstitute( chunkSize );

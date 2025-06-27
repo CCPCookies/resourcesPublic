@@ -916,7 +916,7 @@ namespace CarbonResources
 
     	try
     	{
-    		std::filesystem::rename( sourceFile, targetFile );
+    		std::filesystem::copy_file( sourceFile, targetFile );
     	}
     	catch( std::filesystem::filesystem_error& e )
     	{
