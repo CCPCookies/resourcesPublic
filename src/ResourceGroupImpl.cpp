@@ -914,7 +914,14 @@ namespace CarbonResources
 			std::filesystem::create_directories( targetFile.parent_path() );
 		}
 
-    	std::filesystem::rename( sourceFile, targetFile );
+    	try
+    	{
+    		std::filesystem::rename( sourceFile, targetFile );
+    	}
+    	catch( std::filesystem::filesystem_error& e )
+    	{
+    		return Result( { ResultType::FAILED_TO_SAVE_FILE, e.what() } );
+    	}
 
 		// Add the chunk resource to the bundleResourceGroup
 		Result addResourceResult = bundleResourceGroup.AddResource( chunkResource );
