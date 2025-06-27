@@ -2,6 +2,8 @@
 
 #include "Patching.h"
 
+#include "BundleResourceGroupImpl.h"
+
 #include <yaml-cpp/yaml.h>
 
 #include <ResourceTools.h>
@@ -86,7 +88,19 @@ namespace CarbonResources
 				return createResourceFromYaml;
             }
 
-            //TODO ensure that resource is of base type ResourceGroup
+            // Ensure that resource is of base type ResourceGroup
+			std::string type;
+			Result getTypeResult = resource->GetType( type );
+
+			if( getTypeResult.type != ResultType::SUCCESS )
+			{
+				return getTypeResult;
+			}
+
+			if( !( ( type == ResourceGroupImpl::TypeId() ) || ( type == BundleResourceGroupImpl::TypeId() ) || ( type == PatchResourceGroupImpl::TypeId() ) ) )
+			{
+				return Result{ ResultType::MALFORMED_RESOURCE_GROUP };
+			}
 
 			m_resourceGroupParameter = reinterpret_cast<ResourceGroupInfo*>( resource );
 		}

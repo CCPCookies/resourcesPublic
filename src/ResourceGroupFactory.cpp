@@ -27,22 +27,35 @@ namespace CarbonResources
 		}
 		auto resourceGroupTypeString = type.as<std::string>();
 
-		if( resourceGroupTypeString == ResourceGroupImpl::TypeId() )
+        Result createFromStringResult = CreateFromString( resourceGroupTypeString, out );
+
+        if( createFromStringResult.type != ResultType::SUCCESS )
+        {
+			return createFromStringResult;
+        }
+
+		return out->ImportFromYaml( root );
+	}
+
+    Result CreateFromString(std::string& string, std::shared_ptr<ResourceGroupImpl>& out)
+    {
+		if( string == ResourceGroupImpl::TypeId() )
 		{
 			out = std::make_shared<ResourceGroupImpl>();
 		}
-		else if( resourceGroupTypeString == PatchResourceGroupImpl::TypeId() )
+		else if( string == PatchResourceGroupImpl::TypeId() )
 		{
 			out = std::make_shared<PatchResourceGroupImpl>();
 		}
-		else if( resourceGroupTypeString == BundleResourceGroupImpl::TypeId() )
+		else if( string == BundleResourceGroupImpl::TypeId() )
 		{
 			out = std::make_shared<BundleResourceGroupImpl>();
 		}
 		else
 		{
-			return Result{ ResultType::MALFORMED_RESOURCE_GROUP, "Unexpected Resource Group Type: '" + resourceGroupTypeString + "'." };
+			return Result{ ResultType::MALFORMED_RESOURCE_GROUP, "Unexpected Resource Group Type: '" + string + "'." };
 		}
-		return out->ImportFromYaml( root );
-	}
+
+        return Result{ ResultType::SUCCESS };
+    }
 }

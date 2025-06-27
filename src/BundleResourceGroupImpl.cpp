@@ -12,6 +12,8 @@
 
 #include "ResourceGroupFactory.h"
 
+#include "PatchResourceGroupImpl.h"
+
 namespace CarbonResources
 {
 
@@ -220,7 +222,7 @@ namespace CarbonResources
 					// Add to chunk stream
 					if( !( bundleStream << chunkData ) )
 					{
-						return Result{ ResultType::FAIL }; //TODO make more descriptive
+						return Result{ ResultType::FAIL };
 					}
                 }
                 else
@@ -261,7 +263,6 @@ namespace CarbonResources
             }
 
             // Validate the resource data
-            // TODO: perhaps make this optional
 			std::string recreatedResourceChecksum;
 
             if (!resourceChecksumStream.FinishAndRetrieve(recreatedResourceChecksum))
@@ -283,22 +284,6 @@ namespace CarbonResources
             {
 				return Result{ ResultType::UNEXPECTED_CHUNK_CHECKSUM_RESULT };
             }
-
-            /*
-			// Export data TODO
-			ResourcePutDataParams resourcePutDataParams;
-
-			resourcePutDataParams.resourceDestinationSettings = params.resourceDestinationSettings;
-
-			resourcePutDataParams.data = &resourceData;
-
-			Result putResourceDataResult = resource->PutData( resourcePutDataParams );
-
-			if( putResourceDataResult != Result::SUCCESS )
-			{
-				return putResourceDataResult;
-			}
-            */
 
 		}
 
@@ -368,15 +353,36 @@ namespace CarbonResources
 				return createResourceFromYaml;
 			}
 
-			//TODO ensure that resource is of base type ResourceGroup
+			// Ensure that resource is of base type ResourceGroup
+			std::string type;
+			Result getTypeResult = resource->GetType(type);
+
+            if (getTypeResult.type != ResultType::SUCCESS)
+            {
+				return getTypeResult;
+            }
+
+            if (!((type == ResourceGroupImpl::TypeId()) || (type == BundleResourceGroupImpl::TypeId()) || (type == PatchResourceGroupImpl::TypeId())))
+            {
+				return Result{ ResultType::MALFORMED_RESOURCE_GROUP };
+            }
 
 			m_resourceGroupParameter = reinterpret_cast<ResourceGroupInfo*>( resource );
 		}
 
         if (m_chunkSize.IsParameterExpectedInDocumentVersion(m_versionParameter.GetValue()))
         {
-            // TODO handle failure
-			m_chunkSize = resourceGroupFile[m_chunkSize.GetTag()].as<uintmax_t>();
+
+			if( YAML::Node chunkSize = resourceGroupFile[m_chunkSize.GetTag()] )
+			{
+				m_chunkSize = chunkSize.as<uintmax_t>();
+			}
+            else
+            {
+				return Result{ ResultType::MALFORMED_RESOURCE_GROUP };
+            }
+			
+			
         }
 
 		return Result{ ResultType::SUCCESS };

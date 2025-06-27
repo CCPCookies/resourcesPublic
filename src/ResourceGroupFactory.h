@@ -5,6 +5,8 @@
 namespace CarbonResources
 {
 	Result CreateFromYamlString( const std::string& yamlString, std::shared_ptr<ResourceGroupImpl>& out );
-}
+
+    Result CreateFromString( std::string& string, std::shared_ptr<ResourceGroupImpl>& out );
+	}
 
 #endif //RESOURCEGROUPFACTORY_H

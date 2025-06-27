@@ -54,12 +54,15 @@ namespace CarbonResources
     *  @var StatusProgressType::UNBOUNDED
     *  Status update with unbounded progress. When set the progress integer doesn't report progress.
     *  @var StatusProgressType::PERCENTAGE
-    *  Status update with accoumpanying percentage progress. When set the progress integer reports percentage complete.
+    *  Status update with accompanying percentage progress. When set the progress integer reports percentage complete.
+    *  @var StatusProgressType::WARNING
+    *  Warning message. When set the progress integer doesn't report progress
     */
 	enum class StatusProgressType
 	{
 		UNBOUNDED,
 		PERCENTAGE,
+        WARNING
 	};
 
     /** Status Callback function signature.
