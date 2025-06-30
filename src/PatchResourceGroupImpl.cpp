@@ -89,15 +89,9 @@ namespace CarbonResources
             }
 
             // Ensure that resource is of base type ResourceGroup
-			std::string type;
-			Result getTypeResult = resource->GetType( type );
+			ResourceGroupInfo* resourceGroupInfo = dynamic_cast<ResourceGroupInfo*>( resource );
 
-			if( getTypeResult.type != ResultType::SUCCESS )
-			{
-				return getTypeResult;
-			}
-
-			if( !( ( type == ResourceGroupImpl::TypeId() ) || ( type == BundleResourceGroupImpl::TypeId() ) || ( type == PatchResourceGroupImpl::TypeId() ) ) )
+			if( !resourceGroupInfo )
 			{
 				return Result{ ResultType::MALFORMED_RESOURCE_GROUP };
 			}

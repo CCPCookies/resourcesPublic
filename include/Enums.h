@@ -136,6 +136,10 @@ namespace CarbonResources
     * Resource parameters were attempted to be set by a resource of a different type. This is an internal library error which shouldn't be encountered. If you encounter this error contact API addministrators.
     * @var MALFORMED_RESOURCE_GROUP
     * Resource group provided appears malformed.
+    * @var MALFORMED_RESOURCE
+    * Resource provided appears malformed.
+    * @var FAILED_TO_PARSE_YAML
+    * Failed to parse provided yaml.
     */
     enum class ResultType
     {
@@ -169,6 +173,7 @@ namespace CarbonResources
 		INPUT_DIRECTORY_DOESNT_EXIST,
 	    RESOURCE_TYPE_MISSMATCH,
     	MALFORMED_RESOURCE_GROUP,
+		MALFORMED_RESOURCE,
     	FAILED_TO_PARSE_YAML
         //NOTE: if adding to this enum, a complimentary entry must be added to resultToString.
     };

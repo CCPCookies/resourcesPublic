@@ -555,20 +555,19 @@ namespace CarbonResources
 
 	Result ResourceGroupImpl::CreateResourceFromYaml( YAML::Node& resource, ResourceInfo*& resourceOut )
 	{
-		resourceOut = new ResourceInfo( ResourceInfoParams{} );
+		std::unique_ptr<ResourceInfo> resourceInfo;
+      
+		Result createResourceInfoResult = CreateResourceInfoFromYamlNode( resource, resourceInfo, m_versionParameter.GetValue() );
 
-		Result importFromYamlResult = resourceOut->ImportFromYaml( resource, m_versionParameter.GetValue() );
-
-        if( importFromYamlResult.type != ResultType::SUCCESS )
+        if( createResourceInfoResult.type != ResultType::SUCCESS )
 		{
-			delete resourceOut;
 
-			resourceOut = nullptr;
-
-			return importFromYamlResult;
+			return createResourceInfoResult;
 		}
         else
         {
+			resourceOut = resourceInfo.release();
+
 			return Result{ ResultType::SUCCESS };
         }
 
@@ -1196,7 +1195,7 @@ namespace CarbonResources
 
         std::shared_ptr<ResourceGroupImpl> resourceGroupSubtractionPrevious;
 
-		Result createPreviousResourceGroupResult = CreateFromString( previousGroupType, resourceGroupSubtractionPrevious );
+		Result createPreviousResourceGroupResult = CreateResourceGroupFromString( previousGroupType, resourceGroupSubtractionPrevious );
 
         if (createPreviousResourceGroupResult.type != ResultType::SUCCESS)
         {
@@ -1205,7 +1204,7 @@ namespace CarbonResources
 
         std::shared_ptr<ResourceGroupImpl> resourceGroupSubtractionNext;
 
-		Result createNextResourceGroupResult = CreateFromString( nextGroupType, resourceGroupSubtractionNext );
+		Result createNextResourceGroupResult = CreateResourceGroupFromString( nextGroupType, resourceGroupSubtractionNext );
 
 		if( createNextResourceGroupResult.type != ResultType::SUCCESS )
 		{
