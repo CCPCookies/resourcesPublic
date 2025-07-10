@@ -212,14 +212,16 @@ namespace CarbonResources
 		std::string resourcePrefix;
 	};
 
-    class ResourceGroupImpl;    // TODO remove these from public API
-
     /** @class ResourceGroup
     *  @brief Contains a collection of Resources
     */
     class API ResourceGroup
     {
+	public:
+		class ResourceGroupImpl;
+
 	protected:
+		
         ResourceGroup( ResourceGroupImpl* impl );
 
         ResourceGroup( const ResourceGroup& ) = delete;
@@ -260,7 +262,6 @@ namespace CarbonResources
 		/// @note No file filtering supported
         Result CreateFromDirectory( const CreateResourceGroupFromDirectoryParams& params );
 
-        friend class ResourceGroupImpl;
     };
 
 }
