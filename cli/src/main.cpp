@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #include <iostream>
 #include <ResourceGroup.h>
 #include <BundleResourceGroup.h>

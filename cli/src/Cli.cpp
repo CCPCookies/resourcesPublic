@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #include "Cli.h"
 
 #include <argparse/argparse.hpp>

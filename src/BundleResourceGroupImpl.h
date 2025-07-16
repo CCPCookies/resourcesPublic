@@ -1,20 +1,5 @@
-/* 
-	*************************************************************************
+// Copyright © 2025 CCP ehf.
 
-	BundleResourceGroupImpl.h
-
-	Author:    James Hawk
-	Created:   Feb. 2025
-	Project:   Resources
-
-	Description:   
-
-	  
-
-	(c) CCP 2025
-
-	*************************************************************************
-*/
 #pragma once
 #ifndef BundleResourceGroupImpl_H
 #define BundleResourceGroupImpl_H

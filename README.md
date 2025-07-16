@@ -74,4 +74,4 @@ By submitting a pull request or otherwise contributing to this project, you agre
 
 This project is licensed under the [MIT Licence](LICENSE.txt). Nothing in the MIT License grants any rights to CCP Games' trademarks or game content.
 
-Copyright notice: © 2025 CCP Games.
+Copyright notice: Copyright © 2025 CCP ehf.

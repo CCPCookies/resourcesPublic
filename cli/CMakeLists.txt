@@ -1,3 +1,5 @@
+# Copyright © 2025 CCP ehf.
+
 cmake_minimum_required(VERSION 3.31)
 project(carbon-resources-cli VERSION 1.0.0)
 
