@@ -99,7 +99,7 @@ set_target_properties(carbon-resources PROPERTIES OUTPUT_NAME "_carbon-resources
 # Static lib, exported and used for cli
 ccp_add_library(carbon-resources-static STATIC ${SRC_FILES})
 
-set_target_properties(carbon-resources-static PROPERTIES OUTPUT_NAME "_carbon-resources-static-MD")
+set_target_properties(carbon-resources-static PROPERTIES OUTPUT_NAME "_carbon-resources-static")
 
 target_compile_definitions(carbon-resources-static PUBLIC CARBON_RESOURCES_STATIC)
 
@@ -110,29 +110,6 @@ endif()
 target_link_libraries(carbon-resources-static PRIVATE $<BUILD_LOCAL_INTERFACE:carbon-resources-tools> yaml-cpp::yaml-cpp)
 
 target_include_directories(carbon-resources-static
-        PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-)
-
-
-# Static lib MT
-ccp_add_library(carbon-resources-static-mt STATIC ${SRC_FILES})
-
-target_compile_options(carbon-resources-static-mt PRIVATE "/MT$<$<CONFIG:Debug>:d>")
-
-set_target_properties(carbon-resources-static-mt PROPERTIES OUTPUT_NAME "_carbon-resources-static-MT")
-
-target_compile_definitions(carbon-resources-static-mt PUBLIC CARBON_RESOURCES_STATIC)
-
-if(WIN32)
-    target_compile_definitions(carbon-resources-static-mt PRIVATE NOMINMAX) # Do not define min/max macros.
-endif()
-
-target_link_libraries(carbon-resources-static-mt PRIVATE $<BUILD_LOCAL_INTERFACE:carbon-resources-tools> yaml-cpp::yaml-cpp)
-
-target_include_directories(carbon-resources-static-mt
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -184,7 +161,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     if(INSTALL_BIN_ONLY)
         # Install rule to ensure that our runtime files are in the expected, platform-specific folder
         install(
-                TARGETS carbon-resources carbon-resources-static carbon-resources-static-mt
+                TARGETS carbon-resources carbon-resources-static
                 EXPORT carbon-resourcesTarget
                 CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
                 LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
@@ -194,7 +171,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     else()
         # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
         install(
-                TARGETS carbon-resources carbon-resources-static carbon-resources-static-mt
+                TARGETS carbon-resources carbon-resources-static
                 EXPORT carbon-resourcesTarget
                 CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
                 LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
