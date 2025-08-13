@@ -1,0 +1,27 @@
+Version: 0.1.0
+Type: ResourceGroup
+NumberOfResources: 3
+TotalResourcesSizeCompressed: 89
+TotalResourcesSizeUnCompressed: 35
+Resources:
+  - RelativePath: E.txt
+    Type: Resource
+    Location: 39/39425799084fbc18_88c3bf4d36d7e15cdee3e00674869c43
+    Checksum: 88c3bf4d36d7e15cdee3e00674869c43
+    UncompressedSize: 17
+    CompressedSize: 35
+    BinaryOperation: 33206
+  - RelativePath: F.txt
+    Type: Resource
+    Location: db/dbeb4390d717880f_2741024d9ad45832f3b8670410f5d8b1
+    Checksum: 2741024d9ad45832f3b8670410f5d8b1
+    UncompressedSize: 9
+    CompressedSize: 27
+    BinaryOperation: 33206
+  - RelativePath: Subfolder/G.txt
+    Type: Resource
+    Location: 9a/9a3af00748c740f9_ab3b8a6ba9185e245291f415c1964da5
+    Checksum: ab3b8a6ba9185e245291f415c1964da5
+    UncompressedSize: 9
+    CompressedSize: 27
+    BinaryOperation: 33206

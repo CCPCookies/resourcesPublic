@@ -140,6 +140,19 @@ namespace CarbonResources
         case ResultType::INVALID_CHUNK_SIZE:
 			output = "Chunk size specified is invalid, must be > 0.";
 			return true;
+
+        case ResultType::RESOURCE_GROUP_NOT_SET:
+			output = "Input Resource Group not set";
+			return true;
+
+        case ResultType::RESOURCE_LIST_NOT_SET:
+			output = "Resource list not set";
+			return true;
+
+        case ResultType::RESOURCE_NOT_FOUND:
+			output = "Resource not found";
+			return true;  
+
 	    }
 
 	    output = "Error code unrecognised. This is an internal library error which shouldn't be encountered. If you encounter this error contact API addministrators.";

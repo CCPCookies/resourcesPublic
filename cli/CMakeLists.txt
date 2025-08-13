@@ -21,6 +21,10 @@ set(SRC_FILES
     src/CreateResourceGroupCliOperation.h
     src/Defines.h
     src/main.cpp
+    src/MergeResourceGroupCliOperation.cpp
+    src/MergeResourceGroupCliOperation.h
+    src/RemoveResourcesCliOperation.cpp
+    src/RemoveResourcesCliOperation.h
     src/UnpackBundleCliOperation.cpp
     src/UnpackBundleCliOperation.h
 )

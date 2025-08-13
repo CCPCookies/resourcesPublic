@@ -879,3 +879,100 @@ TEST_F( CarbonResourcesLibraryTest, CreateResourceGroupFailsWithInvalidInputDire
 
 	EXPECT_EQ( resourceGroup.CreateFromDirectory( createResourceGroupParams ).type, CarbonResources::ResultType::INPUT_DIRECTORY_DOESNT_EXIST);
 }
+
+TEST_F( CarbonResourcesLibraryTest, MergeResourceGroups )
+{
+	CarbonResources::ResourceGroup resourceGroup;
+
+	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
+
+	importFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/BaseResourceGroup.yaml" );
+
+	CarbonResources::Result importFromFileResult = resourceGroup.ImportFromFile( importFromFileParams );
+
+    EXPECT_EQ( importFromFileResult.type, CarbonResources::ResultType::SUCCESS );
+
+    // Load merge group
+    CarbonResources::ResourceGroup resourceGroupToMerge;
+
+    CarbonResources::ResourceGroupImportFromFileParams mergeImportFromFileParams;
+
+    mergeImportFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/MergeResourceGroup.yaml" );
+
+    CarbonResources::Result mergeImportFromFileResult = resourceGroupToMerge.ImportFromFile( mergeImportFromFileParams );
+
+    EXPECT_EQ( mergeImportFromFileResult.type, CarbonResources::ResultType::SUCCESS );
+
+    // Merge resource groups
+	CarbonResources::ResourceGroup mergedResourceGroup;
+
+	CarbonResources::ResourceGroupMergeParams mergeParams;
+
+    mergeParams.resourceGroupToMerge = &resourceGroupToMerge;
+
+    mergeParams.mergedResourceGroup = &mergedResourceGroup;
+
+	CarbonResources::Result mergeResult = resourceGroup.Merge( mergeParams );
+
+    EXPECT_EQ( mergeResult.type, CarbonResources::ResultType::SUCCESS );
+
+    // Export the merged result
+	CarbonResources::ResourceGroupExportToFileParams exportParams;
+
+    exportParams.filename = "Merge/mergedResourceGroup.yaml";
+
+	CarbonResources::Result exportResult = mergedResourceGroup.ExportToFile( exportParams );
+
+    EXPECT_EQ( exportResult.type, CarbonResources::ResultType::SUCCESS );
+
+    // Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/ExpectedMergedResourceGroup.yaml" );
+
+	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
+}
+
+TEST_F( CarbonResourcesLibraryTest, RemoveResource )
+{
+	CarbonResources::ResourceGroup resourceGroup;
+
+    // Import ResourceGroup
+    CarbonResources::ResourceGroupImportFromFileParams importParams;
+
+    importParams.filename = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" );
+
+    CarbonResources::Result importResult = resourceGroup.ImportFromFile( importParams );
+
+    EXPECT_EQ( importResult.type, CarbonResources::ResultType::SUCCESS );
+
+    // Remove resource B.txt
+	CarbonResources::ResourceGroupRemoveResourcesParams removeParams;
+
+    std::vector<std::filesystem::path> resourcesToRemove;
+
+    resourcesToRemove.push_back( "B.txt" );
+
+    removeParams.resourcesToRemove = &resourcesToRemove;
+
+    removeParams.errorIfResourceNotFound = true;
+
+	CarbonResources::Result removeResult = resourceGroup.RemoveResources( removeParams );
+
+    EXPECT_EQ( removeResult.type, CarbonResources::ResultType::SUCCESS );
+
+    // Export the ResourceGroup
+	CarbonResources::ResourceGroupExportToFileParams exportParams;
+
+    exportParams.filename = "RemoveResource/ResourceGroup.yaml";
+
+	CarbonResources::Result exportResult = resourceGroup.ExportToFile( exportParams );
+
+    EXPECT_EQ( exportResult.type, CarbonResources::ResultType::SUCCESS );
+
+
+    // Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "RemoveResource/ResourceGroupAfterRemove.yaml" );
+
+	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
+
+
+}

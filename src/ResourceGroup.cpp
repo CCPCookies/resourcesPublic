@@ -47,4 +47,14 @@ namespace CarbonResources
 		return m_impl->CreateFromDirectory( params );
     }
 
+    Result ResourceGroup::Merge( const ResourceGroupMergeParams& params ) const
+    {
+		return m_impl->Merge( params );
+    }
+
+    Result ResourceGroup::RemoveResources(const ResourceGroupRemoveResourcesParams& params) const
+    {
+		return m_impl->RemoveResources( params );
+    }
+
 }

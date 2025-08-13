@@ -127,6 +127,12 @@ namespace CarbonResources
     * Failed to parse provided yaml.
     * @var INVALID_CHUNK_SIZE
     * Chunk size must be > 0.
+    * @var RESOURCE_GROUP_NOT_SET
+    * Resource Group is null
+    * @var RESOURCE_LIST_NOT_SET
+    * Required resource List is not set
+    * @var RESOURCE_NOT_FOUND
+    * Required resource not found
     */
     enum class ResultType
     {
@@ -162,7 +168,10 @@ namespace CarbonResources
     	MALFORMED_RESOURCE_GROUP,
 		MALFORMED_RESOURCE,
     	FAILED_TO_PARSE_YAML,
-		INVALID_CHUNK_SIZE
+		INVALID_CHUNK_SIZE,
+        RESOURCE_GROUP_NOT_SET,
+        RESOURCE_LIST_NOT_SET,
+        RESOURCE_NOT_FOUND
         //NOTE: if adding to this enum, a complimentary entry must be added to resultToString.
     };
 
