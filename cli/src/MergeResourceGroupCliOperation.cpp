@@ -11,6 +11,7 @@ MergeResourceGroupCliOperation::MergeResourceGroupCliOperation() :
 	CliOperation("merge-group", "Merge two Resource Groups together"),
 	m_baseResourceGroupPathArgumentId( "base-resource-group-path" ),
 	m_mergeResourceGroupPathArgumentId( "merge-resource-group-path" ),
+	m_mergedResourceGroupDocumentVersionArgumentId( "--document-version" ),
 	m_mergedResourceGroupOutputArgumentId( "--merge-output-resource-group-path" )
 {
 	AddRequiredPositionalArgument( m_baseResourceGroupPathArgumentId, "The path to the Resource Group to act as a base for the merge." );
@@ -18,6 +19,8 @@ MergeResourceGroupCliOperation::MergeResourceGroupCliOperation() :
     AddRequiredPositionalArgument( m_mergeResourceGroupPathArgumentId, "The path to the Resource Group to act as a target for the merge." );
 
 	CarbonResources::ResourceGroupExportToFileParams defaultParams;
+
+    AddArgument( m_mergedResourceGroupDocumentVersionArgumentId, "Document version for created resource group.", false, false, VersionToString( defaultParams.outputDocumentVersion ) );
 
     AddArgument( m_mergedResourceGroupOutputArgumentId, "The path in which to place the merged Resource Group.", false, false, defaultParams.filename.string() );
 
@@ -53,13 +56,28 @@ bool MergeResourceGroupCliOperation::Execute( std::string& returnErrorMessage ) 
     CarbonResources::ResourceGroupExportToFileParams exportParams;
 
     exportParams.filename = m_argumentParser->get<std::string>( m_mergedResourceGroupOutputArgumentId );
+
+    std::string version = m_argumentParser->get( m_mergedResourceGroupDocumentVersionArgumentId );
+
+    CarbonResources::Version documentVersion;
+
+    bool versionIsValid = ParseDocumentVersion( version, documentVersion );
+
+    if( !versionIsValid )
+	{
+		returnErrorMessage = "Invalid document version";
+
+		return false;
+	}
+
+    exportParams.outputDocumentVersion = documentVersion;
        
-	PrintStartBanner( importParamsBase, importParamsMerge, exportParams );
+	PrintStartBanner( importParamsBase, importParamsMerge, exportParams, version );
 
 	return Merge( importParamsBase, importParamsMerge, exportParams );
 }
 
-void MergeResourceGroupCliOperation::PrintStartBanner( const CarbonResources::ResourceGroupImportFromFileParams& importParamsBase, const CarbonResources::ResourceGroupImportFromFileParams& importParamsMerge, CarbonResources::ResourceGroupExportToFileParams exportParams ) const
+void MergeResourceGroupCliOperation::PrintStartBanner( const CarbonResources::ResourceGroupImportFromFileParams& importParamsBase, const CarbonResources::ResourceGroupImportFromFileParams& importParamsMerge, CarbonResources::ResourceGroupExportToFileParams exportParams, const std::string& version ) const
 {
 	if( s_verbosityLevel == CarbonResources::StatusLevel::OFF )
 	{
@@ -73,6 +91,7 @@ void MergeResourceGroupCliOperation::PrintStartBanner( const CarbonResources::Re
 	std::cout << "Base Resource Group: " << importParamsBase.filename << std::endl;
 	std::cout << "Merge Resource Group: " << importParamsMerge.filename << std::endl;
 	std::cout << "Output merged Path: " << exportParams.filename << std::endl;
+	std::cout << "Output Document Version: " << version << std::endl;
 
 	std::cout << "----------------------------\n" << std::endl;
 }

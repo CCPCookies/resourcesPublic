@@ -12,6 +12,7 @@ RemoveResourcesCliOperation::RemoveResourcesCliOperation() :
 	CliOperation("remove-resources", "Remove resources from a ResourceGroup identified by supplied text file containing a list of RelativePaths to remove."),
 	m_resourceGroupPathArgumentId( "resource-group-path" ),
 	m_resourceListPath( "resource-list-path" ),
+	m_outputResourceGroupDocumentVersionArgumentId( "--document-version" ),
 	m_outputResourceGroupPath( "--output-resource-group-path" ),
 	m_ignoreMissingResources( "--ignore-missing-resources" )
 {
@@ -19,7 +20,11 @@ RemoveResourcesCliOperation::RemoveResourcesCliOperation() :
 
 	AddRequiredPositionalArgument( m_resourceListPath, "Path to text file containing list of RelativePaths of resources to remove, separated by newlines." );
 
-    AddArgument( m_outputResourceGroupPath, "Filename for created resource group.", false, false, "ResourceGroup.yaml" );
+    CarbonResources::ResourceGroupExportToFileParams defaultParams;
+
+    AddArgument( m_outputResourceGroupDocumentVersionArgumentId, "Document version for created resource group.", false, false, VersionToString( defaultParams.outputDocumentVersion ) );
+
+    AddArgument( m_outputResourceGroupPath, "Filename for created resource group.", false, false, defaultParams.filename.string() );
 
     AddArgumentFlag( m_ignoreMissingResources, "Set to ignore 'resource not found' errors caused by supplying a list with Resources not present in ResourceGroup." );
 }
@@ -52,14 +57,29 @@ bool RemoveResourcesCliOperation::Execute( std::string& returnErrorMessage ) con
 
 	exportParams.filename = outResourceGroupFilename;
 
+    std::string version = m_argumentParser->get( m_outputResourceGroupDocumentVersionArgumentId );
+
+    CarbonResources::Version documentVersion;
+
+	bool versionIsValid = ParseDocumentVersion( version, documentVersion );
+
+    if( !versionIsValid )
+	{
+		returnErrorMessage = "Invalid document version";
+
+		return false;
+	}
+
+    exportParams.outputDocumentVersion = documentVersion;
+
     bool ignoreMissingResources =  m_argumentParser->get<bool>( m_ignoreMissingResources );
 
-	PrintStartBanner( importParams, resourcesToRemovePath, exportParams, ignoreMissingResources );
+	PrintStartBanner( importParams, resourcesToRemovePath, exportParams, ignoreMissingResources, version );
 
 	return RemoveResources( importParams, resourcesToRemovePath, exportParams, ignoreMissingResources );
 }
 
-void RemoveResourcesCliOperation::PrintStartBanner( const CarbonResources::ResourceGroupImportFromFileParams& importParams, std::filesystem::path& resourcesToRemoveFile, CarbonResources::ResourceGroupExportToFileParams& exportParams, bool ignoreMissingResources ) const
+void RemoveResourcesCliOperation::PrintStartBanner( const CarbonResources::ResourceGroupImportFromFileParams& importParams, std::filesystem::path& resourcesToRemoveFile, CarbonResources::ResourceGroupExportToFileParams& exportParams, bool ignoreMissingResources, const std::string& version ) const
 {
 	if( s_verbosityLevel == CarbonResources::StatusLevel::OFF )
 	{
@@ -73,6 +93,7 @@ void RemoveResourcesCliOperation::PrintStartBanner( const CarbonResources::Resou
 	std::cout << "Resource Group: " << importParams.filename << std::endl;
 	std::cout << "Resources to remove Path: " << resourcesToRemoveFile << std::endl;
 	std::cout << "Output Resource Group Path: " << exportParams.filename << std::endl;
+	std::cout << "Output Document Version: " << version << std::endl;
     if (ignoreMissingResources)
     {
 	    std::cout << "Ignore missing Resources: On" << exportParams.filename << std::endl;

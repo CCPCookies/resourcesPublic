@@ -82,6 +82,8 @@ protected:
 
 	std::string ResourceDestinationTypeChoicesAsString() const;
 
+    bool ParseDocumentVersion( const std::string& version, CarbonResources::Version& documentVersion ) const;
+
 private:
 
     static void StatusUpdate( CarbonResources::StatusLevel level, CarbonResources::StatusProgressType type, int progress, const std::string& info );
