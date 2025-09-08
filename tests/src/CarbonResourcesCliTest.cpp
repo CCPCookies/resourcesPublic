@@ -437,6 +437,10 @@ TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoAdditions )
 	// Check output matches expected
 	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithAdditions.txt" );
 
+    EXPECT_TRUE( FileExists( goldFile ) );
+
+	EXPECT_TRUE( FileExists( outputPath ) );
+
 	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
 }
 
@@ -472,6 +476,10 @@ TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoChanges )
 	// Check output matches expected
 	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithChanges.txt" );
 
+    EXPECT_TRUE( FileExists( goldFile ) );
+
+	EXPECT_TRUE( FileExists( outputPath ) );
+
 	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
 }
 
@@ -506,6 +514,10 @@ TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoSubtractions )
 
 	// Check output matches expected
 	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithSubtractions.txt" );
+
+    EXPECT_TRUE( FileExists( goldFile ) );
+
+    EXPECT_TRUE( FileExists( outputPath ) );
 
 	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
 }
