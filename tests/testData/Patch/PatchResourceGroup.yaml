@@ -4,12 +4,12 @@ NumberOfResources: 2
 TotalResourcesSizeCompressed: 429
 TotalResourcesSizeUnCompressed: 18758
 ResourceGroupResource:
-  RelativePath: DiffResourceGroup_36ac35cc88a6806bcb0623f76722d759.yaml
+  RelativePath: DiffResourceGroup_89f6afa275d3dbab32ed413950d7521c.yaml
   Type: ResourceGroup
-  Location: cc/cc00d34500ea7a31_36ac35cc88a6806bcb0623f76722d759
-  Checksum: 36ac35cc88a6806bcb0623f76722d759
-  UncompressedSize: 800
-  CompressedSize: 339
+  Location: cc/cc00d34500ea7a31_89f6afa275d3dbab32ed413950d7521c
+  Checksum: 89f6afa275d3dbab32ed413950d7521c
+  UncompressedSize: 848
+  CompressedSize: 348
 MaxInputChunkSize: 50000000
 RemovedResourceRelativePaths:
   - testresource.txt

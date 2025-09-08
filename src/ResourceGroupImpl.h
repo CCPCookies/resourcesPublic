@@ -69,6 +69,8 @@ namespace CarbonResources
 
         Result Diff( ResourceGroupSubtractionParams& params ) const;
 
+        Result DiffChangesAsLists( const ResourceGroupDiffAgainstGroupParams& params ) const;
+
         Result Merge( const ResourceGroupMergeParams& params );
 
         Result RemoveResources( const ResourceGroupRemoveResourcesParams& params );

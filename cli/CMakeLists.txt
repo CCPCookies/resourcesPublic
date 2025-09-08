@@ -20,6 +20,8 @@ set(SRC_FILES
     src/CreateResourceGroupCliOperation.cpp
     src/CreateResourceGroupCliOperation.h
     src/Defines.h
+    src/DiffResourceGroupCliOperation.cpp
+    src/DiffResourceGroupCliOperation.h
     src/main.cpp
     src/MergeResourceGroupCliOperation.cpp
     src/MergeResourceGroupCliOperation.h

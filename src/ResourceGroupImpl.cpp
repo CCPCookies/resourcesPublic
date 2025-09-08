@@ -1924,6 +1924,61 @@ namespace CarbonResources
         return Result{ ResultType::SUCCESS };
     }
 
+    Result ResourceGroup::ResourceGroupImpl::DiffChangesAsLists( const ResourceGroupDiffAgainstGroupParams& params ) const
+    {
+        if (!params.resourceGroupToDiffAgainst)
+        {
+			return Result{ ResultType::RESOURCE_GROUP_NOT_SET };
+        }
+
+        if ((!params.additions) || (!params.subtractions))
+        {
+			return Result{ ResultType::REQUIRED_INPUT_PARAMETER_NOT_SET };
+        }
+
+		ResourceGroupSubtractionParams subtractionParams;
+
+        ResourceGroup result1;
+
+        ResourceGroup result2;
+
+        subtractionParams.subtractResourceGroup = params.resourceGroupToDiffAgainst->m_impl;
+
+        subtractionParams.result1 = result1.m_impl;
+
+        subtractionParams.result2 = result2.m_impl;
+
+        Result diffResult = Diff( subtractionParams );
+
+        if (diffResult.type != ResultType::SUCCESS)
+        {
+			return diffResult;
+        }
+
+        for (auto removedResource : subtractionParams.removedResources)
+        {
+			params.subtractions->push_back( removedResource );
+        }
+
+        for (auto resource : result1.m_impl->m_resourcesParameter)
+        {
+			std::filesystem::path relativePath;
+
+			Result getRelativePathResult = resource->GetRelativePath( relativePath );
+
+			if( getRelativePathResult.type != ResultType::SUCCESS )
+			{
+				return getRelativePathResult;
+			}
+
+			params.additions->push_back( relativePath );
+        
+        }
+
+        return Result{ ResultType::SUCCESS };
+
+    }
+
     Result ResourceGroup::ResourceGroupImpl::Diff( ResourceGroupSubtractionParams& params ) const
     {
 		if( params.statusCallback )

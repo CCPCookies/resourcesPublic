@@ -153,6 +153,10 @@ namespace CarbonResources
 			output = "Resource not found";
 			return true;  
 
+        case ResultType::REQUIRED_INPUT_PARAMETER_NOT_SET:
+			output = "A required parameter was not set";
+			return true;  
+
 	    }
 
 	    output = "Error code unrecognised. This is an internal library error which shouldn't be encountered. If you encounter this error contact API addministrators.";

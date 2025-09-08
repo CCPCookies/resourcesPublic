@@ -224,6 +224,24 @@ namespace CarbonResources
         bool errorIfResourceNotFound = true;
 	};
 
+    /** @struct ResourceGroupDiffAgainstGroupParams
+    *  @brief Function Parameters required for CarbonResources::ResourceGroup::DiffAgainstGroup
+    *  @var ResourceGroupDiffAgainstGroupParams::resourceGroupToDiffAgainst
+    *  Resource group to diff against
+    *  @var ResourceGroupDiffAgainstGroupParams::additions
+    *  Output list of relative paths that have been added or modified on second group.
+    *  @var ResourceGroupDiffAgainstGroupParams::subtractions
+    *  Output list of relative paths that have been removed on second group.
+    */
+	struct ResourceGroupDiffAgainstGroupParams
+	{
+		ResourceGroup* resourceGroupToDiffAgainst = nullptr;
+
+		std::vector<std::filesystem::path>* additions = nullptr;
+
+        std::vector<std::filesystem::path>* subtractions = nullptr;
+	};
+
     /** @class ResourceGroup
     *  @brief Contains a collection of Resources
     */
@@ -278,6 +296,11 @@ namespace CarbonResources
 		/// @param params input parameters, See ResourceGroupMergeParams for more details.
 		/// @return Result see CarbonResources::Result for more details.
 		Result Merge( const ResourceGroupMergeParams& params ) const;
+
+        /// @brief Diffs two supplied ResourceGroups.
+		/// @param params input parameters, See ResourceGroupDiffAgainstGroupParams for more details.
+		/// @return Result see CarbonResources::Result for more details.
+		Result DiffAgainstGroup( const ResourceGroupDiffAgainstGroupParams& params ) const;
 
         /// @brief Removes Resources from ResourceGroup. Resources to remove are supplied are identified from a vector of RelativePaths.
 		/// @param params input parameters, See CreateResourceGroupFromDirectoryParams for more details.

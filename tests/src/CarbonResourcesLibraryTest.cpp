@@ -880,13 +880,158 @@ TEST_F( CarbonResourcesLibraryTest, CreateResourceGroupFailsWithInvalidInputDire
 	EXPECT_EQ( resourceGroup.CreateFromDirectory( createResourceGroupParams ).type, CarbonResources::ResultType::INPUT_DIRECTORY_DOESNT_EXIST);
 }
 
-TEST_F( CarbonResourcesLibraryTest, MergeResourceGroups )
+TEST_F( CarbonResourcesLibraryTest, DiffResourceGroupsWithTwoAdditions )
+{
+    // Load base group
+	CarbonResources::ResourceGroup baseResourceGroup;
+
+	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
+
+	importFromFileParams.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" );
+
+	CarbonResources::Result importFromFileResult = baseResourceGroup.ImportFromFile( importFromFileParams );
+
+	EXPECT_EQ( importFromFileResult.type, CarbonResources::ResultType::SUCCESS );
+
+
+    // Load group with additions
+    CarbonResources::ResourceGroup resourceGroupWithAdditions;
+
+	CarbonResources::ResourceGroupImportFromFileParams importFromFileParamsWithAdditions;
+
+	importFromFileParamsWithAdditions.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithAdditions.txt" );
+
+	CarbonResources::Result importFromFileResultAdditions = resourceGroupWithAdditions.ImportFromFile( importFromFileParamsWithAdditions );
+
+	EXPECT_EQ( importFromFileResultAdditions.type, CarbonResources::ResultType::SUCCESS );
+
+
+    // Perform diff
+    CarbonResources::ResourceGroupDiffAgainstGroupParams diffAgainstGroupParams;
+
+    diffAgainstGroupParams.resourceGroupToDiffAgainst = &baseResourceGroup;
+
+    std::vector<std::filesystem::path> additions;
+
+    std::vector<std::filesystem::path> subtractions;
+
+    diffAgainstGroupParams.additions = &additions;
+
+    diffAgainstGroupParams.subtractions = &subtractions;
+
+    CarbonResources::Result diffResult = resourceGroupWithAdditions.DiffAgainstGroup( diffAgainstGroupParams );
+
+    EXPECT_EQ( diffResult.type, CarbonResources::ResultType::SUCCESS );
+
+
+    // Test the result
+	EXPECT_EQ( additions.size(), 2 );
+
+}
+
+TEST_F( CarbonResourcesLibraryTest, DiffResourceGroupsWithTwoChanges )
+{
+	// Load base group
+	CarbonResources::ResourceGroup baseResourceGroup;
+
+	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
+
+	importFromFileParams.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" );
+
+	CarbonResources::Result importFromFileResult = baseResourceGroup.ImportFromFile( importFromFileParams );
+
+	EXPECT_EQ( importFromFileResult.type, CarbonResources::ResultType::SUCCESS );
+
+
+	// Load group with Changes
+	CarbonResources::ResourceGroup resourceGroupWithChanges;
+
+	CarbonResources::ResourceGroupImportFromFileParams importFromFileParamsWithChanges;
+
+	importFromFileParamsWithChanges.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithChanges.txt" );
+
+	CarbonResources::Result importFromFileResultChanges = resourceGroupWithChanges.ImportFromFile( importFromFileParamsWithChanges );
+
+	EXPECT_EQ( importFromFileResultChanges.type, CarbonResources::ResultType::SUCCESS );
+
+
+	// Perform diff
+	CarbonResources::ResourceGroupDiffAgainstGroupParams diffAgainstGroupParams;
+
+	diffAgainstGroupParams.resourceGroupToDiffAgainst = &baseResourceGroup;
+
+	std::vector<std::filesystem::path> additions;
+
+	std::vector<std::filesystem::path> subtractions;
+
+	diffAgainstGroupParams.additions = &additions;
+
+	diffAgainstGroupParams.subtractions = &subtractions;
+
+	CarbonResources::Result diffResult = resourceGroupWithChanges.DiffAgainstGroup( diffAgainstGroupParams );
+
+	EXPECT_EQ( diffResult.type, CarbonResources::ResultType::SUCCESS );
+
+
+	// Test the result
+	EXPECT_EQ( additions.size(), 2 );
+}
+
+TEST_F( CarbonResourcesLibraryTest, DiffResourceGroupsWithTwoSubtractions )
+{
+	// Load base group
+	CarbonResources::ResourceGroup baseResourceGroup;
+
+	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
+
+	importFromFileParams.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" );
+
+	CarbonResources::Result importFromFileResult = baseResourceGroup.ImportFromFile( importFromFileParams );
+
+	EXPECT_EQ( importFromFileResult.type, CarbonResources::ResultType::SUCCESS );
+
+
+	// Load group with Subtractions
+	CarbonResources::ResourceGroup resourceGroupWithSubtractions;
+
+	CarbonResources::ResourceGroupImportFromFileParams importFromFileParamsWithSubtractions;
+
+	importFromFileParamsWithSubtractions.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithSubtractions.txt" );
+
+	CarbonResources::Result importFromFileResultSubtractions = resourceGroupWithSubtractions.ImportFromFile( importFromFileParamsWithSubtractions );
+
+	EXPECT_EQ( importFromFileResultSubtractions.type, CarbonResources::ResultType::SUCCESS );
+
+
+	// Perform diff
+	CarbonResources::ResourceGroupDiffAgainstGroupParams diffAgainstGroupParams;
+
+	diffAgainstGroupParams.resourceGroupToDiffAgainst = &baseResourceGroup;
+
+	std::vector<std::filesystem::path> additions;
+
+	std::vector<std::filesystem::path> subtractions;
+
+	diffAgainstGroupParams.additions = &additions;
+
+	diffAgainstGroupParams.subtractions = &subtractions;
+
+	CarbonResources::Result diffResult = resourceGroupWithSubtractions.DiffAgainstGroup( diffAgainstGroupParams );
+
+	EXPECT_EQ( diffResult.type, CarbonResources::ResultType::SUCCESS );
+
+
+	// Test the result
+	EXPECT_EQ( subtractions.size(), 2 );
+}
+
+TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsAdditive )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
 	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
 
-	importFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/BaseResourceGroup.yaml" );
+	importFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/BaseResourceGroup.yaml" );
 
 	CarbonResources::Result importFromFileResult = resourceGroup.ImportFromFile( importFromFileParams );
 
@@ -897,7 +1042,7 @@ TEST_F( CarbonResourcesLibraryTest, MergeResourceGroups )
 
     CarbonResources::ResourceGroupImportFromFileParams mergeImportFromFileParams;
 
-    mergeImportFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/MergeResourceGroup.yaml" );
+    mergeImportFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/MergeResourceGroup.yaml" );
 
     CarbonResources::Result mergeImportFromFileResult = resourceGroupToMerge.ImportFromFile( mergeImportFromFileParams );
 
@@ -926,7 +1071,164 @@ TEST_F( CarbonResourcesLibraryTest, MergeResourceGroups )
     EXPECT_EQ( exportResult.type, CarbonResources::ResultType::SUCCESS );
 
     // Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/ExpectedMergedResourceGroup.yaml" );
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/ExpectedMergedResourceGroup.yaml" );
+
+	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
+}
+
+TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsIdentical )
+{
+	CarbonResources::ResourceGroup resourceGroup;
+
+	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
+
+	importFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/YamlIdentical/BaseResourceGroup.yaml" );
+
+	CarbonResources::Result importFromFileResult = resourceGroup.ImportFromFile( importFromFileParams );
+
+	EXPECT_EQ( importFromFileResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Load merge group
+	CarbonResources::ResourceGroup resourceGroupToMerge;
+
+	CarbonResources::ResourceGroupImportFromFileParams mergeImportFromFileParams;
+
+	mergeImportFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/YamlIdentical/MergeResourceGroup.yaml" );
+
+	CarbonResources::Result mergeImportFromFileResult = resourceGroupToMerge.ImportFromFile( mergeImportFromFileParams );
+
+	EXPECT_EQ( mergeImportFromFileResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Merge resource groups
+	CarbonResources::ResourceGroup mergedResourceGroup;
+
+	CarbonResources::ResourceGroupMergeParams mergeParams;
+
+	mergeParams.resourceGroupToMerge = &resourceGroupToMerge;
+
+	mergeParams.mergedResourceGroup = &mergedResourceGroup;
+
+	CarbonResources::Result mergeResult = resourceGroup.Merge( mergeParams );
+
+	EXPECT_EQ( mergeResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Export the merged result
+	CarbonResources::ResourceGroupExportToFileParams exportParams;
+
+	exportParams.filename = "Merge/mergedResourceGroup.yaml";
+
+	CarbonResources::Result exportResult = mergedResourceGroup.ExportToFile( exportParams );
+
+	EXPECT_EQ( exportResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/YamlIdentical/ExpectedMergedResourceGroup.yaml" );
+
+	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
+}
+
+TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsWithIntersect_V_0_0_0 )
+{
+	CarbonResources::ResourceGroup resourceGroup;
+
+	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
+
+	importFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/CSVWithIntersect/BaseResourceGroup.txt" );
+
+	CarbonResources::Result importFromFileResult = resourceGroup.ImportFromFile( importFromFileParams );
+
+	EXPECT_EQ( importFromFileResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Load merge group
+	CarbonResources::ResourceGroup resourceGroupToMerge;
+
+	CarbonResources::ResourceGroupImportFromFileParams mergeImportFromFileParams;
+
+	mergeImportFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/CSVWithIntersect/MergeResourceGroup.txt" );
+
+	CarbonResources::Result mergeImportFromFileResult = resourceGroupToMerge.ImportFromFile( mergeImportFromFileParams );
+
+	EXPECT_EQ( mergeImportFromFileResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Merge resource groups
+	CarbonResources::ResourceGroup mergedResourceGroup;
+
+	CarbonResources::ResourceGroupMergeParams mergeParams;
+
+	mergeParams.resourceGroupToMerge = &resourceGroupToMerge;
+
+	mergeParams.mergedResourceGroup = &mergedResourceGroup;
+
+	CarbonResources::Result mergeResult = resourceGroup.Merge( mergeParams );
+
+	EXPECT_EQ( mergeResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Export the merged result
+	CarbonResources::ResourceGroupExportToFileParams exportParams;
+
+	exportParams.filename = "Merge/mergedResourceGroup.txt";
+
+    exportParams.outputDocumentVersion = CarbonResources::Version{ 0, 0, 0 };
+
+	CarbonResources::Result exportResult = mergedResourceGroup.ExportToFile( exportParams );
+
+	EXPECT_EQ( exportResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/CSVWithIntersect/ExpectedMergedResourceGroup.txt" );
+
+	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
+}
+
+TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsAdditive_V_0_0_0 )
+{
+	CarbonResources::ResourceGroup resourceGroup;
+
+	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
+
+	importFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/CSVAdditive/BaseResourceGroup.txt" );
+
+	CarbonResources::Result importFromFileResult = resourceGroup.ImportFromFile( importFromFileParams );
+
+	EXPECT_EQ( importFromFileResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Load merge group
+	CarbonResources::ResourceGroup resourceGroupToMerge;
+
+	CarbonResources::ResourceGroupImportFromFileParams mergeImportFromFileParams;
+
+	mergeImportFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/CSVAdditive/MergeResourceGroup.txt" );
+
+	CarbonResources::Result mergeImportFromFileResult = resourceGroupToMerge.ImportFromFile( mergeImportFromFileParams );
+
+	EXPECT_EQ( mergeImportFromFileResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Merge resource groups
+	CarbonResources::ResourceGroup mergedResourceGroup;
+
+	CarbonResources::ResourceGroupMergeParams mergeParams;
+
+	mergeParams.resourceGroupToMerge = &resourceGroupToMerge;
+
+	mergeParams.mergedResourceGroup = &mergedResourceGroup;
+
+	CarbonResources::Result mergeResult = resourceGroup.Merge( mergeParams );
+
+	EXPECT_EQ( mergeResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Export the merged result
+	CarbonResources::ResourceGroupExportToFileParams exportParams;
+
+	exportParams.filename = "Merge/mergedResourceGroup.txt";
+
+    exportParams.outputDocumentVersion = CarbonResources::Version{ 0, 0, 0 };
+
+	CarbonResources::Result exportResult = mergedResourceGroup.ExportToFile( exportParams );
+
+	EXPECT_EQ( exportResult.type, CarbonResources::ResultType::SUCCESS );
+
+	// Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/CSVAdditive/ExpectedMergedResourceGroup.txt" );
 
 	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
 }

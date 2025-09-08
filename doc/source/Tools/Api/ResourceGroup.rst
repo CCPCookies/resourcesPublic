@@ -30,3 +30,13 @@ Input Parameters
 
 .. doxygenstruct:: CarbonResources::BundleCreateParams
     :members:
+
+.. doxygenstruct:: CarbonResources::ResourceGroupMergeParams
+    :members:
+
+.. doxygenstruct:: CarbonResources::ResourceGroupDiffAgainstGroupParams
+    :members:
+
+.. doxygenstruct:: CarbonResources::ResourceGroupRemoveResourcesParams
+    :members:
+

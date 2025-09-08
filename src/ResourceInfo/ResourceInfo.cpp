@@ -931,12 +931,22 @@ namespace CarbonResources
 
 			Result getPrefixResult = other->GetPrefix( prefix );
 
-			if( getPrefixResult.type != ResultType::SUCCESS )
+            if( getPrefixResult.type == ResultType::SUCCESS )
 			{
-				return getPrefixResult;
+				m_prefix = prefix;
 			}
-
-			m_prefix = prefix;
+            else
+            {
+                // Prefix is optional, value may not be set
+				if( getPrefixResult.type != ResultType::RESOURCE_VALUE_NOT_SET )
+				{
+					return getPrefixResult;
+				}
+                else
+                {
+					m_prefix.Reset();
+                }
+            }
 		}
 
     	if (m_binaryOperation.IsParameterExpectedInDocumentVersion( documentVersion ))

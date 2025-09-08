@@ -405,6 +405,111 @@ TEST_F( CarbonResourcesCliTest, RemoveResources )
 	EXPECT_TRUE( FilesMatch( goldFile, resourceGroupAfterRemovePath ) );
 }
 
+TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoAdditions )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "diff-group" );
+
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
+
+	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
+
+	arguments.push_back( baseResourceGroupPath );
+
+	std::string diffResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithAdditions.txt" ).string();
+
+	arguments.push_back( diffResourceGroupPath );
+
+    arguments.push_back( "--diff-output-path" );
+
+    std::filesystem::path outputPath = "Diff.txt";
+
+    arguments.push_back( outputPath.string() );
+
+	int res = RunCli( arguments, output );
+
+	EXPECT_EQ( res, 0 );
+
+	// Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithAdditions.txt" );
+
+	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
+}
+
+TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoChanges )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "diff-group" );
+
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
+
+	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
+
+	arguments.push_back( baseResourceGroupPath );
+
+	std::string diffResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithChanges.txt" ).string();
+
+	arguments.push_back( diffResourceGroupPath );
+
+	arguments.push_back( "--diff-output-path" );
+
+	std::filesystem::path outputPath = "Diff.txt";
+
+	arguments.push_back( outputPath.string() );
+
+	int res = RunCli( arguments, output );
+
+	EXPECT_EQ( res, 0 );
+
+	// Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithChanges.txt" );
+
+	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
+}
+
+TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoSubtractions )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "diff-group" );
+
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
+
+	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
+
+	arguments.push_back( baseResourceGroupPath );
+
+	std::string diffResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithSubtractions.txt" ).string();
+
+	arguments.push_back( diffResourceGroupPath );
+
+	arguments.push_back( "--diff-output-path" );
+
+	std::filesystem::path outputPath = "Diff.txt";
+
+	arguments.push_back( outputPath.string() );
+
+	int res = RunCli( arguments, output );
+
+	EXPECT_EQ( res, 0 );
+
+	// Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithSubtractions.txt" );
+
+	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
+}
+
 TEST_F( CarbonResourcesCliTest, MergeGroup )
 {
 	std::string output;
@@ -416,11 +521,11 @@ TEST_F( CarbonResourcesCliTest, MergeGroup )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "3" );
 
-    std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "MergeGroups/BaseResourceGroup.yaml" ).string();
+    std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/BaseResourceGroup.yaml" ).string();
 
     arguments.push_back( baseResourceGroupPath );
 
-    std::string mergeResourceGroupPath = GetTestFileFileAbsolutePath( "MergeGroups/MergeResourceGroup.yaml" ).string();
+    std::string mergeResourceGroupPath = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/MergeResourceGroup.yaml" ).string();
 
 	arguments.push_back( mergeResourceGroupPath );
 
@@ -435,7 +540,7 @@ TEST_F( CarbonResourcesCliTest, MergeGroup )
 	EXPECT_EQ( res, 0 );
 
     // Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/ExpectedMergedResourceGroup.yaml" );
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/ExpectedMergedResourceGroup.yaml" );
 
 	EXPECT_TRUE( FilesMatch( goldFile, mergedOutputPath ) );
 }

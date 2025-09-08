@@ -14,6 +14,7 @@
 #include "CreateBundleCliOperation.h"
 #include "UnpackBundleCliOperation.h"
 #include "MergeResourceGroupCliOperation.h"
+#include "DiffResourceGroupCliOperation.h"
 #include "RemoveResourcesCliOperation.h"
 #include "Defines.h"
 
@@ -49,6 +50,10 @@ int main( int argc, char** argv )
     MergeResourceGroupCliOperation mergeResourceGroupOperation;
 
 	cli.AddOperation( &mergeResourceGroupOperation );
+
+    DiffResourceGroupCliOperation diffResourceGroupOperation;
+
+	cli.AddOperation( &diffResourceGroupOperation );
 
     RemoveResourcesCliOperation removeResourcesOperation;
 
