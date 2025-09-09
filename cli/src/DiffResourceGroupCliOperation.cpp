@@ -130,7 +130,7 @@ bool DiffResourceGroupCliOperation::Diff( const CarbonResources::ResourceGroupIm
     // Output the results to file
     std::ofstream out;
 	
-    out.open( outputPath );
+    out.open( outputPath, std::ios::out | std::ios::binary );
 
     if (!out)
     {
