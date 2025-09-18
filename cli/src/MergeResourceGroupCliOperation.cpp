@@ -125,11 +125,11 @@ bool MergeResourceGroupCliOperation::Merge( const CarbonResources::ResourceGroup
     // Perform merge
 	CarbonResources::ResourceGroupMergeParams mergeParams;
 
-    CarbonResources::ResourceGroup mergedResourceGroup;
+    CarbonResources::ResourceGroup mergedResultResourceGroup;
 
     mergeParams.resourceGroupToMerge = &mergeResourceGroup;
 
-    mergeParams.mergedResourceGroup = &mergedResourceGroup;
+    mergeParams.mergedResourceGroup = &mergedResultResourceGroup;
 
 	CarbonResources::Result mergeResult = baseResourceGroup.Merge( mergeParams );
 
@@ -141,7 +141,7 @@ bool MergeResourceGroupCliOperation::Merge( const CarbonResources::ResourceGroup
     }
 
     // Export
-	CarbonResources::Result exportResult = mergedResourceGroup.ExportToFile( exportParams );
+	CarbonResources::Result exportResult = mergedResultResourceGroup.ExportToFile( exportParams );
 
     if (exportResult.type != CarbonResources::ResultType::SUCCESS)
     {
