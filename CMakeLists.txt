@@ -1,7 +1,7 @@
 # Copyright © 2025 CCP ehf.
 
 cmake_minimum_required(VERSION 3.31)
-project(carbon-resources VERSION 2.0.0)
+project(carbon-resources VERSION 2.1.0)
 
 if(NOT DEFINED ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
     message(FATAL_ERROR "Missing required environment variable CCP_EVE_PERFORCE_BRANCH_PATH")

@@ -1,0 +1,2 @@
+- animation/cameraanimation/flybywarpflyintodistance_camera.gr2
+- animation/cameraanimation/flybywarpfollowstruggling_camera.gr2

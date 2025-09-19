@@ -1,0 +1,20 @@
+Version: 0.1.0
+Type: ResourceGroup
+NumberOfResources: 2
+TotalResourcesSizeCompressed: 52
+TotalResourcesSizeUnCompressed: 12
+Resources:
+  - RelativePath: A.txt
+    Type: Resource
+    Location: fd/fd16efba87398194_409113af37ca03db453ee3e793fcf64d
+    Checksum: 409113af37ca03db453ee3e793fcf64d
+    UncompressedSize: 6
+    CompressedSize: 26
+    BinaryOperation: 33206
+  - RelativePath: B.txt
+    Type: Resource
+    Location: cb/cb9c2bb39145f21b_409113af37ca03db453ee3e793fcf64d
+    Checksum: 409113af37ca03db453ee3e793fcf64d
+    UncompressedSize: 6
+    CompressedSize: 26
+    BinaryOperation: 33206

@@ -1,0 +1,41 @@
+Version: 0.1.0
+Type: ResourceGroup
+NumberOfResources: 5
+TotalResourcesSizeCompressed: 135
+TotalResourcesSizeUnCompressed: 45
+Resources:
+  - RelativePath: A.txt
+    Type: Resource
+    Location: fd/fd16efba87398194_3fc606eaeb6bd188c17cbdbee65acbf3
+    Checksum: 3fc606eaeb6bd188c17cbdbee65acbf3
+    UncompressedSize: 9
+    CompressedSize: 27
+    BinaryOperation: 33206
+  - RelativePath: B.txt
+    Type: Resource
+    Location: cb/cb9c2bb39145f21b_189695ebb418847603ad6953b3bc876f
+    Checksum: 189695ebb418847603ad6953b3bc876f
+    UncompressedSize: 9
+    CompressedSize: 27
+    BinaryOperation: 33206
+  - RelativePath: C.txt
+    Type: Resource
+    Location: 50/50b87bab50c30936_6c38a71a20767230981dd499326edc0e
+    Checksum: 6c38a71a20767230981dd499326edc0e
+    UncompressedSize: 9
+    CompressedSize: 27
+    BinaryOperation: 33206
+  - RelativePath: E.txt
+    Type: Resource
+    Location: 39/39425799084fbc18_ada6c873f59b2001986bbe6de439dcb9
+    Checksum: ada6c873f59b2001986bbe6de439dcb9
+    UncompressedSize: 9
+    CompressedSize: 27
+    BinaryOperation: 33206
+  - RelativePath: Subfolder/F.txt
+    Type: Resource
+    Location: f3/f345effdccd3d604_2741024d9ad45832f3b8670410f5d8b1
+    Checksum: 2741024d9ad45832f3b8670410f5d8b1
+    UncompressedSize: 9
+    CompressedSize: 27
+    BinaryOperation: 33206

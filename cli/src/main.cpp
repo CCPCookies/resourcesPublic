@@ -13,6 +13,9 @@
 #include "CreatePatchCliOperation.h"
 #include "CreateBundleCliOperation.h"
 #include "UnpackBundleCliOperation.h"
+#include "MergeResourceGroupCliOperation.h"
+#include "DiffResourceGroupCliOperation.h"
+#include "RemoveResourcesCliOperation.h"
 #include "Defines.h"
 
 std::string CalculateVersionString()
@@ -43,6 +46,18 @@ int main( int argc, char** argv )
     CreateBundleCliOperation createBundleOperation;
 
     cli.AddOperation( &createBundleOperation );
+
+    MergeResourceGroupCliOperation mergeResourceGroupOperation;
+
+	cli.AddOperation( &mergeResourceGroupOperation );
+
+    DiffResourceGroupCliOperation diffResourceGroupOperation;
+
+	cli.AddOperation( &diffResourceGroupOperation );
+
+    RemoveResourcesCliOperation removeResourcesOperation;
+
+	cli.AddOperation( &removeResourcesOperation );
 
 #ifdef DEV_FEATURES
 	ApplyPatchCliOperation addPatchOperation;

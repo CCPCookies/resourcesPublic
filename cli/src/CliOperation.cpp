@@ -41,6 +41,23 @@ bool CliOperation::AddRequiredPositionalArgument( const std::string& argumentId,
     return true;
 }
 
+bool CliOperation::AddArgumentFlag( const std::string& argumentId, const std::string& helpString )
+{
+	if( !m_argumentParser )
+	{
+		return false;
+	}
+
+	argparse::Argument& argument = m_argumentParser->add_argument( argumentId )
+									   .help( helpString );
+
+	argument.default_value( false );
+
+    argument.implicit_value( true );
+
+	return true;
+}
+
 bool CliOperation::AddArgument( const std::string& argumentId, const std::string& helpString, bool required /* = false*/, bool append /* = false*/, std::string defaultValue /*= ""*/, std::string choicesString /* = ""*/ )
 {
 	if( !m_argumentParser )
@@ -475,5 +492,45 @@ bool CliOperation::SetVerbosityLevel()
 		return false;
     }
 
+	return true;
+}
+
+
+bool CliOperation::ParseDocumentVersion( const std::string& version, CarbonResources::Version& documentVersion ) const
+{
+	try
+	{
+		auto first = version.find( "." );
+		unsigned long in{ 0 };
+
+		in = std::stoul( version.substr( 0, first ) );
+		if( in > std::numeric_limits<unsigned int>::max() )
+		{
+			return false;
+		}
+		documentVersion.major = static_cast<unsigned int>( in );
+		auto second = version.find( ".", first + 1 );
+		in = std::stoul( version.substr( first + 1, second - first ) );
+		if( in > std::numeric_limits<unsigned int>::max() )
+		{
+			return false;
+		}
+		documentVersion.minor = static_cast<unsigned int>( in );
+
+		in = std::stoul( version.substr( second + 1 ) );
+		if( in > std::numeric_limits<unsigned int>::max() )
+		{
+			return false;
+		}
+		documentVersion.patch = static_cast<unsigned int>( in );
+	}
+	catch( std::invalid_argument& )
+	{
+		return false;
+	}
+	catch( std::out_of_range& )
+	{
+		return false;
+	}
 	return true;
 }

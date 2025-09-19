@@ -68,6 +68,12 @@ namespace CarbonResources
 	    Result AddResource( ResourceInfo* resource );
 
         Result Diff( ResourceGroupSubtractionParams& params ) const;
+
+        Result DiffChangesAsLists( const ResourceGroupDiffAgainstGroupParams& params ) const;
+
+        Result Merge( const ResourceGroupMergeParams& params );
+
+        Result RemoveResources( const ResourceGroupRemoveResourcesParams& params );
         
         virtual std::string GetType() const;
 
@@ -113,6 +119,8 @@ namespace CarbonResources
 	    Result ExportCsv( const VersionInternal& outputDocumentVersion, std::string& data, StatusCallback statusCallback = nullptr ) const;
 
         Result ProcessChunk( ResourceTools::GetChunk& chunkData, const std::filesystem::path& chunkRelativePath, BundleResourceGroup::BundleResourceGroupImpl& bundleResourceGroup, const ResourceDestinationSettings& chunkDestinationSettings ) const;
+
+        Result RemoveResource( ResourceInfo& relativePath );
 
     protected:
 

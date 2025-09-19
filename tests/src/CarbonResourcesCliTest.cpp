@@ -277,6 +277,286 @@ TEST_F( CarbonResourcesCliTest, CreateBundle )
 	EXPECT_TRUE( DirectoryIsSubset( goldDirectory, "CreateBundleOut" ) );
 }
 
+TEST_F( CarbonResourcesCliTest, RemoveResourcesWithUnknownResourceIgnoreOnResourceNotFound )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "remove-resources" );
+
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
+
+	std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
+
+	arguments.push_back( resourceGroupPath );
+
+	std::string resourcesToRemoveFile = GetTestFileFileAbsolutePath( "RemoveResource/ResourcesToRemoveListWithUnknownResource.txt" ).string();
+
+	arguments.push_back( resourcesToRemoveFile );
+
+	arguments.push_back( "--output-resource-group-path" );
+
+	std::filesystem::path resourceGroupAfterRemovePath = "RemoveResource/ResourceGroup.yaml";
+
+	arguments.push_back( resourceGroupAfterRemovePath.string() );
+
+    arguments.push_back( "--ignore-missing-resources" );
+
+	int res = RunCli( arguments, output );
+
+	EXPECT_EQ( res, 0 );
+}
+
+TEST_F( CarbonResourcesCliTest, RemoveResourcesWithUnknownResourceWithInvalidPathToResourcesFile )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "remove-resources" );
+
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
+
+	std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
+
+	arguments.push_back( resourceGroupPath );
+
+	std::string resourcesToRemoveFile = GetTestFileFileAbsolutePath( "INVALID_PATH" ).string();
+
+	arguments.push_back( resourcesToRemoveFile );
+
+	arguments.push_back( "--output-resource-group-path" );
+
+	std::filesystem::path resourceGroupAfterRemovePath = "RemoveResource/ResourceGroup.yaml";
+
+	arguments.push_back( resourceGroupAfterRemovePath.string() );
+
+	int res = RunCli( arguments, output );
+
+	EXPECT_EQ( res, 1 );
+}
+
+TEST_F( CarbonResourcesCliTest, RemoveResourcesWithUnknownResource )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "remove-resources" );
+
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
+
+	std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
+
+	arguments.push_back( resourceGroupPath );
+
+	std::string resourcesToRemoveFile = GetTestFileFileAbsolutePath( "RemoveResource/ResourcesToRemoveListWithUnknownResource.txt" ).string();
+
+	arguments.push_back( resourcesToRemoveFile );
+
+	arguments.push_back( "--output-resource-group-path" );
+
+	std::filesystem::path resourceGroupAfterRemovePath = "RemoveResource/ResourceGroup.yaml";
+
+	arguments.push_back( resourceGroupAfterRemovePath.string() );
+
+	int res = RunCli( arguments, output );
+
+	EXPECT_EQ( res, 1 );
+
+}
+
+TEST_F( CarbonResourcesCliTest, RemoveResources )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "remove-resources" );
+
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
+
+    std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
+
+	arguments.push_back( resourceGroupPath );
+
+    std::string resourcesToRemoveFile = GetTestFileFileAbsolutePath( "RemoveResource/ResourcesToRemoveList.txt" ).string();
+
+	arguments.push_back( resourcesToRemoveFile );
+
+    arguments.push_back( "--output-resource-group-path" );
+
+	std::filesystem::path resourceGroupAfterRemovePath = "RemoveResource/ResourceGroup.yaml";
+
+	arguments.push_back( resourceGroupAfterRemovePath.string() );
+
+    int res = RunCli( arguments, output );
+
+	EXPECT_EQ( res, 0 );
+
+    // Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "RemoveResource/ResourceGroupAfterRemove.yaml" );
+
+	EXPECT_TRUE( FilesMatch( goldFile, resourceGroupAfterRemovePath ) );
+}
+
+TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoAdditions )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "diff-group" );
+
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
+
+	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
+
+	arguments.push_back( baseResourceGroupPath );
+
+	std::string diffResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithAdditions.txt" ).string();
+
+	arguments.push_back( diffResourceGroupPath );
+
+    arguments.push_back( "--diff-output-path" );
+
+    std::filesystem::path outputPath = "DiffWithTwoAdditions.txt";
+
+    arguments.push_back( outputPath.string() );
+
+	int res = RunCli( arguments, output );
+
+	EXPECT_EQ( res, 0 );
+
+	// Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithAdditions.txt" );
+
+    EXPECT_TRUE( FileExists( goldFile ) );
+
+	EXPECT_TRUE( FileExists( outputPath ) );
+
+	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
+}
+
+TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoChanges )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "diff-group" );
+
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
+
+	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
+
+	arguments.push_back( baseResourceGroupPath );
+
+	std::string diffResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithChanges.txt" ).string();
+
+	arguments.push_back( diffResourceGroupPath );
+
+	arguments.push_back( "--diff-output-path" );
+
+	std::filesystem::path outputPath = "DiffWithTwoChanges.txt";
+
+	arguments.push_back( outputPath.string() );
+
+	int res = RunCli( arguments, output );
+
+	EXPECT_EQ( res, 0 );
+
+	// Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithChanges.txt" );
+
+    EXPECT_TRUE( FileExists( goldFile ) );
+
+	EXPECT_TRUE( FileExists( outputPath ) );
+
+	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
+}
+
+TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoSubtractions )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "diff-group" );
+
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
+
+	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
+
+	arguments.push_back( baseResourceGroupPath );
+
+	std::string diffResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithSubtractions.txt" ).string();
+
+	arguments.push_back( diffResourceGroupPath );
+
+	arguments.push_back( "--diff-output-path" );
+
+	std::filesystem::path outputPath = "DiffWithTwoSubtractions.txt";
+
+	arguments.push_back( outputPath.string() );
+
+	int res = RunCli( arguments, output );
+
+	EXPECT_EQ( res, 0 );
+
+	// Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithSubtractions.txt" );
+
+    EXPECT_TRUE( FileExists( goldFile ) );
+
+    EXPECT_TRUE( FileExists( outputPath ) );
+
+	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
+}
+
+TEST_F( CarbonResourcesCliTest, MergeGroup )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "merge-group" );
+
+	arguments.push_back( "--verbosity-level" );
+	arguments.push_back( "3" );
+
+    std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/BaseResourceGroup.yaml" ).string();
+
+    arguments.push_back( baseResourceGroupPath );
+
+    std::string mergeResourceGroupPath = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/MergeResourceGroup.yaml" ).string();
+
+	arguments.push_back( mergeResourceGroupPath );
+
+    arguments.push_back( "--merge-output-resource-group-path" );
+
+    std::filesystem::path mergedOutputPath = "Merge/mergedResourceGroup.yaml";
+
+    arguments.push_back( mergedOutputPath.string() );
+    
+    int res = RunCli( arguments, output );
+
+	EXPECT_EQ( res, 0 );
+
+    // Check output matches expected
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/ExpectedMergedResourceGroup.yaml" );
+
+	EXPECT_TRUE( FilesMatch( goldFile, mergedOutputPath ) );
+}
+
 TEST_F( CarbonResourcesCliTest, CreatePatch )
 {
 	std::string output;

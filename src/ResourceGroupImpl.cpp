@@ -1794,7 +1794,191 @@ namespace CarbonResources
 		return Result{ ResultType::SUCCESS };
     }
 
-    
+    Result ResourceGroup::ResourceGroupImpl::RemoveResources( const ResourceGroupRemoveResourcesParams& params )
+    {
+        if (!params.resourcesToRemove)
+        {
+			return Result{ ResultType::RESOURCE_LIST_NOT_SET };
+        }
+
+        for (std::filesystem::path& relativePath : *params.resourcesToRemove)
+        {
+            // Construct a ResourceInfo from relativePath
+			ResourceInfoParams resourceInfoParams;
+
+			resourceInfoParams.relativePath = relativePath;
+
+			ResourceInfo resource( resourceInfoParams );
+
+			Result removeResourceResult = RemoveResource( resource );
+
+            if (removeResourceResult.type != ResultType::SUCCESS)
+            {
+                if (removeResourceResult.type != ResultType::RESOURCE_NOT_FOUND)
+                {
+					return removeResourceResult;
+                }
+                else
+                {
+                    if (params.errorIfResourceNotFound == true)
+                    {
+						return removeResourceResult;
+                    }
+                }
+            }
+        }
+
+        return Result{ ResultType::SUCCESS };
+    }
+
+    Result ResourceGroup::ResourceGroupImpl::RemoveResource( ResourceInfo& resource )
+    {
+	
+		auto iter = m_resourcesParameter.Find( &resource );
+
+        if (iter == m_resourcesParameter.end())
+        {
+			return Result{ ResultType::RESOURCE_NOT_FOUND };
+        }
+
+        ResourceInfo* foundResource = *iter;
+
+        // Update counters
+        m_numberOfResources = m_numberOfResources.GetValue() - 1;
+
+		uintmax_t resourceUncompressedSize;
+
+		Result resourceGetUncompressedSizeResult = foundResource->GetUncompressedSize( resourceUncompressedSize );
+
+		if( resourceGetUncompressedSizeResult.type != ResultType::SUCCESS )
+		{
+			return resourceGetUncompressedSizeResult;
+		}
+
+		uintmax_t resourceCompressedSize;
+
+		Result resourceGetCompressedSizeResult = foundResource->GetCompressedSize( resourceCompressedSize );
+
+		if( resourceGetCompressedSizeResult.type != ResultType::SUCCESS )
+		{
+			return resourceGetCompressedSizeResult;
+		}
+
+        // Update sizes
+        m_totalResourcesSizeUncompressed = m_totalResourcesSizeUncompressed.GetValue() - resourceUncompressedSize;
+
+		m_totalResourcesSizeCompressed = m_totalResourcesSizeCompressed.GetValue() - resourceCompressedSize;
+
+        // Remove from ResourceGroup
+        m_resourcesParameter.Remove( iter );
+
+        return Result{ ResultType::SUCCESS };
+    }
+
+    Result ResourceGroup::ResourceGroupImpl::Merge( const ResourceGroupMergeParams& params )
+    {
+        if (params.mergedResourceGroup == nullptr)
+        {
+			return Result{ ResultType::RESOURCE_GROUP_NOT_SET };
+        }
+
+        if( params.resourceGroupToMerge == nullptr )
+		{
+			return Result{ ResultType::RESOURCE_GROUP_NOT_SET };
+		}
+
+		DocumentParameterCollection<ResourceInfo*> mergeResources = params.resourceGroupToMerge->m_impl->m_resourcesParameter;
+
+        std::vector<ResourceInfo*> sortedResourcesParameter( m_resourcesParameter.begin(), m_resourcesParameter.end() );
+		std::vector<ResourceInfo*> sortedMergeResources( mergeResources.begin(), mergeResources.end() );
+
+		std::sort( sortedResourcesParameter.begin(), sortedResourcesParameter.end(), []( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
+		std::sort( sortedMergeResources.begin(), sortedMergeResources.end(), []( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
+
+        std::vector<ResourceInfo*> unionResources;
+		std::set_union( 
+            sortedMergeResources.begin(), sortedMergeResources.end(), 
+            sortedResourcesParameter.begin(), sortedResourcesParameter.end(), 
+            std::back_inserter( unionResources ), 
+            []( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
+
+        // Add result to merge ResourceGroup output
+        for (auto resource : unionResources)
+        {
+			ResourceInfo* resourceCopy = nullptr;
+
+			Result createResourceFromResourceResult = CreateResourceFromResource( *resource, resourceCopy );
+
+			if( createResourceFromResourceResult.type != ResultType::SUCCESS )
+			{
+				return createResourceFromResourceResult;
+			}
+
+			Result addResourceResult = params.mergedResourceGroup->m_impl->AddResource( resourceCopy );
+
+            if (addResourceResult.type != ResultType::SUCCESS)
+            {
+				return addResourceResult;
+            }
+        }
+
+        return Result{ ResultType::SUCCESS };
+    }
+
+    Result ResourceGroup::ResourceGroupImpl::DiffChangesAsLists( const ResourceGroupDiffAgainstGroupParams& params ) const
+    {
+        if (!params.resourceGroupToDiffAgainst)
+        {
+			return Result{ ResultType::RESOURCE_GROUP_NOT_SET };
+        }
+
+        if ((!params.additions) || (!params.subtractions))
+        {
+			return Result{ ResultType::REQUIRED_INPUT_PARAMETER_NOT_SET };
+        }
+
+		ResourceGroupSubtractionParams subtractionParams;
+
+        ResourceGroup result1;
+
+        ResourceGroup result2;
+
+        subtractionParams.subtractResourceGroup = params.resourceGroupToDiffAgainst->m_impl;
+
+        subtractionParams.result1 = result1.m_impl;
+
+        subtractionParams.result2 = result2.m_impl;
+
+        Result diffResult = Diff( subtractionParams );
+
+        if (diffResult.type != ResultType::SUCCESS)
+        {
+			return diffResult;
+        }
+
+        for (auto removedResource : subtractionParams.removedResources)
+        {
+			params.subtractions->push_back( removedResource );
+        }
+
+        for (auto resource : result1.m_impl->m_resourcesParameter)
+        {
+			std::filesystem::path relativePath;
+
+			Result getRelativePathResult = resource->GetRelativePath( relativePath );
+
+			if( getRelativePathResult.type != ResultType::SUCCESS )
+			{
+				return getRelativePathResult;
+			}
+
+			params.additions->push_back( relativePath );
+        
+        }
+
+        return Result{ ResultType::SUCCESS };
+
+    }
 
     Result ResourceGroup::ResourceGroupImpl::Diff( ResourceGroupSubtractionParams& params ) const
     {

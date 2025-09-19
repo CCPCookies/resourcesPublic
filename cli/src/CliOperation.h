@@ -56,6 +56,8 @@ protected:
 
 	bool AddArgument( const std::string& argumentId, const std::string& helpString, bool required = false, bool append = false, std::string defaultValue = "", std::string choicesString = "" );
 
+    bool AddArgumentFlag( const std::string& argumentId, const std::string& helpString );
+
     argparse::ArgumentParser* m_argumentParser;
 
     CarbonResources::StatusCallback GetStatusCallback() const;
@@ -79,6 +81,8 @@ protected:
 	std::string ResourceSourceTypeChoicesAsString() const;
 
 	std::string ResourceDestinationTypeChoicesAsString() const;
+
+    bool ParseDocumentVersion( const std::string& version, CarbonResources::Version& documentVersion ) const;
 
 private:
 

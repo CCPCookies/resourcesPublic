@@ -22,6 +22,11 @@ void CarbonResourcesTestFixture::TearDown()
 	
 }
 
+bool CarbonResourcesTestFixture::FileExists( const std::filesystem::path& filePath )
+{
+	return std::filesystem::exists( filePath );
+}
+
 bool CarbonResourcesTestFixture::FilesMatch( const std::filesystem::path& file1Path, const std::filesystem::path& file2Path )
 {
     // Open files generate data checksums and compare

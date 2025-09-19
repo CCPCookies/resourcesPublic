@@ -1,0 +1,2 @@
++ animation/cameraanimation/flybywarpfrontshaky_camera.gr2
++ animation/cameraanimation/idlebasicpanback_camera.gr2
