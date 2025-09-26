@@ -87,9 +87,9 @@ int Cli::ProcessCommandLine( int argc, char** argv )
 
 void Cli::PrintCliHeader()
 {
-	std::cout << "====================" << std::endl;
-	std::cout << "carbon-resources-cli" << std::endl;
-	std::cout << "Version: " << m_version << std::endl;
+    std::cout << "====================" << std::endl;
+    std::cout << "resources-cli" << std::endl;
+    std::cout << "Version: " << m_version << std::endl;
     std::cout << "====================\n" << std::endl;
 
 }

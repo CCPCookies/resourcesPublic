@@ -16,7 +16,7 @@ set(SRC_FILES
     src/CliTestFixture.cpp
     src/CliTestFixture.h
     src/CarbonResourcesLibraryTest.cpp
-    src/CarbonResourcesCliTest.cpp
+    src/ResourcesCliTest.cpp
     src/ResourceToolsLibraryTest.cpp
 )
 
@@ -25,7 +25,7 @@ add_executable(carbon-resources-test ${SRC_FILES})
 target_compile_definitions(carbon-resources-test
         PRIVATE
         TEST_DATA_BASE_PATH="${CMAKE_SOURCE_DIR}/tests/testData"
-        CARBON_RESOURCES_CLI_EXE_NAME=\"$<TARGET_FILE_BASE_NAME:carbon-resources-cli>\")
+        CARBON_RESOURCES_CLI_EXE_NAME=\"$<TARGET_FILE_BASE_NAME:resources-cli>\")
 
 target_include_directories(carbon-resources-test PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -42,7 +42,7 @@ if(WIN32)
     # Get CLI exe
     add_custom_command(
         TARGET carbon-resources-test POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:carbon-resources-cli> $<TARGET_FILE_DIR:carbon-resources-test>
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:resources-cli> $<TARGET_FILE_DIR:carbon-resources-test>
         COMMAND_EXPAND_LISTS
     )
 
@@ -57,7 +57,7 @@ elseif(APPLE)
     # Get CLI exe
     add_custom_command(
             TARGET carbon-resources-test POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:carbon-resources-cli> $<TARGET_FILE_DIR:carbon-resources-test>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:resources-cli> $<TARGET_FILE_DIR:carbon-resources-test>
             COMMAND_EXPAND_LISTS
 
     )

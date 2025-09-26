@@ -42,7 +42,7 @@ set(SRC_FILES
 
 add_library(carbon-resources-tools STATIC ${SRC_FILES})
 
-#target_link_libraries(carbon-resources-cli P)
+#target_link_libraries(resources-cli P)
 find_package(bsdiff CONFIG REQUIRED)
 
 get_target_property(_SOURCES carbon-resources-tools SOURCES)
