@@ -1,7 +1,7 @@
 Design Documents
 ================
 
-Documents contained in this section detail design approaches in  carbon-resources.
+Documents contained in this section detail design approaches in resources.
 
 .. toctree::
    :maxdepth: 1

@@ -20,8 +20,8 @@ This example uses two directories.
 
 .. code::
 
-    .\carbon-resources.exe create-group C:\PreviousBuild --output-file PreviousResourceGroup.yaml
-    .\carbon-resources.exe create-group C:\NextBuild --output-file NextResourceGroup.yaml
+    .\resources.exe create-group C:\PreviousBuild --output-file PreviousResourceGroup.yaml
+    .\resources.exe create-group C:\NextBuild --output-file NextResourceGroup.yaml
 
 These two commands will create two resource groups
 
@@ -37,7 +37,7 @@ The resource groups generated in the previous section can now be use to generate
 
 .. code::
 
-    .\carbon-resources.exe create-patch PreviousResourceGroup.yaml NextResourceGroup.yaml --resource-source-base-path-previous C:\PreviousBuild --resource-source-base-path-next C:\NextBuild
+    .\resources.exe create-patch PreviousResourceGroup.yaml NextResourceGroup.yaml --resource-source-base-path-previous C:\PreviousBuild --resource-source-base-path-next C:\NextBuild
 
 The command is passed 4 required arguments
 
@@ -67,14 +67,14 @@ Furthermore, once the patch binaries are compressed their size may reduce dramat
 
 This gives a patch which is created of many very small files which is not ideal for transfer over the internet.
 
-In order to solve this carbon-resources also provides a concept of bundling.
+In order to solve this resources also provides a concept of bundling.
 
 Bundling joins files together into chunks based on their final combined compressed size.
 
 
 .. code::
     
-    .\carbon-resources.exe create-bundle PatchOut\PatchResourceGroup.yaml --resource-source-path PatchOut\Patches --resource-source-type LOCAL_CDN --chunk-destination-type REMOTE_CDN
+    .\resources.exe create-bundle PatchOut\PatchResourceGroup.yaml --resource-source-path PatchOut\Patches --resource-source-type LOCAL_CDN --chunk-destination-type REMOTE_CDN
     
 
 Arguments:
@@ -92,7 +92,7 @@ There are many more exposed options than discussed here. For exhaustive list ref
 
 .. code::
 
-    .\carbon-resources.exe -h
-    .\carbon-resources.exe create-group -h
-    .\carbon-resources.exe create-patch -h
-    .\carbon-resources.exe create-bundle -h
+    .\resources.exe -h
+    .\resources.exe create-group -h
+    .\resources.exe create-patch -h
+    .\resources.exe create-bundle -h

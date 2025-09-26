@@ -31,7 +31,7 @@ target_include_directories(resources-test PUBLIC ${CMAKE_CURRENT_LIST_DIR}/inclu
 
 target_include_directories(resources-test PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(resources-test PRIVATE GTest::gtest GTest::gtest_main tiny-process-library::tiny-process-library carbon-resources resources-tools)
+target_link_libraries(resources-test PRIVATE GTest::gtest GTest::gtest_main tiny-process-library::tiny-process-library resources resources-tools)
 
 if(DEV_FEATURES)
     target_compile_definitions( resources-test PRIVATE DEV_FEATURES )

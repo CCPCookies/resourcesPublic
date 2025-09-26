@@ -47,7 +47,7 @@ if(DEV_FEATURES)
     target_compile_definitions( resources-cli PRIVATE DEV_FEATURES )
 endif()
 
-set_target_properties(resources-cli PROPERTIES OUTPUT_NAME "carbon-resources")
+set_target_properties(resources-cli PROPERTIES OUTPUT_NAME "resources")
 
 # Install rule to ensure that our runtime files are in the expected, platform-specific folder
 install(

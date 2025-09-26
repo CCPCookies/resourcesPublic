@@ -33,6 +33,8 @@ private:
 
 private:
 
+    std::string m_name;
+
     std::string m_version;
 
 	std::vector<CliOperation*> m_operations;

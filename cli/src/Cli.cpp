@@ -7,14 +7,15 @@
 #include "Defines.h"
 
 Cli::Cli( const std::string& name, const std::string& version ):
+	m_name(name),
 	m_version(version)
 {
-	
+
 }
 
 Cli::~Cli()
 {
-	
+
 }
 
 void Cli::AddOperation( CliOperation* operation )
@@ -89,6 +90,7 @@ void Cli::PrintCliHeader()
 {
     std::cout << "====================" << std::endl;
     std::cout << "resources-cli" << std::endl;
+    std::cout << "Name:" << m_name << std::endl;
     std::cout << "Version: " << m_version << std::endl;
     std::cout << "====================\n" << std::endl;
 

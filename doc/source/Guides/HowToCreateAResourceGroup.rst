@@ -5,7 +5,7 @@ Resource Groups can be created via the lib or CLI. This example uses the CLI.
 
 .. code::
 
-    .\carbon-resources.exe create-group C:\Build --output-file ResourceGroup.yaml
+    .\resources.exe create-group C:\Build --output-file ResourceGroup.yaml
 
 **Arguments:**
 

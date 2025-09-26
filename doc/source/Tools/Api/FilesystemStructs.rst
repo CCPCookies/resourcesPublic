@@ -3,7 +3,7 @@ Filesystem Structures
 
 Resources are handled differently based on which filesystem type they follow.
 
-Structures in this document can be used to alter filesystem settings for carbon-resources operations.
+Structures in this document can be used to alter filesystem settings for resources operations.
 
 See :doc:`../../DesignDocuments/filesystemDesign` for further details.
 

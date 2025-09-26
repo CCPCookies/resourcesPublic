@@ -7,7 +7,7 @@ Furthermore, once the patch binaries are compressed their size may reduce dramat
 
 This gives a patch which is created of many very small files which is not ideal for transfer over the internet.
 
-In order to solve this carbon-resources also provides a concept of bundling.
+In order to solve this resources also provides a concept of bundling.
 
 Bundling joins files together into chunks based on their final combined compressed size.
 
@@ -16,7 +16,7 @@ Note: This document refers to filesystem types, see :doc:`../DesignDocuments/fil
 
 .. code::
     
-    .\carbon-resources.exe create-bundle PatchOut\PatchResourceGroup.yaml --resource-source-path PatchOut\Patches --resource-source-type LOCAL_CDN --resourcegroup-type PatchResourceGroup --chunk-destination-type REMOTE_CDN
+    .\resources.exe create-bundle PatchOut\PatchResourceGroup.yaml --resource-source-path PatchOut\Patches --resource-source-type LOCAL_CDN --resourcegroup-type PatchResourceGroup --chunk-destination-type REMOTE_CDN
     
 
 **Arguments:**

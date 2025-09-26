@@ -60,7 +60,7 @@ The following command will perform the same action as above given the same input
 
 .. code::
     
-    .\carbon-resources.exe unpack-bundle Bundle\BundleResourceGroup.yaml --chunk-source-base-path \Bundle\Chunks --resource-destination-type LOCAL_RELATIVE
+    .\resources.exe unpack-bundle Bundle\BundleResourceGroup.yaml --chunk-source-base-path \Bundle\Chunks --resource-destination-type LOCAL_RELATIVE
 
 
 **Arguments:**

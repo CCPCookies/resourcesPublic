@@ -179,7 +179,7 @@ namespace CarbonResources
     };
 
     /** @struct Result
-    *  @brief Return structure for carbon-resources operations
+    *  @brief Return structure for resources operations
     *  @var Result::type
     *  Type of result returned
     *  @var Result::info
@@ -248,14 +248,14 @@ namespace CarbonResources
 		unsigned int patch;
     };
 
-    static const Version S_LIBRARY_VERSION = { VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH }; /*!< Current version of the carbon-resources */
+    static const Version S_LIBRARY_VERSION = { VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH }; /*!< Current version of the resources */
 
-    static const Version S_DOCUMENT_VERSION = { 0, 1, 0 }; /*!< Maximum document version supported by carbon-resources */
+    static const Version S_DOCUMENT_VERSION = { 0, 1, 0 }; /*!< Maximum document version supported by resources */
 
     static const std::vector S_VALID_DOCUMENT_VERSIONS = { 
                                                             Version{ 0, 0, 0 },
 														    Version{ 0, 1, 0 }
-                                                         }; /*!< List of valid document version supported by carbon-resources */
+                                                         }; /*!< List of valid document version supported by resources */
 
 }
 

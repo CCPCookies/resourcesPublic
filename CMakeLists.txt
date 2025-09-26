@@ -1,7 +1,7 @@
 # Copyright © 2025 CCP ehf.
 
 cmake_minimum_required(VERSION 3.31)
-project(carbon-resources VERSION 2.1.0)
+project(resources VERSION 2.1.0)
 
 if(NOT DEFINED ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
     message(FATAL_ERROR "Missing required environment variable CCP_EVE_PERFORCE_BRANCH_PATH")
@@ -67,34 +67,34 @@ set(SRC_FILES
     src/ParameterVersion.cpp
 )
 
-ccp_add_library(carbon-resources SHARED ${SRC_FILES})
+ccp_add_library(resources SHARED ${SRC_FILES})
 
-target_compile_definitions(carbon-resources PRIVATE EXPORT_LIBRARY)
+target_compile_definitions(resources PRIVATE EXPORT_LIBRARY)
 
 # Version is required in code
 # Added as config
 configure_file(src/Version.h.in include/Version.h @ONLY)
 
 if(WIN32)
-    target_compile_definitions(carbon-resources PRIVATE NOMINMAX) # Do not define min/max macros.
+    target_compile_definitions(resources PRIVATE NOMINMAX) # Do not define min/max macros.
 endif()
 
-target_link_libraries(carbon-resources PRIVATE resources-tools yaml-cpp::yaml-cpp)
+target_link_libraries(resources PRIVATE resources-tools yaml-cpp::yaml-cpp)
 
-target_include_directories(carbon-resources
+target_include_directories(resources
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
 
-get_target_property(_SOURCES carbon-resources SOURCES)
+get_target_property(_SOURCES resources SOURCES)
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}"
         PREFIX "Sources"
         FILES ${_SOURCES}
 )
 
-set_target_properties(carbon-resources PROPERTIES OUTPUT_NAME "_carbon-resources")
+set_target_properties(resources PROPERTIES OUTPUT_NAME "_resources")
 
 # Static lib, exported and used for cli
 ccp_add_library(resources-static STATIC ${SRC_FILES})
@@ -153,16 +153,16 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
                 INSTALL_DESTINATION documentation
         )
 
-        # Ensure that carbon-resources is built before Spinx target
-        add_dependencies(Sphinx carbon-resources)
+        # Ensure that resources is built before Spinx target
+        add_dependencies(Sphinx resources)
     endif()
 
     set(INSTALL_BIN_ONLY OFF CACHE BOOL "Do not Install configuration files meant to be read by projects using this project as a dependency (Cmake Config/ header files etc . . .). Set this to ON when installing this component to the perforce vendor folder")
     if(INSTALL_BIN_ONLY)
         # Install rule to ensure that our runtime files are in the expected, platform-specific folder
         install(
-                TARGETS carbon-resources resources-static
-                EXPORT carbon-resourcesTarget
+                TARGETS resources resources-static
+                EXPORT resourcesTarget
                 CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
                 LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
                 ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
@@ -171,8 +171,8 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     else()
         # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
         install(
-                TARGETS carbon-resources resources-static
-                EXPORT carbon-resourcesTarget
+                TARGETS resources resources-static
+                EXPORT resourcesTarget
                 CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
                 LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
                 ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
@@ -184,12 +184,12 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include DESTINATION . FILES_MATCHING PATTERN "*.h")
 
         install(
-                EXPORT carbon-resourcesTarget
-                DESTINATION ${CMAKE_INSTALL_PREFIX}/share/carbon-resources
-                FILE carbon-resources.cmake)
+                EXPORT resourcesTarget
+                DESTINATION ${CMAKE_INSTALL_PREFIX}/share/resources
+                FILE resources.cmake)
         install(
-                FILES carbon-resourcesConfig.cmake
-                DESTINATION ${CMAKE_INSTALL_PREFIX}/share/carbon-resources)
+                FILES resourcesConfig.cmake
+                DESTINATION ${CMAKE_INSTALL_PREFIX}/share/resources)
     endif()
 
 endif()
