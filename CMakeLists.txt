@@ -22,7 +22,7 @@ include(cmake/CcpGlobalSettings.cmake)
 include(cmake/CcpTargetConfigurations.cmake)
 include(cmake/CcpDocsGenerator.cmake)
 
-find_package(yaml-cpp CONFIG REQUIRED) ## Can it be in tools?
+find_package(yaml-cpp CONFIG REQUIRED)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 # Add subdirectory for resource tools static library
@@ -79,7 +79,7 @@ if(WIN32)
     target_compile_definitions(carbon-resources PRIVATE NOMINMAX) # Do not define min/max macros.
 endif()
 
-target_link_libraries(carbon-resources PRIVATE carbon-resources-tools yaml-cpp::yaml-cpp)
+target_link_libraries(carbon-resources PRIVATE resources-tools yaml-cpp::yaml-cpp)
 
 target_include_directories(carbon-resources
         PUBLIC
@@ -107,7 +107,7 @@ if(WIN32)
     target_compile_definitions(carbon-resources-static PRIVATE NOMINMAX) # Do not define min/max macros.
 endif()
 
-target_link_libraries(carbon-resources-static PRIVATE $<BUILD_LOCAL_INTERFACE:carbon-resources-tools> yaml-cpp::yaml-cpp)
+target_link_libraries(carbon-resources-static PRIVATE $<BUILD_LOCAL_INTERFACE:resources-tools> yaml-cpp::yaml-cpp)
 
 target_include_directories(carbon-resources-static
         PUBLIC
