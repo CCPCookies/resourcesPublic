@@ -4,18 +4,18 @@
 #include <BundleResourceGroup.h>
 #include <PatchResourceGroup.h>
 
-#include "CarbonResourcesTestFixture.h"
+#include "ResourcesTestFixture.h"
 
 #include <gtest/gtest.h>
 
 #include <FileDataStreamOut.h>
 
-struct CarbonResourcesLibraryTest : public CarbonResourcesTestFixture{};
+struct ResourcesLibraryTest : public ResourcesTestFixture{};
 
 // Import ResourceGroup V0.0.0
 // Export should output as V0.1.0
 // This is the only instance that exporting a file of a lower version results in a version bump
-TEST_F( CarbonResourcesLibraryTest, BinaryGroupImportExport_V_0_0_0_To_V_0_1_0 )
+TEST_F( ResourcesLibraryTest, BinaryGroupImportExport_V_0_0_0_To_V_0_1_0 )
 {
 
 	CarbonResources::ResourceGroup binaryResourceGroup;
@@ -38,7 +38,7 @@ TEST_F( CarbonResourcesLibraryTest, BinaryGroupImportExport_V_0_0_0_To_V_0_1_0 )
 }
 
 // Import a BinaryResourceGroup v0.1.0 and export it again checking input == output
-TEST_F( CarbonResourcesLibraryTest, BinaryGroupImportExport_V_0_1_0 )
+TEST_F( ResourcesLibraryTest, BinaryGroupImportExport_V_0_1_0 )
 {
 	CarbonResources::ResourceGroup binaryResourceGroup;
 
@@ -60,7 +60,7 @@ TEST_F( CarbonResourcesLibraryTest, BinaryGroupImportExport_V_0_1_0 )
 // Import ResourceGroup V0.0.0 
 // Export should output as V0.1.0
 // This is the only instance that exporting a file of a lower version results in a version bump
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportExport_V_0_0_0_To_V_0_1_0 )
+TEST_F( ResourcesLibraryTest, ResourceGroupImportExport_V_0_0_0_To_V_0_1_0 )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
@@ -81,7 +81,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportExport_V_0_0_0_To_V_0_1_0
 	EXPECT_TRUE( FilesMatch( exportParams.filename, goldStandardFilename ) );
 }
 
-TEST_F( CarbonResourcesLibraryTest, ImportEmptyResourceGroup )
+TEST_F( ResourcesLibraryTest, ImportEmptyResourceGroup )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
@@ -89,7 +89,7 @@ TEST_F( CarbonResourcesLibraryTest, ImportEmptyResourceGroup )
 	EXPECT_EQ(resourceGroup.ImportFromFile( importParams ).type,CarbonResources::ResultType::SUCCESS);
 }
 
-TEST_F( CarbonResourcesLibraryTest, ImportResourceGroupWithOutOfBoundsBinaryOperation )
+TEST_F( ResourcesLibraryTest, ImportResourceGroupWithOutOfBoundsBinaryOperation )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
@@ -128,7 +128,7 @@ CarbonResources::Result AttemptImportResourceGroupMissingParameter( const std::s
 
 // Import a ResourceGroup with missing parameters that are expected for the version provided
 // This should fail gracefully and give appropriate feedback to user
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupHandleImportMissingParametersForVersion )
+TEST_F( ResourcesLibraryTest, ResourceGroupHandleImportMissingParametersForVersion )
 {
 	std::filesystem::path emptyResourceGroupPath = GetTestFileFileAbsolutePath( "ResourceGroups/EmptyResourceGroup.yaml" );
 	EXPECT_EQ( AttemptImportResourceGroupMissingParameter( "Version", emptyResourceGroupPath ).type, CarbonResources::ResultType::MALFORMED_RESOURCE_GROUP );
@@ -140,7 +140,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupHandleImportMissingParametersFo
 }
 
 
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupLoadInvalidYaml )
+TEST_F( ResourcesLibraryTest, ResourceGroupLoadInvalidYaml )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
@@ -150,7 +150,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupLoadInvalidYaml )
 	EXPECT_EQ( resourceGroup.ImportFromFile( importParams ).type, CarbonResources::ResultType::FAILED_TO_PARSE_YAML );
 }
 
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupLoadInvalidCsv )
+TEST_F( ResourcesLibraryTest, ResourceGroupLoadInvalidCsv )
 {
 
 	CarbonResources::ResourceGroup resourceGroup;
@@ -162,7 +162,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupLoadInvalidCsv )
 
 }
 
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupLoadCsvWithInvalidCompressedSizeField )
+TEST_F( ResourcesLibraryTest, ResourceGroupLoadCsvWithInvalidCompressedSizeField )
 {
 
 	CarbonResources::ResourceGroup resourceGroup;
@@ -173,7 +173,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupLoadCsvWithInvalidCompressedSiz
 	EXPECT_EQ( resourceGroup.ImportFromFile( importParams ).type, CarbonResources::ResultType::MALFORMED_RESOURCE_INPUT );
 }
 
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupLoadEmptyCsv )
+TEST_F( ResourcesLibraryTest, ResourceGroupLoadEmptyCsv )
 {
 
 	CarbonResources::ResourceGroup resourceGroup;
@@ -185,7 +185,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupLoadEmptyCsv )
 
 }
 
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupLoadNonexistantFileFails )
+TEST_F( ResourcesLibraryTest, ResourceGroupLoadNonexistantFileFails )
 {
 
 	CarbonResources::ResourceGroup resourceGroup;
@@ -196,7 +196,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupLoadNonexistantFileFails )
 	EXPECT_EQ( resourceGroup.ImportFromFile( importParams ).type, CarbonResources::ResultType::FAILED_TO_OPEN_FILE );
 }
 
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupWithInvalidExtensionFails )
+TEST_F( ResourcesLibraryTest, ResourceGroupWithInvalidExtensionFails )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
@@ -209,7 +209,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupWithInvalidExtensionFails )
 // Import a ResourceGroup with version greater than current document minor version specified in enums.h
 // This should open ignoring anything extra added in the future version
 // The version of the imported ResourceGroup should be set at the max supported version in enums.h
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportNewerMinorVersion )
+TEST_F( ResourcesLibraryTest, ResourceGroupImportNewerMinorVersion )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
@@ -219,7 +219,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportNewerMinorVersion )
 
 // Import a ResourceGroup with version greater than current document major version specified in enums.h
 // This should gracefully fail to open
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportNewerMajorVersion )
+TEST_F( ResourcesLibraryTest, ResourceGroupImportNewerMajorVersion )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
@@ -229,7 +229,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportNewerMajorVersion )
 
 // Import a ResourceGroup that doesn't exist
 // This should gracefully fail
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportNonExistantFile )
+TEST_F( ResourcesLibraryTest, ResourceGroupImportNonExistantFile )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
@@ -241,7 +241,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportNonExistantFile )
 }
 
 // Import a ResourceGroup v0.1.0 and export it again checking input == output
-TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportExport_V_0_1_0 )
+TEST_F( ResourcesLibraryTest, ResourceGroupImportExport_V_0_1_0 )
 {
 
 	CarbonResources::ResourceGroup resourceGroup;
@@ -261,7 +261,7 @@ TEST_F( CarbonResourcesLibraryTest, ResourceGroupImportExport_V_0_1_0 )
 	EXPECT_TRUE( FilesMatch( importParams.filename, exportParams.filename ) );
 }
 
-TEST_F( CarbonResourcesLibraryTest, UnpackBundle )
+TEST_F( ResourcesLibraryTest, UnpackBundle )
 {
 	// Load the bundle file
 	CarbonResources::BundleResourceGroup bundleResourceGroup;
@@ -293,7 +293,7 @@ TEST_F( CarbonResourcesLibraryTest, UnpackBundle )
 
 }
 
-TEST_F( CarbonResourcesLibraryTest, UnpackBundleExpectingRemoteCdnButPassedLocalCdn )
+TEST_F( ResourcesLibraryTest, UnpackBundleExpectingRemoteCdnButPassedLocalCdn )
 {
 	// Load the bundle file
 	CarbonResources::BundleResourceGroup bundleResourceGroup;
@@ -321,7 +321,7 @@ TEST_F( CarbonResourcesLibraryTest, UnpackBundleExpectingRemoteCdnButPassedLocal
 
 }
 
-TEST_F( CarbonResourcesLibraryTest, UnpackRemoteBundleAsLocal )
+TEST_F( ResourcesLibraryTest, UnpackRemoteBundleAsLocal )
 {
 	// Import ResourceGroup
 	CarbonResources::ResourceGroup resourceGroup;
@@ -359,7 +359,7 @@ TEST_F( CarbonResourcesLibraryTest, UnpackRemoteBundleAsLocal )
 	EXPECT_EQ( bundleResourceGroup.Unpack( bundleUnpackParams ).type, CarbonResources::ResultType::FAILED_TO_PARSE_YAML );
 }
 
-TEST_F( CarbonResourcesLibraryTest, CreateBundleWithZeroChunkSize )
+TEST_F( ResourcesLibraryTest, CreateBundleWithZeroChunkSize )
 {
 	// Import ResourceGroup
 	CarbonResources::ResourceGroup resourceGroup;
@@ -396,7 +396,7 @@ TEST_F( CarbonResourcesLibraryTest, CreateBundleWithZeroChunkSize )
 
 }
 
-TEST_F( CarbonResourcesLibraryTest, CreateBundle )
+TEST_F( ResourcesLibraryTest, CreateBundle )
 {
 	// Import ResourceGroup
 	CarbonResources::ResourceGroup resourceGroup;
@@ -436,7 +436,7 @@ TEST_F( CarbonResourcesLibraryTest, CreateBundle )
 
 }
 
-TEST_F( CarbonResourcesLibraryTest, CreateAndUnpackBundle )
+TEST_F( ResourcesLibraryTest, CreateAndUnpackBundle )
 {
 	// Import ResourceGroup
 	CarbonResources::ResourceGroup resourceGroup;
@@ -503,7 +503,7 @@ TEST_F( CarbonResourcesLibraryTest, CreateAndUnpackBundle )
 	EXPECT_TRUE( std::filesystem::exists( unpackedGroupPath ) );
 }
 
-TEST_F( CarbonResourcesLibraryTest, ApplyPatch )
+TEST_F( ResourcesLibraryTest, ApplyPatch )
 {
 	// Load the patch file
 	CarbonResources::PatchResourceGroup patchResourceGroup;
@@ -550,7 +550,7 @@ TEST_F( CarbonResourcesLibraryTest, ApplyPatch )
 	EXPECT_TRUE( DirectoryIsSubset( patchApplyParams.resourcesToPatchDestinationSettings.basePath , goldDirectory ));
 
 }
-TEST_F( CarbonResourcesLibraryTest, CreatePatchWhereBuildsHaveNoChanges )
+TEST_F( ResourcesLibraryTest, CreatePatchWhereBuildsHaveNoChanges )
 {
 	// Previous ResourceGroup
 	CarbonResources::ResourceGroup resourceGroupPrevious;
@@ -606,7 +606,7 @@ TEST_F( CarbonResourcesLibraryTest, CreatePatchWhereBuildsHaveNoChanges )
 
 }
 
-TEST_F( CarbonResourcesLibraryTest, CreatePatch )
+TEST_F( ResourcesLibraryTest, CreatePatch )
 {
     // Previous ResourceGroup
 	CarbonResources::ResourceGroup resourceGroupPrevious;
@@ -667,7 +667,7 @@ TEST_F( CarbonResourcesLibraryTest, CreatePatch )
     
 }
 
-TEST_F( CarbonResourcesLibraryTest, CreatePatchZeroInputChunkSize )
+TEST_F( ResourcesLibraryTest, CreatePatchZeroInputChunkSize )
 {
 	// Previous ResourceGroup
 	CarbonResources::ResourceGroup resourceGroupPrevious;
@@ -721,7 +721,7 @@ TEST_F( CarbonResourcesLibraryTest, CreatePatchZeroInputChunkSize )
 
 }
 
-TEST_F( CarbonResourcesLibraryTest, ApplyPatchWithChunking )
+TEST_F( ResourcesLibraryTest, ApplyPatchWithChunking )
 {
 	// Load the patch file
 	CarbonResources::PatchResourceGroup patchResourceGroup;
@@ -764,7 +764,7 @@ TEST_F( CarbonResourcesLibraryTest, ApplyPatchWithChunking )
 	EXPECT_TRUE( FilesMatch( nextTestResource, patchApplyParams.resourcesToPatchDestinationSettings.basePath / "testresource2.txt" ) );
 }
 
-TEST_F( CarbonResourcesLibraryTest, CreatePatchWithChunking )
+TEST_F( ResourcesLibraryTest, CreatePatchWithChunking )
 {
 	// Previous ResourceGroup
 	CarbonResources::ResourceGroup resourceGroupPrevious;
@@ -825,7 +825,7 @@ TEST_F( CarbonResourcesLibraryTest, CreatePatchWithChunking )
 	EXPECT_TRUE( DirectoryIsSubset(  goldDirectory, patchCreateParams.resourcePatchBinaryDestinationSettings.basePath ) );
 }
 
-TEST_F( CarbonResourcesLibraryTest, CreateResourceGroupFromDirectory )
+TEST_F( ResourcesLibraryTest, CreateResourceGroupFromDirectory )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
@@ -851,7 +851,7 @@ TEST_F( CarbonResourcesLibraryTest, CreateResourceGroupFromDirectory )
     EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
 }
 
-TEST_F( CarbonResourcesLibraryTest, CreateResourceGroupFromDirectoryOutputPathIsInvalid )
+TEST_F( ResourcesLibraryTest, CreateResourceGroupFromDirectoryOutputPathIsInvalid )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
@@ -869,7 +869,7 @@ TEST_F( CarbonResourcesLibraryTest, CreateResourceGroupFromDirectoryOutputPathIs
 
 }
 
-TEST_F( CarbonResourcesLibraryTest, CreateResourceGroupFailsWithInvalidInputDirectory )
+TEST_F( ResourcesLibraryTest, CreateResourceGroupFailsWithInvalidInputDirectory )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
@@ -880,7 +880,7 @@ TEST_F( CarbonResourcesLibraryTest, CreateResourceGroupFailsWithInvalidInputDire
 	EXPECT_EQ( resourceGroup.CreateFromDirectory( createResourceGroupParams ).type, CarbonResources::ResultType::INPUT_DIRECTORY_DOESNT_EXIST);
 }
 
-TEST_F( CarbonResourcesLibraryTest, DiffResourceGroupsWithTwoAdditions )
+TEST_F( ResourcesLibraryTest, DiffResourceGroupsWithTwoAdditions )
 {
     // Load base group
 	CarbonResources::ResourceGroup baseResourceGroup;
@@ -929,7 +929,7 @@ TEST_F( CarbonResourcesLibraryTest, DiffResourceGroupsWithTwoAdditions )
 
 }
 
-TEST_F( CarbonResourcesLibraryTest, DiffResourceGroupsWithTwoChanges )
+TEST_F( ResourcesLibraryTest, DiffResourceGroupsWithTwoChanges )
 {
 	// Load base group
 	CarbonResources::ResourceGroup baseResourceGroup;
@@ -977,7 +977,7 @@ TEST_F( CarbonResourcesLibraryTest, DiffResourceGroupsWithTwoChanges )
 	EXPECT_EQ( additions.size(), 2 );
 }
 
-TEST_F( CarbonResourcesLibraryTest, DiffResourceGroupsWithTwoSubtractions )
+TEST_F( ResourcesLibraryTest, DiffResourceGroupsWithTwoSubtractions )
 {
 	// Load base group
 	CarbonResources::ResourceGroup baseResourceGroup;
@@ -1025,7 +1025,7 @@ TEST_F( CarbonResourcesLibraryTest, DiffResourceGroupsWithTwoSubtractions )
 	EXPECT_EQ( subtractions.size(), 2 );
 }
 
-TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsAdditive )
+TEST_F( ResourcesLibraryTest, MergeResourceGroupsAdditive )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
@@ -1076,7 +1076,7 @@ TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsAdditive )
 	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
 }
 
-TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsIdentical )
+TEST_F( ResourcesLibraryTest, MergeResourceGroupsIdentical )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
@@ -1127,7 +1127,7 @@ TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsIdentical )
 	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
 }
 
-TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsWithIntersect_V_0_0_0 )
+TEST_F( ResourcesLibraryTest, MergeResourceGroupsWithIntersect_V_0_0_0 )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
@@ -1180,7 +1180,7 @@ TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsWithIntersect_V_0_0_0 )
 	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
 }
 
-TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsAdditive_V_0_0_0 )
+TEST_F( ResourcesLibraryTest, MergeResourceGroupsAdditive_V_0_0_0 )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
@@ -1233,7 +1233,7 @@ TEST_F( CarbonResourcesLibraryTest, MergeResourceGroupsAdditive_V_0_0_0 )
 	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
 }
 
-TEST_F( CarbonResourcesLibraryTest, RemoveResource )
+TEST_F( ResourcesLibraryTest, RemoveResource )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 

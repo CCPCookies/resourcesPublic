@@ -10,7 +10,7 @@
 
 #include <filesystem>
 
-struct CarbonResourcesTestFixture : public ::testing::Test
+struct ResourcesTestFixture : public ::testing::Test
 {
 	void SetUp();
 

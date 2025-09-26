@@ -7,9 +7,9 @@
 #include <vector>
 #include <string>
 
-#include "CarbonResourcesTestFixture.h"
+#include "ResourcesTestFixture.h"
 
-struct CliTestFixture : public CarbonResourcesTestFixture
+struct CliTestFixture : public ResourcesTestFixture
 {
 
     int RunCli( std::vector<std::string> &arguments, std::string &output );
