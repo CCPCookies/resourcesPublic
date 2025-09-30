@@ -42,7 +42,6 @@ set(SRC_FILES
 
 add_library(resources-tools STATIC ${SRC_FILES})
 
-#target_link_libraries(resources-cli P)
 find_package(bsdiff CONFIG REQUIRED)
 
 get_target_property(_SOURCES resources-tools SOURCES)

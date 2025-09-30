@@ -1,7 +1,7 @@
 Result Structures
 =================
 
-Resources returns as much useful information as possible to the caller.
+resources returns as much useful information as possible to the caller.
 
 This is especially important when encountering errors.
 
