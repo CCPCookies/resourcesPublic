@@ -7,7 +7,7 @@ Note: This document refers to filesystem types, see :doc:`../DesignDocuments/fil
 
 .. code::
 
-    .\carbon-resources.exe create-patch PreviousResourceGroup.yaml NextResourceGroup.yaml --resource-source-base-path-previous C:\PreviousBuild --resource-source-base-path-next C:\NextBuild
+    .\resources.exe create-patch PreviousResourceGroup.yaml NextResourceGroup.yaml --resource-source-base-path-previous C:\PreviousBuild --resource-source-base-path-next C:\NextBuild
 
 **Arguments:**
 

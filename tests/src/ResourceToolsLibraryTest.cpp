@@ -10,7 +10,7 @@
 
 #include <gtest/gtest.h>
 
-#include "CarbonResourcesTestFixture.h"
+#include "ResourcesTestFixture.h"
 #include "ChunkIndex.h"
 #include "FileDataStreamIn.h"
 #include "FileDataStreamOut.h"
@@ -21,7 +21,7 @@
 #include "Patching.h"
 #include "RollingChecksum.h"
 
-struct ResourceToolsTest : public CarbonResourcesTestFixture
+struct ResourceToolsTest : public ResourcesTestFixture
 {
 };
 

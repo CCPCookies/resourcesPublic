@@ -1,6 +1,6 @@
 // Copyright © 2025 CCP ehf.
 
-#include "CarbonResourcesTestFixture.h"
+#include "ResourcesTestFixture.h"
 
 #include <process.hpp>
 
@@ -12,22 +12,22 @@
 
 #include <ResourceTools.h>
 
-void CarbonResourcesTestFixture::SetUp()
+void ResourcesTestFixture::SetUp()
 {
 
 }
 
-void CarbonResourcesTestFixture::TearDown()
+void ResourcesTestFixture::TearDown()
 {
 	
 }
 
-bool CarbonResourcesTestFixture::FileExists( const std::filesystem::path& filePath )
+bool ResourcesTestFixture::FileExists( const std::filesystem::path& filePath )
 {
 	return std::filesystem::exists( filePath );
 }
 
-bool CarbonResourcesTestFixture::FilesMatch( const std::filesystem::path& file1Path, const std::filesystem::path& file2Path )
+bool ResourcesTestFixture::FilesMatch( const std::filesystem::path& file1Path, const std::filesystem::path& file2Path )
 {
     // Open files generate data checksums and compare
 
@@ -80,7 +80,7 @@ bool CarbonResourcesTestFixture::FilesMatch( const std::filesystem::path& file1P
     
 }
 
-bool CarbonResourcesTestFixture::DirectoryIsSubset( const std::filesystem::path& dir1, const std::filesystem::path& dir2 )
+bool ResourcesTestFixture::DirectoryIsSubset( const std::filesystem::path& dir1, const std::filesystem::path& dir2 )
 {
 	for( auto entry : std::filesystem::recursive_directory_iterator( dir1 ) )
 	{
@@ -96,7 +96,7 @@ bool CarbonResourcesTestFixture::DirectoryIsSubset( const std::filesystem::path&
 	return true;
 }
 
-std::filesystem::path CarbonResourcesTestFixture::GetTestFileFileAbsolutePath( const std::filesystem::path& relativePath )
+std::filesystem::path ResourcesTestFixture::GetTestFileFileAbsolutePath( const std::filesystem::path& relativePath )
 {
     std::filesystem::path basePath( TEST_DATA_BASE_PATH );
 

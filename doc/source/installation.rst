@@ -1,7 +1,7 @@
 Installation
 ============
 
-carbon-resources supports Windows and macOS.
+resources supports Windows and macOS.
 
 Dependencies are sourced via `VCPKG <https://learn.microsoft.com/en-us/vcpkg/>`_
 

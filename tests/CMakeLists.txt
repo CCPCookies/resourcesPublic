@@ -2,7 +2,7 @@
 
 cmake_minimum_required(VERSION 3.18)
 
-project(carbon-resources-test)
+project(resources-test)
 
 find_package(CURL CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
@@ -11,53 +11,53 @@ find_package(tiny-process-library CONFIG REQUIRED)
 include(GoogleTest)
 
 set(SRC_FILES
-    src/CarbonResourcesTestFixture.cpp
-    src/CarbonResourcesTestFixture.h
+    src/ResourcesTestFixture.cpp
+    src/ResourcesTestFixture.h
     src/CliTestFixture.cpp
     src/CliTestFixture.h
-    src/CarbonResourcesLibraryTest.cpp
-    src/CarbonResourcesCliTest.cpp
+    src/ResourcesLibraryTest.cpp
+    src/ResourcesCliTest.cpp
     src/ResourceToolsLibraryTest.cpp
 )
 
-add_executable(carbon-resources-test ${SRC_FILES})
+add_executable(resources-test ${SRC_FILES})
 
-target_compile_definitions(carbon-resources-test
+target_compile_definitions(resources-test
         PRIVATE
         TEST_DATA_BASE_PATH="${CMAKE_SOURCE_DIR}/tests/testData"
-        CARBON_RESOURCES_CLI_EXE_NAME=\"$<TARGET_FILE_BASE_NAME:carbon-resources-cli>\")
+        CARBON_RESOURCES_CLI_EXE_NAME=\"$<TARGET_FILE_BASE_NAME:resources-cli>\")
 
-target_include_directories(carbon-resources-test PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+target_include_directories(resources-test PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
-target_include_directories(carbon-resources-test PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(resources-test PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(carbon-resources-test PRIVATE GTest::gtest GTest::gtest_main tiny-process-library::tiny-process-library carbon-resources carbon-resources-tools)
+target_link_libraries(resources-test PRIVATE GTest::gtest GTest::gtest_main tiny-process-library::tiny-process-library resources resources-tools)
 
 if(DEV_FEATURES)
-    target_compile_definitions( carbon-resources-test PRIVATE DEV_FEATURES )
+    target_compile_definitions( resources-test PRIVATE DEV_FEATURES )
 endif()
 
 if(WIN32)
 
     # Get CLI exe
     add_custom_command(
-        TARGET carbon-resources-test POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:carbon-resources-cli> $<TARGET_FILE_DIR:carbon-resources-test>
+        TARGET resources-test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:resources-cli> $<TARGET_FILE_DIR:resources-test>
         COMMAND_EXPAND_LISTS
     )
 
     # Binaries
     add_custom_command(
-        TARGET carbon-resources-test POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:carbon-resources-test> $<TARGET_FILE_DIR:carbon-resources-test>
+        TARGET resources-test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:resources-test> $<TARGET_FILE_DIR:resources-test>
         COMMAND_EXPAND_LISTS
     )
 
 elseif(APPLE)
     # Get CLI exe
     add_custom_command(
-            TARGET carbon-resources-test POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:carbon-resources-cli> $<TARGET_FILE_DIR:carbon-resources-test>
+            TARGET resources-test POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:resources-cli> $<TARGET_FILE_DIR:resources-test>
             COMMAND_EXPAND_LISTS
 
     )
@@ -66,9 +66,9 @@ endif()
 cmake_path(SET TEST_DATA_PATH ${CMAKE_CURRENT_SOURCE_DIR}/testData)
 
 gtest_discover_tests(
-        carbon-resources-test capiTests
+        resources-test capiTests
         PROPERTIES
             ENVIRONMENT "TEST_DATA_PATH=${TEST_DATA_PATH}"
-            WORKING_DIRECTORY $<TARGET_FILE_DIR:carbon-resources-test>  # So that we can find the CLI executable.
+            WORKING_DIRECTORY $<TARGET_FILE_DIR:resources-test>  # So that we can find the CLI executable.
         DISCOVERY_MODE PRE_TEST # Workaround to get builds working on macOS on ARM https://gitlab.kitware.com/cmake/cmake/-/issues/21845
 )

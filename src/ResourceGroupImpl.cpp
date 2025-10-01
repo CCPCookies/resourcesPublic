@@ -662,7 +662,7 @@ namespace CarbonResources
         {
 			if( statusCallback )
             {
-				statusCallback( StatusLevel::OVERVIEW, StatusProgressType::WARNING, 0, "Supplied resource group version greater than carbon-resources build max version. Some data may be lost during import." );
+				statusCallback( StatusLevel::OVERVIEW, StatusProgressType::WARNING, 0, "Supplied resource group version greater than resources build max version. Some data may be lost during import." );
             }
 			version = S_DOCUMENT_VERSION;
         }

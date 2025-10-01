@@ -2,9 +2,9 @@
 
 #include "CliTestFixture.h"
 
-struct CarbonResourcesCliTest : public CliTestFixture{};
+struct ResourcesCliTest : public CliTestFixture{};
 
-TEST_F( CarbonResourcesCliTest, RunWithoutArguments )
+TEST_F( ResourcesCliTest, RunWithoutArguments )
 {
 	std::string output;
 
@@ -16,7 +16,7 @@ TEST_F( CarbonResourcesCliTest, RunWithoutArguments )
     ASSERT_EQ( res, 4 );
 }
 
-TEST_F( CarbonResourcesCliTest, RunWithNonesenseArguments )
+TEST_F( ResourcesCliTest, RunWithNonesenseArguments )
 {
 	std::string output;
 
@@ -30,7 +30,7 @@ TEST_F( CarbonResourcesCliTest, RunWithNonesenseArguments )
 	ASSERT_EQ( res, 3 );
 }
 
-TEST_F( CarbonResourcesCliTest, RunCreateGroupWithNoArguments )
+TEST_F( ResourcesCliTest, RunCreateGroupWithNoArguments )
 {
 	std::string output;
 
@@ -44,7 +44,7 @@ TEST_F( CarbonResourcesCliTest, RunCreateGroupWithNoArguments )
 	ASSERT_EQ( res, 2 );
 }
 
-TEST_F( CarbonResourcesCliTest, RunCreatePatchWithNoArguments )
+TEST_F( ResourcesCliTest, RunCreatePatchWithNoArguments )
 {
 	std::string output;
 
@@ -58,7 +58,7 @@ TEST_F( CarbonResourcesCliTest, RunCreatePatchWithNoArguments )
 	ASSERT_EQ( res, 2 );
 }
 
-TEST_F( CarbonResourcesCliTest, RunCreateBundleWithNoArguments )
+TEST_F( ResourcesCliTest, RunCreateBundleWithNoArguments )
 {
 	std::string output;
 
@@ -74,7 +74,7 @@ TEST_F( CarbonResourcesCliTest, RunCreateBundleWithNoArguments )
 
 #ifdef DEV_FEATURES
 
-TEST_F( CarbonResourcesCliTest, RunApplyPatchWithNoArguments )
+TEST_F( ResourcesCliTest, RunApplyPatchWithNoArguments )
 {
 	std::string output;
 
@@ -88,7 +88,7 @@ TEST_F( CarbonResourcesCliTest, RunApplyPatchWithNoArguments )
 	ASSERT_EQ( res, 2 );
 }
 
-TEST_F( CarbonResourcesCliTest, RunUnpackBundleWithNoArguments )
+TEST_F( ResourcesCliTest, RunUnpackBundleWithNoArguments )
 {
 	std::string output;
 
@@ -102,7 +102,7 @@ TEST_F( CarbonResourcesCliTest, RunUnpackBundleWithNoArguments )
 	ASSERT_EQ( res, 2 );
 }
 
-TEST_F( CarbonResourcesCliTest, CreateOperationWithInvalidInput )
+TEST_F( ResourcesCliTest, CreateOperationWithInvalidInput )
 {
 
 	std::string output;
@@ -125,7 +125,7 @@ TEST_F( CarbonResourcesCliTest, CreateOperationWithInvalidInput )
 }
 
 #endif
-TEST_F( CarbonResourcesCliTest, CreateResourceGroupFromDirectory )
+TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectory )
 {
 	std::string output;
 
@@ -157,7 +157,7 @@ TEST_F( CarbonResourcesCliTest, CreateResourceGroupFromDirectory )
     EXPECT_TRUE( FilesMatch( goldFile, "GroupOut/ResourceGroup.yaml" ) );
 }
 
-TEST_F( CarbonResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormat )
+TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormat )
 {
 	std::string output;
 
@@ -192,7 +192,7 @@ TEST_F( CarbonResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentForma
     EXPECT_TRUE( FilesMatch( goldFile, "GroupOut/ResourceGroup.csv" ) );
 }
 
-TEST_F( CarbonResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormatWithPrefix )
+TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormatWithPrefix )
 {
 	std::string output;
 
@@ -230,7 +230,7 @@ TEST_F( CarbonResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentForma
     EXPECT_TRUE( FilesMatch( goldFile, "GroupOut/ResourceGroupPrefixed.csv" ) );
 }
 
-TEST_F( CarbonResourcesCliTest, CreateBundle )
+TEST_F( ResourcesCliTest, CreateBundle )
 {
 	std::string output;
 
@@ -277,7 +277,7 @@ TEST_F( CarbonResourcesCliTest, CreateBundle )
 	EXPECT_TRUE( DirectoryIsSubset( goldDirectory, "CreateBundleOut" ) );
 }
 
-TEST_F( CarbonResourcesCliTest, RemoveResourcesWithUnknownResourceIgnoreOnResourceNotFound )
+TEST_F( ResourcesCliTest, RemoveResourcesWithUnknownResourceIgnoreOnResourceNotFound )
 {
 	std::string output;
 
@@ -309,7 +309,7 @@ TEST_F( CarbonResourcesCliTest, RemoveResourcesWithUnknownResourceIgnoreOnResour
 	EXPECT_EQ( res, 0 );
 }
 
-TEST_F( CarbonResourcesCliTest, RemoveResourcesWithUnknownResourceWithInvalidPathToResourcesFile )
+TEST_F( ResourcesCliTest, RemoveResourcesWithUnknownResourceWithInvalidPathToResourcesFile )
 {
 	std::string output;
 
@@ -339,7 +339,7 @@ TEST_F( CarbonResourcesCliTest, RemoveResourcesWithUnknownResourceWithInvalidPat
 	EXPECT_EQ( res, 1 );
 }
 
-TEST_F( CarbonResourcesCliTest, RemoveResourcesWithUnknownResource )
+TEST_F( ResourcesCliTest, RemoveResourcesWithUnknownResource )
 {
 	std::string output;
 
@@ -370,7 +370,7 @@ TEST_F( CarbonResourcesCliTest, RemoveResourcesWithUnknownResource )
 
 }
 
-TEST_F( CarbonResourcesCliTest, RemoveResources )
+TEST_F( ResourcesCliTest, RemoveResources )
 {
 	std::string output;
 
@@ -405,7 +405,7 @@ TEST_F( CarbonResourcesCliTest, RemoveResources )
 	EXPECT_TRUE( FilesMatch( goldFile, resourceGroupAfterRemovePath ) );
 }
 
-TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoAdditions )
+TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoAdditions )
 {
 	std::string output;
 
@@ -444,7 +444,7 @@ TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoAdditions )
 	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
 }
 
-TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoChanges )
+TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoChanges )
 {
 	std::string output;
 
@@ -483,7 +483,7 @@ TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoChanges )
 	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
 }
 
-TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoSubtractions )
+TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoSubtractions )
 {
 	std::string output;
 
@@ -522,7 +522,7 @@ TEST_F( CarbonResourcesCliTest, DiffResourceGroupsWithTwoSubtractions )
 	EXPECT_TRUE( FilesMatch( goldFile, outputPath ) );
 }
 
-TEST_F( CarbonResourcesCliTest, MergeGroup )
+TEST_F( ResourcesCliTest, MergeGroup )
 {
 	std::string output;
 
@@ -557,7 +557,7 @@ TEST_F( CarbonResourcesCliTest, MergeGroup )
 	EXPECT_TRUE( FilesMatch( goldFile, mergedOutputPath ) );
 }
 
-TEST_F( CarbonResourcesCliTest, CreatePatch )
+TEST_F( ResourcesCliTest, CreatePatch )
 {
 	std::string output;
 
@@ -613,7 +613,7 @@ TEST_F( CarbonResourcesCliTest, CreatePatch )
 	EXPECT_TRUE( DirectoryIsSubset( goldDirectory, "PatchOut/Patches" ) );
 }
 
-TEST_F( CarbonResourcesCliTest, CreateGroup )
+TEST_F( ResourcesCliTest, CreateGroup )
 {
 	std::string output;
 
@@ -630,7 +630,7 @@ TEST_F( CarbonResourcesCliTest, CreateGroup )
 
     arguments.push_back( "--output-file" );
 
-    std::string outputFilename = "CarbonResourcesCliTestResourceGroup.yaml";
+    std::string outputFilename = "ResourcesCliTestResourceGroup.yaml";
 
     arguments.push_back( outputFilename );
 
@@ -651,7 +651,7 @@ TEST_F( CarbonResourcesCliTest, CreateGroup )
 
 #ifdef DEV_FEATURES
 
-TEST_F( CarbonResourcesCliTest, ApplyPatch )
+TEST_F( ResourcesCliTest, ApplyPatch )
 {
 	std::string output;
 
@@ -706,7 +706,7 @@ TEST_F( CarbonResourcesCliTest, ApplyPatch )
 	EXPECT_TRUE( DirectoryIsSubset( outputBasePath, goldDirectory ) );
 }
 
-TEST_F( CarbonResourcesCliTest, UnpackBundle )
+TEST_F( ResourcesCliTest, UnpackBundle )
 {
 	std::string output;
 

@@ -1,7 +1,7 @@
 Filesystem Design - Local/Remote
 ================================
 
-carbon-resources works with 3 filesystem target types:
+resources works with 3 filesystem target types:
 
 1. ``LOCAL_RELATIVE``
 2. ``LOCAL_CDN``
@@ -44,7 +44,7 @@ Files created this way mean that if a files content changes the filename also ch
 REMOTE_CDN
 ----------
 
-Reading/Writing resources using ``REMOTE_CDN`` do slightly different things, however in the future this may change if uploading is added to carbon-resources.
+Reading/Writing file resources using ``REMOTE_CDN`` do slightly different things, however in the future this may change if uploading is added to resources.
 
 Reading resources using ``REMOTE_CDN`` will download the resource following the same naming rules as ``LOCAL_CDN``.
 

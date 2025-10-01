@@ -1,10 +1,10 @@
-# carbon-resources
+# resources
 
 [![license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.txt)
 
 ## Overview
 
-*carbon-resources* provides a suite of tools to manage/manipulate and deliver resources for Carbon titles.
+*resources* provides a suite of tools to manage/manipulate and deliver resource files for Carbon titles.
 
 ## 🛠️ Building
 
@@ -13,10 +13,10 @@ Build using provided `CMakeLists` in the repository root.
 ## 🔍 Accessing the Documentation
 
 Documentation provides:
-1. carbon-resources API.
-2. carbon-resources CLI Information.
-3. carbon-resources guides.
-4. carbon-resources usage examples.
+1. resources API.
+2. resources CLI Information.
+3. resources guides.
+4. resources usage examples.
 
 ### Current requirements for documentation generation
 

@@ -71,7 +71,7 @@ The following command will perform the same action as above given the same input
 
 .. code::
     
-    .\carbon-resources.exe apply-patch Patch/PatchResourceGroup.yaml --patch-binaries-base-path Patch/LocalCDNPatches/ --resources-to-patch-base-path Patch/PreviousBuildResources/ --next-resources-base-path Patch/NextBuildResources/
+    .\resources.exe apply-patch Patch/PatchResourceGroup.yaml --patch-binaries-base-path Patch/LocalCDNPatches/ --resources-to-patch-base-path Patch/PreviousBuildResources/ --next-resources-base-path Patch/NextBuildResources/
 
 
 **Arguments:**

@@ -33,7 +33,7 @@ std::string CalculateVersionString()
 
 int main( int argc, char** argv )
 {
-	Cli cli( "carbon-resources", CalculateVersionString() );
+    Cli cli( "resources", CalculateVersionString() );
 
     CreateResourceGroupCliOperation createResourceGroupOperation;
 

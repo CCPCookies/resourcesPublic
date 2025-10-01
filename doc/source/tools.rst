@@ -1,10 +1,10 @@
 Tools
 =====
 
-carbon-resources consists of two base tools.
+*resources* consists of two base tools.
 
-1. carbon-resources library
-2. carbon-resources CLI
+1. resources library
+2. resources CLI
 
 More information can be found below.
 

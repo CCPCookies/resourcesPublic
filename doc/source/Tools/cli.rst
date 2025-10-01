@@ -1,9 +1,9 @@
-carbon-resources CLI
+resources CLI
 ====================
 
 The CLI exposes operations to be performed on the CI to create patches and bundles.
 
-carbon-resources operations are exposed along with the same input variables as the lib target.
+resources operations are exposed along with the same input variables as the lib target.
 
 
 .. list-table:: CLI operations
@@ -24,12 +24,12 @@ Detailed help refer to the CLI documentation.
 
 .. code::
 
-   $ .\carbon-resources -h
-   $ .\carbon-resources create-group -h
-   $ .\carbon-resources create-patch -h
-   $ .\carbon-resources create-bundle -h
+   $ .\resources -h
+   $ .\resources create-group -h
+   $ .\resources create-patch -h
+   $ .\resources create-bundle -h
 
-Alternatively as the operations map directly to the carbon-resources library, the :doc:`api` documentation can be referred to for further information.
+Alternatively as the operations map directly to the resources library, the :doc:`api` documentation can be referred to for further information.
 
 Return Values
 -------------
