@@ -1884,7 +1884,10 @@ Result ResourceGroup::ResourceGroupImpl::Merge( const ResourceGroupMergeParams& 
 
 	std::vector<ResourceInfo*> unionResources;
 	std::set_union(
-		sortedMergeResources.begin(), sortedMergeResources.end(), sortedResourcesParameter.begin(), sortedResourcesParameter.end(), std::back_inserter( unionResources ), []( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
+		sortedMergeResources.begin(), sortedMergeResources.end(),
+		sortedResourcesParameter.begin(), sortedResourcesParameter.end(),
+		std::back_inserter( unionResources ),
+		[]( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
 
 	// Add result to merge ResourceGroup output
 	for( auto resource : unionResources )
@@ -1981,15 +1984,24 @@ Result ResourceGroup::ResourceGroupImpl::Diff( ResourceGroupSubtractionParams& p
 
 	std::vector<ResourceInfo*> addedResources;
 	std::set_difference(
-		sortedResourcesParameter.begin(), sortedResourcesParameter.end(), sortedSubtractionResources.begin(), sortedSubtractionResources.end(), std::back_inserter( addedResources ), []( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
+		sortedResourcesParameter.begin(), sortedResourcesParameter.end(),
+		sortedSubtractionResources.begin(), sortedSubtractionResources.end(),
+		std::back_inserter( addedResources ),
+		[]( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
 
 	std::vector<ResourceInfo*> removedResources;
 	std::set_difference(
-		sortedSubtractionResources.begin(), sortedSubtractionResources.end(), sortedResourcesParameter.begin(), sortedResourcesParameter.end(), std::back_inserter( removedResources ), []( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
+		sortedSubtractionResources.begin(), sortedSubtractionResources.end(),
+		sortedResourcesParameter.begin(), sortedResourcesParameter.end(),
+		std::back_inserter( removedResources ),
+		[]( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
 
 	std::vector<ResourceInfo*> potentiallyModifiedResources;
 	std::set_intersection(
-		sortedResourcesParameter.begin(), sortedResourcesParameter.end(), sortedSubtractionResources.begin(), sortedSubtractionResources.end(), std::back_inserter( potentiallyModifiedResources ), []( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
+		sortedResourcesParameter.begin(), sortedResourcesParameter.end(),
+		sortedSubtractionResources.begin(), sortedSubtractionResources.end(),
+		std::back_inserter( potentiallyModifiedResources ),
+		[]( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
 
 	for( ResourceInfo* resource : potentiallyModifiedResources )
 	{
@@ -2014,7 +2026,8 @@ Result ResourceGroup::ResourceGroupImpl::Diff( ResourceGroupSubtractionParams& p
 		}
 
 		ResourceInfo* resource2 = *std::lower_bound(
-			sortedSubtractionResources.begin(), sortedSubtractionResources.end(), resource, []( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
+			sortedSubtractionResources.begin(), sortedSubtractionResources.end(), resource,
+			[]( const ResourceInfo* a, const ResourceInfo* b ) { return *a < *b; } );
 
 		std::string resource1Checksum;
 

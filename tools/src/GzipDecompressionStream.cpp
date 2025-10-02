@@ -90,6 +90,5 @@ bool GzipDecompressionStream::Finish()
 	m_decompressionInProgress = false;
 
 	return inflateEnd( &m_stream ) == Z_OK;
-	;
 }
 }
