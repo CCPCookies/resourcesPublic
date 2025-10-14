@@ -104,9 +104,14 @@ target_include_directories(resources-static
 
 add_subdirectory(cli)
 
-enable_testing()
-
-add_subdirectory(tests)
+# Enable testing based on option set (on by default)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    option(BUILD_TESTING "Build and run tests. Enabled by default." ON)
+    include(CTest)
+    if(BUILD_TESTING)
+        add_subdirectory(tests)
+    endif()
+endif()
 
 
 # Provide an install target if this is the top level project only
