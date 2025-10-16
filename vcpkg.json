@@ -27,7 +27,7 @@
   ],
   "features": {
     "tests": {
-      "description": "Dependencies needed for generating and running tests",
+      "description": "Enable tests",
       "dependencies": [
         {
           "name": "gtest",
@@ -41,7 +41,7 @@
       ]
     },
     "docs": {
-      "description": "Dependencies needed for generating documentation",
+      "description": "Generate documentation",
       "dependencies": [
         {
           "name": "python3",
