@@ -9,7 +9,6 @@ include(cmake/CcpTargetConfigurations.cmake)
 include(cmake/CcpDocsGenerator.cmake)
 
 find_package(yaml-cpp CONFIG REQUIRED)
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 # Add subdirectory for resource tools static library
 add_subdirectory(tools)
@@ -126,6 +125,8 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     option(BUILD_DOCUMENTATION "Build Documentation" ${BUILD_DOCUMENTATION_DEFAULT_FLAG})
 
     if (BUILD_DOCUMENTATION)
+        find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
         # Run sphinx
         set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/doc/source)
         set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/doc/build)
