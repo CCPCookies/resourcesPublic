@@ -58,6 +58,27 @@
       "environment": {
         "X_VCPKG_REGISTRIES_CACHE": "${sourceDir}/vcpkg_registry_cache"
       }
+    },
+    {
+      "name": "ci",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_DOCUMENTATION": "ON",
+        "BUILD_TESTING": "ON",
+        "VCPKG_MANIFEST_FEATURES": "docs;tests"
+      }
+    },
+    {
+      "name": "carbon_windows_vcpkg_vs_ci",
+      "inherits": ["carbon_windows_vcpkg_vs", "ci"]
+    },
+    {
+      "name": "carbon_windows_vcpkg_nmc_ci",
+      "inherits": ["carbon_windows_vcpkg_nmc", "ci"]
+    },
+    {
+      "name": "carbon_osx_vcpkg_ci",
+      "inherits": ["carbon_osx_vcpkg", "ci"]
     }
   ]
 }

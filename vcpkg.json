@@ -25,14 +25,16 @@
       "version>=": "4.3.3"
     }
   ],
+  "default-features": [
+    "tests"
+  ],
   "features": {
     "tests": {
       "description": "Enable tests",
       "dependencies": [
         {
           "name": "gtest",
-          "version>=": "1.15.2",
-          "host": true
+          "version>=": "1.15.2"
         },
         {
           "name": "tiny-process-library",
@@ -45,8 +47,7 @@
       "dependencies": [
         {
           "name": "python3",
-          "version>=": "3.12.3",
-          "host": true
+          "version>=": "3.12.3"
         }
       ]
     }
