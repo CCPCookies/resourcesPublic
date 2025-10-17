@@ -65,9 +65,6 @@ endif ()
 
 cmake_path(SET TEST_DATA_PATH ${CMAKE_CURRENT_SOURCE_DIR}/testData)
 
-message(STATUS "=========> Test data path: ${TEST_DATA_PATH}")
-
-
 gtest_discover_tests(
         resources-test capiTests
         PROPERTIES
