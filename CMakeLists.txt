@@ -9,7 +9,6 @@ include(cmake/CcpTargetConfigurations.cmake)
 include(cmake/CcpDocsGenerator.cmake)
 
 find_package(yaml-cpp CONFIG REQUIRED)
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 # Add subdirectory for resource tools static library
 add_subdirectory(tools)
@@ -104,10 +103,14 @@ target_include_directories(resources-static
 
 add_subdirectory(cli)
 
-enable_testing()
-
-add_subdirectory(tests)
-
+# Enable testing based on option set (on by default)
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    option(BUILD_TESTING "Build and run tests. Enabled by default." ON)
+    if (BUILD_TESTING)
+        include(CTest)
+        add_subdirectory(tests)
+    endif ()
+endif ()
 
 # Provide an install target if this is the top level project only
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
@@ -123,6 +126,8 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     option(BUILD_DOCUMENTATION "Build Documentation" ${BUILD_DOCUMENTATION_DEFAULT_FLAG})
 
     if (BUILD_DOCUMENTATION)
+        find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
         # Run sphinx
         set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/doc/source)
         set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/doc/build)
