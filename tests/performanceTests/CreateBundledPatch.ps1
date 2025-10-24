@@ -1,0 +1,6 @@
+Measure-Command {
+.\resources.exe create-group BuildPrevious --output-file ResourceGroups/ClientAResourceGroup.yaml --verbosity-level 3 --skip-compression | Out-Default
+.\resources.exe create-group BuildNext --output-file ResourceGroups/ClientBResourceGroup.yaml --verbosity-level 3 --skip-compression | Out-Default
+.\resources.exe create-patch ResourceGroups/ClientAResourceGroup.yaml ResourceGroups/ClientBResourceGroup.yaml --resource-source-base-path-previous BuildPrevious --resource-source-base-path-next BuildNext --verbosity-level 3 --patchResourcegroup-relative-path patchResourceGroup.yaml --patch-destination-base-path Patch/Patches/ --patch-resourcegroup-destination-path Patch --skip-compression --chunk-size 1048576 | Out-Default
+.\resources.exe create-bundle Patch/patchResourceGroup.yaml --resource-source-path Patch/Patches --resource-source-type LOCAL_CDN --bundle-resourcegroup-destination-path Bundle --chunk-destination-path Bundle/Chunks --chunk-destination-type LOCAL_CDN --verbosity-level 3 | Out-Default
+}

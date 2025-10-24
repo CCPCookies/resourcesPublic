@@ -11,7 +11,8 @@ CreateResourceGroupCliOperation::CreateResourceGroupCliOperation() :
 	m_createResourceGroupPathArgumentId( "input-directory" ),
 	m_createResourceGroupOutputFileArgumentId( "--output-file" ),
 	m_createResourceGroupDocumentVersionArgumentId( "--document-version" ),
-	m_createResourceGroupResourcePrefixArgumentId( "--resource-prefix" )
+	m_createResourceGroupResourcePrefixArgumentId( "--resource-prefix" ),
+	m_createResourceGroupSkipCompressionCalculation( "--skip-compression" )
 {
 
 	AddRequiredPositionalArgument( m_createResourceGroupPathArgumentId, "Base directory to create resource group from." );
@@ -28,6 +29,8 @@ CreateResourceGroupCliOperation::CreateResourceGroupCliOperation() :
 	AddArgument( m_createResourceGroupDocumentVersionArgumentId, "Document version for created resource group.", false, false, VersionToString( defaultImportParams.outputDocumentVersion ) );
 
 	AddArgument( m_createResourceGroupResourcePrefixArgumentId, R"(Optional resource path prefix, such as "res" or "app")", false, false, "" );
+	
+    AddArgumentFlag( m_createResourceGroupSkipCompressionCalculation, "Set skip compression calculations on resources." );
 }
 
 bool CreateResourceGroupCliOperation::Execute( std::string& returnErrorMessage ) const
@@ -39,10 +42,12 @@ bool CreateResourceGroupCliOperation::Execute( std::string& returnErrorMessage )
 	std::string version = m_argumentParser->get( m_createResourceGroupDocumentVersionArgumentId );
 
 	std::string resourcePrefix = m_argumentParser->get( m_createResourceGroupResourcePrefixArgumentId );
+	
+    bool skipCompressionCalculation = m_argumentParser->get<bool>( m_createResourceGroupSkipCompressionCalculation );
 
 	CarbonResources::Version documentVersion;
 
-	PrintStartBanner( inputDirectory, outputFile, version, resourcePrefix );
+	PrintStartBanner( inputDirectory, outputFile, version, resourcePrefix, skipCompressionCalculation );
 
 	bool versionIsValid = ParseDocumentVersion( version, documentVersion );
 
@@ -52,10 +57,10 @@ bool CreateResourceGroupCliOperation::Execute( std::string& returnErrorMessage )
 
 		return false;
 	}
-	return CreateResourceGroup( inputDirectory, outputFile, documentVersion, resourcePrefix );
+	return CreateResourceGroup( inputDirectory, outputFile, documentVersion, resourcePrefix, skipCompressionCalculation );
 }
 
-void CreateResourceGroupCliOperation::PrintStartBanner( const std::filesystem::path& inputDirectory, const std::filesystem::path& outputFile, const std::string& version, const std::string& resourcePrefix ) const
+void CreateResourceGroupCliOperation::PrintStartBanner( const std::filesystem::path& inputDirectory, const std::filesystem::path& outputFile, const std::string& version, const std::string& resourcePrefix, bool skipCompressionCalculation ) const
 {
 	if( s_verbosityLevel == CarbonResources::StatusLevel::OFF )
 	{
@@ -74,11 +79,20 @@ void CreateResourceGroupCliOperation::PrintStartBanner( const std::filesystem::p
 
 	std::cout << "Resource Prefix: " << resourcePrefix << std::endl;
 
+    if (skipCompressionCalculation)
+    {
+		std::cout << "Calculate Compression: Off" << std::endl;
+    }
+	else
+	{
+		std::cout << "Calculate Compression: On" << std::endl;
+	}
+
 	std::cout << "----------------------------\n"
 			  << std::endl;
 }
 
-bool CreateResourceGroupCliOperation::CreateResourceGroup( const std::filesystem::path& inputDirectory, const std::filesystem::path& resourceGroupOutputFile, CarbonResources::Version documentVersion, const std::string& resourcePrefix ) const
+bool CreateResourceGroupCliOperation::CreateResourceGroup( const std::filesystem::path& inputDirectory, const std::filesystem::path& resourceGroupOutputFile, CarbonResources::Version documentVersion, const std::string& resourcePrefix, bool skipCompressionCalculation ) const
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
@@ -92,6 +106,7 @@ bool CreateResourceGroupCliOperation::CreateResourceGroup( const std::filesystem
 
 	createResourceGroupParams.statusCallback = GetStatusCallback();
 
+	createResourceGroupParams.calculateCompressions = !skipCompressionCalculation;
 
 	if( createResourceGroupParams.statusCallback )
 	{

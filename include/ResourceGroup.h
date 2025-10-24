@@ -66,6 +66,10 @@ struct ResourceDestinationSettings
     *  Where to save the resulting BundleResourceGroup
     *  @var BundleCreateParams::statusCallback
     *  Optional status function callback. Callback is triggered at key status update events.
+    *  @var BundleCreateParams::downloadRetrySeconds
+    *  Delay before a failed download is retried (seconds)
+    *  @var BundleCreateParams::calculateCompressions
+    *  Specifies if compression will be calculated for the generated bundle chunks
     */
 struct BundleCreateParams
 {
@@ -86,6 +90,8 @@ struct BundleCreateParams
 	StatusCallback statusCallback = nullptr;
 
 	std::chrono::seconds downloadRetrySeconds{ 120 };
+
+    bool calculateCompressions = true;
 };
 
 /** @struct PatchCreateParams
@@ -110,6 +116,12 @@ struct BundleCreateParams
     *  Where the produced PatchResourceGroup will be saved.
     *  @var PatchCreateParams::statusCallback
     *  Optional status function callback. Callback is triggered at key status update events.
+    *  @var PatchCreateParams::downloadRetrySeconds
+    *  Delay before a failed download is retried (seconds)
+    *  @var PatchCreateParams::indexFolder
+    *  Directory to store index calculation files during patch creation.
+    *  @var BundleCreateParams::calculateCompressions
+    *  Specifies if compression will be calculated for the generated bundle chunks
     */
 struct PatchCreateParams
 {
@@ -136,6 +148,8 @@ struct PatchCreateParams
 	std::chrono::seconds downloadRetrySeconds{ 120 };
 
 	std::filesystem::path indexFolder = std::filesystem::temp_directory_path() / "carbonResources" / "chunkIndexes";
+
+    bool calculateCompressions = true;
 };
 
 /** @struct ResourceGroupImportFromFileParams
@@ -180,6 +194,10 @@ struct ResourceGroupExportToFileParams
     *  Document version to output. By default this will be latest supported by the library.
     *  @var CreateResourceGroupFromDirectoryParams::statusCallback
     *  Optional status function callback. Callback is triggered at key status update events.
+    *  @var CreateResourceGroupFromDirectoryParams::resourcePrefix
+    *  Resource prefix setting, e.g. res.
+    *  @var BundleCreateParams::calculateCompressions
+    *  Specifies if compression will be calculated for the generated bundle chunks
     */
 struct CreateResourceGroupFromDirectoryParams
 {
@@ -191,7 +209,9 @@ struct CreateResourceGroupFromDirectoryParams
 
 	StatusCallback statusCallback = nullptr;
 
-	std::string resourcePrefix;
+	std::string resourcePrefix = "";
+
+    bool calculateCompressions = true;
 };
 
 /** @struct ResourceGroupMergeParams

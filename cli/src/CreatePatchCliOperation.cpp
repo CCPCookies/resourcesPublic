@@ -23,7 +23,8 @@ CreatePatchCliOperation::CreatePatchCliOperation() :
 	m_patchFileRelativePathPrefixArgumentId( "--patch-prefix" ),
 	m_maxInputChunkSizeArgumentId( "--chunk-size" ),
 	m_downloadRetrySecondsArgumentId( "--download-retry" ),
-	m_indexFolderArgumentId( "--index-folder" )
+	m_indexFolderArgumentId( "--index-folder" ),
+	m_skipCompressionCalculation( "--skip-compression" )
 {
 
 	AddRequiredPositionalArgument( m_previousResourceGroupPathArgumentId, "Filename to previous resourceGroup." );
@@ -62,6 +63,8 @@ CreatePatchCliOperation::CreatePatchCliOperation() :
 	AddArgument( m_downloadRetrySecondsArgumentId, "The number of seconds before attempt to download a resource fails with a network related error", false, false, SecondsToString( defaultParams.downloadRetrySeconds ) );
 
 	AddArgument( m_indexFolderArgumentId, "The folder in which to place indexes generated for patch files.", false, false, defaultParams.indexFolder.string() );
+
+    AddArgumentFlag( m_skipCompressionCalculation, "Set skip compression calculations on patches." );
 }
 
 bool CreatePatchCliOperation::Execute( std::string& returnErrorMessage ) const
@@ -175,12 +178,23 @@ bool CreatePatchCliOperation::Execute( std::string& returnErrorMessage ) const
 
 	createPatchParams.downloadRetrySeconds = std::chrono::seconds( retrySeconds );
 
+	createPatchParams.indexFolder = m_argumentParser->get( m_indexFolderArgumentId );
+
+    bool skipCompressionCalculation = m_argumentParser->get<bool>( m_skipCompressionCalculation );
+
+    if (skipCompressionCalculation && createPatchParams.resourcePatchBinaryDestinationSettings.destinationType == CarbonResources::ResourceDestinationType::REMOTE_CDN)
+    {
+		returnErrorMessage = "Cannot skip compression when patch desination type is REMOTE_CDN.";
+
+		return false;
+    }
+
+    createPatchParams.calculateCompressions = !skipCompressionCalculation;
+
 	if( s_verbosityLevel != CarbonResources::StatusLevel::OFF )
 	{
 		PrintStartBanner( previousResourceGroupParams, nextResourceGroupParams, createPatchParams );
 	}
-
-	createPatchParams.indexFolder = m_argumentParser->get( m_indexFolderArgumentId );
 
 	return CreatePatch( previousResourceGroupParams, nextResourceGroupParams, createPatchParams );
 }
@@ -228,6 +242,15 @@ void CreatePatchCliOperation::PrintStartBanner( const CarbonResources::ResourceG
 	std::cout << "Download Retry Seconds: " << createPatchParams.downloadRetrySeconds.count() << std::endl;
 
 	std::cout << "Index File Folder: " << createPatchParams.indexFolder << std::endl;
+
+    if( createPatchParams.calculateCompressions )
+	{
+		std::cout << "Calculate Compression: Off" << std::endl;
+	}
+	else
+	{
+		std::cout << "Calculate Compression: On" << std::endl;
+	}
 
 	std::cout << "----------------------------\n"
 			  << std::endl;
