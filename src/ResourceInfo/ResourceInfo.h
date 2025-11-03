@@ -311,7 +311,7 @@ public:
 
 	Result ExportToCsv( std::string& out, const VersionInternal& documentVersion );
 
-	Result SetParametersFromData( const std::string& data );
+	Result SetParametersFromData( const std::string& data, bool calculateCompression = true );
 
 	Result SetParametersFromSourceStream( ResourceTools::FileDataStreamIn& stream, size_t matchSize );
 

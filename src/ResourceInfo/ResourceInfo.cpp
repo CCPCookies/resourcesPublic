@@ -58,8 +58,11 @@ ResourceInfo::ResourceInfo( const ResourceInfoParams& params )
 
 	m_checksum = params.checksum;
 
-	m_compressedSize = params.compressedSize;
-
+    if (params.compressedSize > 0)
+	{
+		m_compressedSize = params.compressedSize;
+    }
+	
 	m_uncompressedSize = params.uncompressedSize;
 
 	if( params.binaryOperation )
@@ -809,7 +812,7 @@ Result ResourceInfo::ImportFromYaml( YAML::Node& resource, const VersionInternal
 		}
 		else
 		{
-			return Result{ ResultType::MALFORMED_RESOURCE_INPUT };
+			m_compressedSize.Reset();
 		}
 	}
 
@@ -900,12 +903,14 @@ Result ResourceInfo::SetParametersFromResource( const ResourceInfo* other, const
 
 		Result getCompressedSizeResult = other->GetCompressedSize( compressedSize );
 
-		if( getCompressedSizeResult.type != ResultType::SUCCESS )
+		if( getCompressedSizeResult.type == ResultType::SUCCESS )
 		{
-			return getCompressedSizeResult;
+			m_compressedSize = compressedSize;
 		}
-
-		m_compressedSize = compressedSize;
+        else
+        {
+			m_compressedSize.Reset();
+        }
 	}
 
 	if( m_prefix.IsParameterExpectedInDocumentVersion( documentVersion ) )
@@ -1012,7 +1017,7 @@ Result ResourceInfo::UpdateLocation()
 	return Result( { ResultType::SUCCESS } );
 }
 
-Result ResourceInfo::SetParametersFromData( const std::string& data )
+Result ResourceInfo::SetParametersFromData( const std::string& data, bool calculateCompression /* = true */ )
 {
 	std::string checksum;
 
@@ -1032,14 +1037,21 @@ Result ResourceInfo::SetParametersFromData( const std::string& data )
 		return getTypeResult;
 	}
 
-	std::string compressedData;
+	if (calculateCompression)
+    {
+		std::string compressedData;
 
-	if( !ResourceTools::GZipCompressData( data, compressedData ) )
-	{
-		return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
-	}
+		if( !ResourceTools::GZipCompressData( data, compressedData ) )
+		{
+			return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
+		}
 
-	m_compressedSize = compressedData.size();
+		m_compressedSize = compressedData.size();
+    }
+    else
+    {
+		m_compressedSize.Reset();
+    }
 
 	m_uncompressedSize = data.size();
 
@@ -1142,6 +1154,7 @@ Result ResourceInfo::ExportToYaml( YAML::Emitter& out, const VersionInternal& do
 		out << YAML::Value << m_checksum.GetValue();
 	}
 
+	//Uncompressed Size
 	if( m_uncompressedSize.IsParameterExpectedInDocumentVersion( documentVersion ) )
 	{
 		if( !m_uncompressedSize.HasValue() )
@@ -1156,13 +1169,11 @@ Result ResourceInfo::ExportToYaml( YAML::Emitter& out, const VersionInternal& do
 	// Compressed Size
 	if( m_compressedSize.IsParameterExpectedInDocumentVersion( documentVersion ) )
 	{
-		if( !m_compressedSize.HasValue() )
+		if( m_compressedSize.HasValue() )
 		{
-			return Result{ ResultType::REQUIRED_RESOURCE_PARAMETER_NOT_SET };
+			out << YAML::Key << m_compressedSize.GetTag();
+			out << YAML::Value << m_compressedSize.GetValue();
 		}
-
-		out << YAML::Key << m_compressedSize.GetTag();
-		out << YAML::Value << m_compressedSize.GetValue();
 	}
 
 	// Binary Operation
@@ -1185,22 +1196,6 @@ Result ResourceInfo::ExportToYaml( YAML::Emitter& out, const VersionInternal& do
 			out << YAML::Value << m_prefix.GetValue();
 		}
 	}
-
-	/*
-        // Clean this up after ABI thought exercises finished
-
-
-		if( m_something.IsParameterExpectedInDocumentVersion( documentVersion ) )
-		{
-			if( !m_something.HasValue() )
-			{
-				return Result::REQUIRED_RESOURCE_PARAMETER_NOT_SET;
-			}
-
-			out << YAML::Key << m_something.GetTag();
-			out << YAML::Value << m_something.GetValue();
-		}
-        */
 
 	return Result{ ResultType::SUCCESS };
 }

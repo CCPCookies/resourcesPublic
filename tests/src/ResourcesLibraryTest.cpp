@@ -136,7 +136,6 @@ TEST_F( ResourcesLibraryTest, ResourceGroupHandleImportMissingParametersForVersi
 	EXPECT_EQ( AttemptImportResourceGroupMissingParameter( "Version", emptyResourceGroupPath ).type, CarbonResources::ResultType::MALFORMED_RESOURCE_GROUP );
 	EXPECT_EQ( AttemptImportResourceGroupMissingParameter( "Type", emptyResourceGroupPath ).type, CarbonResources::ResultType::MALFORMED_RESOURCE_GROUP );
 	EXPECT_EQ( AttemptImportResourceGroupMissingParameter( "NumberOfResources", emptyResourceGroupPath ).type, CarbonResources::ResultType::MALFORMED_RESOURCE_GROUP );
-	EXPECT_EQ( AttemptImportResourceGroupMissingParameter( "TotalResourcesSizeCompressed", emptyResourceGroupPath ).type, CarbonResources::ResultType::MALFORMED_RESOURCE_GROUP );
 	EXPECT_EQ( AttemptImportResourceGroupMissingParameter( "TotalResourcesSizeUnCompressed", emptyResourceGroupPath ).type, CarbonResources::ResultType::MALFORMED_RESOURCE_GROUP );
 	EXPECT_EQ( AttemptImportResourceGroupMissingParameter( "Resources", emptyResourceGroupPath ).type, CarbonResources::ResultType::MALFORMED_RESOURCE_GROUP );
 }
@@ -836,6 +835,34 @@ TEST_F( ResourcesLibraryTest, CreateResourceGroupFromDirectory )
 	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
 #elif __APPLE__
 	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+#else
+#error Unsupported platform
+#endif
+	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
+}
+
+TEST_F( ResourcesLibraryTest, CreateResourceGroupFromDirectorySkipCompression )
+{
+	CarbonResources::ResourceGroup resourceGroup;
+
+	CarbonResources::CreateResourceGroupFromDirectoryParams createResourceGroupParams;
+
+	createResourceGroupParams.directory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+
+    createResourceGroupParams.calculateCompressions = false;
+
+	EXPECT_EQ( resourceGroup.CreateFromDirectory( createResourceGroupParams ).type, CarbonResources::ResultType::SUCCESS );
+
+	CarbonResources::ResourceGroupExportToFileParams exportParams;
+
+	exportParams.filename = "ResourceGroups/ResourceGroup.yaml";
+
+	EXPECT_EQ( resourceGroup.ExportToFile( exportParams ).type, CarbonResources::ResultType::SUCCESS );
+
+#if _WIN64
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupSkipCompressionWindows.yaml" );
+#elif __APPLE__
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupSkipCompressionMacOS.yaml" );
 #else
 #error Unsupported platform
 #endif

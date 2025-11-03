@@ -1,8 +1,7 @@
 # Copyright © 2025 CCP ehf.
 
 cmake_minimum_required(VERSION 3.30.1)
-project(resources VERSION 3.0.3)
-
+project(resources VERSION 3.1.0)
 
 include(cmake/CcpGlobalSettings.cmake)
 include(cmake/CcpTargetConfigurations.cmake)

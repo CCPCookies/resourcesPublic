@@ -111,7 +111,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromDirectory( const CreateResour
 					return getResourceDataResult;
 				}
 
-				Result setParametersFromDataResult = resource->SetParametersFromData( resourceData );
+				Result setParametersFromDataResult = resource->SetParametersFromData( resourceData, params.calculateCompressions );
 
 				if( setParametersFromDataResult.type != ResultType::SUCCESS )
 				{
@@ -135,10 +135,13 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromDirectory( const CreateResour
 
 				ResourceTools::FileDataStreamIn fileStreamIn( params.resourceStreamThreshold );
 
-				if( !compressionStream.Start() )
-				{
-					return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
-				}
+				if (params.calculateCompressions)
+                {
+					if( !compressionStream.Start() )
+					{
+						return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
+					}
+                }
 
 				if( !fileStreamIn.StartRead( entry.path() ) )
 				{
@@ -168,7 +171,21 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromDirectory( const CreateResour
 						return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
 					}
 
-					if( !( compressionStream << &fileData ) )
+					if( params.calculateCompressions )
+					{
+						if( !( compressionStream << &fileData ) )
+						{
+							return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
+						}
+					}
+
+					compressedDataSize += compressedData.size();
+					compressedData.clear();
+				}
+
+				if( params.calculateCompressions )
+				{
+					if( !compressionStream.Finish() )
 					{
 						return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
 					}
@@ -176,14 +193,6 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromDirectory( const CreateResour
 					compressedDataSize += compressedData.size();
 					compressedData.clear();
 				}
-
-				if( !compressionStream.Finish() )
-				{
-					return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
-				}
-
-				compressedDataSize += compressedData.size();
-				compressedData.clear();
 
 				std::string checksum;
 
@@ -227,6 +236,11 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromDirectory( const CreateResour
 			}
 		}
 	}
+
+    if (!params.calculateCompressions)
+    {
+		m_totalResourcesSizeCompressed.Reset();
+    }
 
 	if( params.statusCallback )
 	{
@@ -671,7 +685,7 @@ Result ResourceGroup::ResourceGroupImpl::ImportFromYaml( YAML::Node& resourceGro
 	YAML::Node totalResourceSizeCompressedNode = resourceGroupFile[m_totalResourcesSizeCompressed.GetTag()];
 	if( !totalResourceSizeCompressedNode.IsDefined() )
 	{
-		return Result{ ResultType::MALFORMED_RESOURCE_GROUP };
+		m_totalResourcesSizeCompressed.Reset();
 	}
 
 	YAML::Node totalResourceSizeUncompressedNode = resourceGroupFile[m_totalResourcesSizeUncompressed.GetTag()];
@@ -777,8 +791,14 @@ Result ResourceGroup::ResourceGroupImpl::ExportYaml( const VersionInternal& outp
 	out << YAML::Key << m_numberOfResources.GetTag();
 	out << YAML::Value << m_numberOfResources.GetValue();
 
-	out << YAML::Key << m_totalResourcesSizeCompressed.GetTag();
-	out << YAML::Value << m_totalResourcesSizeCompressed.GetValue();
+    if (m_totalResourcesSizeCompressed.HasValue())
+    {
+		uintmax_t compressedSize = m_totalResourcesSizeCompressed.GetValue();
+
+		out << YAML::Key << m_totalResourcesSizeCompressed.GetTag();
+		out << YAML::Value << compressedSize;
+		
+    }
 
 	out << YAML::Key << m_totalResourcesSizeUncompressed.GetTag();
 	out << YAML::Value << m_totalResourcesSizeUncompressed.GetValue();
@@ -1620,7 +1640,7 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 				patchSourceOffset += patchSourceOffsetDelta;
 				if( !patchData.empty() )
 				{
-					Result setParametersFromDataResult = patchResource->SetParametersFromData( patchData );
+					Result setParametersFromDataResult = patchResource->SetParametersFromData( patchData, params.calculateCompressions );
 
 					if( setParametersFromDataResult.type != ResultType::SUCCESS )
 					{
@@ -1771,12 +1791,10 @@ Result ResourceGroup::ResourceGroupImpl::AddResource( ResourceInfo* resource )
 
 	Result resourceGetCompressedSizeResult = resource->GetCompressedSize( resourceCompressedSize );
 
-	if( resourceGetCompressedSizeResult.type != ResultType::SUCCESS )
+	if( resourceGetCompressedSizeResult.type == ResultType::SUCCESS )
 	{
-		return resourceGetCompressedSizeResult;
+		m_totalResourcesSizeCompressed = m_totalResourcesSizeCompressed.GetValue() + resourceCompressedSize;
 	}
-
-	m_totalResourcesSizeCompressed = m_totalResourcesSizeCompressed.GetValue() + resourceCompressedSize;
 
 	return Result{ ResultType::SUCCESS };
 }

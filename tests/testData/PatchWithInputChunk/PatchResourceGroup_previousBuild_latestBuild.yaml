@@ -28,7 +28,6 @@ Resources:
     Location: ""
     Checksum: d41d8cd98f00b204e9800998ecf8427e
     UncompressedSize: 8925
-    CompressedSize: 0
     TargetResourceRelativePath: introMoviePrefixed.txt
     DataOffset: 500
     SourceOffset: 192
@@ -46,7 +45,6 @@ Resources:
     Location: ""
     Checksum: d41d8cd98f00b204e9800998ecf8427e
     UncompressedSize: 2500
-    CompressedSize: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 500
     SourceOffset: 490
@@ -64,7 +62,6 @@ Resources:
     Location: ""
     Checksum: d41d8cd98f00b204e9800998ecf8427e
     UncompressedSize: 2500
-    CompressedSize: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 3500
     SourceOffset: 3563
@@ -82,7 +79,6 @@ Resources:
     Location: ""
     Checksum: d41d8cd98f00b204e9800998ecf8427e
     UncompressedSize: 500
-    CompressedSize: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 6500
     SourceOffset: 6546
@@ -100,7 +96,6 @@ Resources:
     Location: ""
     Checksum: d41d8cd98f00b204e9800998ecf8427e
     UncompressedSize: 1462
-    CompressedSize: 0
     TargetResourceRelativePath: introMovieSomewhatChanged.txt
     DataOffset: 7500
     SourceOffset: 7629
@@ -109,7 +104,6 @@ Resources:
     Location: ""
     Checksum: d41d8cd98f00b204e9800998ecf8427e
     UncompressedSize: 9000
-    CompressedSize: 0
     TargetResourceRelativePath: intromovie.txt
     DataOffset: 0
     SourceOffset: 0

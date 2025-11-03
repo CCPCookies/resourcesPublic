@@ -16,8 +16,8 @@ public:
 	virtual bool Execute( std::string& returnErrorMessage ) const final;
 
 private:
-	void PrintStartBanner( const std::filesystem::path& inputDirectory, const std::filesystem::path& resourceGroupOutputDirectory, const std::string& version, const std::string& resourcePrefix ) const;
-	bool CreateResourceGroup( const std::filesystem::path& inputDirectory, const std::filesystem::path& resourceGroupOutputFile, CarbonResources::Version documentVersion, const std::string& resourcePrefix ) const;
+	void PrintStartBanner( const std::filesystem::path& inputDirectory, const std::filesystem::path& resourceGroupOutputDirectory, const std::string& version, const std::string& resourcePrefix, bool skipCompressionCalculation ) const;
+	bool CreateResourceGroup( const std::filesystem::path& inputDirectory, const std::filesystem::path& resourceGroupOutputFile, CarbonResources::Version documentVersion, const std::string& resourcePrefix, bool skipCompressionCalculation ) const;
 
 private:
 	std::string m_createResourceGroupPathArgumentId;
@@ -27,6 +27,8 @@ private:
 	std::string m_createResourceGroupDocumentVersionArgumentId;
 
 	std::string m_createResourceGroupResourcePrefixArgumentId;
+	
+    std::string m_createResourceGroupSkipCompressionCalculation;
 };
 
 #endif // CreateResourceGroupCliOperation_H

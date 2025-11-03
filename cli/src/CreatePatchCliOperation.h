@@ -55,6 +55,8 @@ private:
 	std::string m_downloadRetrySecondsArgumentId;
 
 	std::string m_indexFolderArgumentId;
+
+    std::string m_skipCompressionCalculation;
 };
 
 #endif // CreatePatchCliOperation_H
