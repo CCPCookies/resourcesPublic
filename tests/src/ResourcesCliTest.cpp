@@ -155,7 +155,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectory )
 #else
 #error Unsupported platform
 #endif
-	EXPECT_TRUE( FilesMatch( goldFile, "GroupOut/ResourceGroup.yaml" ) );
+	EXPECT_TRUE( FilesMatch( goldFile, outputFile ) );
 }
 
 TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryExportResources )
@@ -196,7 +196,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryExportResources )
 #else
 #error Unsupported platform
 #endif
-	EXPECT_TRUE( FilesMatch( goldFile, "GroupOut/ResourceGroup.yaml" ) );
+	EXPECT_TRUE( FilesMatch( goldFile, outputFile ) );
 
     EXPECT_TRUE( DirectoryIsSubset( exportOutputPath, inputDirectory ) );
 }
@@ -232,7 +232,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryWithSkipCompression )
 #else
 #error Unsupported platform
 #endif
-	EXPECT_TRUE( FilesMatch( goldFile, "GroupOut/ResourceGroup.yaml" ) );
+	EXPECT_TRUE( FilesMatch( goldFile, outputFile ) );
 }
 
 TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormat )
@@ -267,7 +267,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormat )
 #else
 #error Unsupported platform
 #endif
-	EXPECT_TRUE( FilesMatch( goldFile, "GroupOut/ResourceGroup.csv" ) );
+	EXPECT_TRUE( FilesMatch( goldFile, outputFile ) );
 }
 
 TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormatWithPrefix )
@@ -305,7 +305,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormatWithP
 #else
 #error Unsupported platform
 #endif
-	EXPECT_TRUE( FilesMatch( goldFile, "GroupOut/ResourceGroupPrefixed.csv" ) );
+	EXPECT_TRUE( FilesMatch( goldFile, outputFile ) );
 }
 
 TEST_F( ResourcesCliTest, CreateBundle )
