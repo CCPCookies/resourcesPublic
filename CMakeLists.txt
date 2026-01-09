@@ -82,6 +82,57 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}"
 
 set_target_properties(resources PROPERTIES OUTPUT_NAME "_resources")
 
+
+
+# Combine static libraries to single static for distribution
+# This is useful for consumers taht just want a simple single
+# file to link against
+
+if (WIN32)
+
+    set(RESOURCES_STANDALONE_LIB_NAME _resources_static_standalone.lib)
+
+    #requires lib.exe to be available msvc
+    add_custom_command(TARGET resources POST_BUILD
+        COMMAND lib.exe
+                /OUT:${RESOURCES_STANDALONE_LIB_NAME}
+                $<TARGET_FILE:resources>
+                $<TARGET_FILE:yaml-cpp::yaml-cpp>
+                $<TARGET_FILE:resources-tools-static-standalone>
+                /VERBOSE
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+
+elseif(APPLE)
+
+    set(RESOURCES_STANDALONE_LIB_NAME _resources_static_standalone.a)
+
+    #libtool -static -o new.a old1.a old2.a
+    add_custom_command(TARGET resources POST_BUILD
+        COMMAND libtool -static -o ${RESOURCES_STANDALONE_LIB_NAME}
+                $<TARGET_FILE:resources>
+                $<TARGET_FILE:yaml-cpp::yaml-cpp>
+                $<TARGET_FILE:resources-tools-static-standalone>
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+
+else()
+    message(FATAL_ERROR "Unsupported platform")
+
+endif()
+
+# Add library for static standalone
+# This is then used for CLI as a way for testing the library
+add_library(resources-static-standalone STATIC IMPORTED GLOBAL)
+add_dependencies(resources-static-standalone resources)
+
+set_target_properties(resources-static-standalone
+        PROPERTIES
+        IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/${RESOURCES_STANDALONE_LIB_NAME}
+        INTERFACE_INCLUDE_DIRECTORIES "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>;$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+        INTERFACE_COMPILE_DEFINITIONS CARBON_RESOURCES_STATIC
+        )
+
 add_subdirectory(cli)
 
 # Enable testing based on option set (on by default)
@@ -140,6 +191,10 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
                 ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
                 RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
         )
+
+        # Copy the standalone static library
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${RESOURCES_STANDALONE_LIB_NAME}
+            DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/)
     else ()
         # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
         install(
@@ -150,6 +205,11 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
                 ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
                 RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
         )
+
+        # Copy the standalone static library
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${RESOURCES_STANDALONE_LIB_NAME}
+            DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/)
+
         # Install rule for available public headers
         install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h")
 
