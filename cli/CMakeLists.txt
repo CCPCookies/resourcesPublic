@@ -30,8 +30,7 @@ set(SRC_FILES
 
 ccp_add_executable(resources-cli ${SRC_FILES})
 
-# Links with resources-static-standalone to ensure that the combine lib is functional
-target_link_libraries(resources-cli PRIVATE resources-static-standalone argparse::argparse)
+target_link_libraries(resources-cli PRIVATE resources argparse::argparse)
 
 get_target_property(_SOURCES resources-cli SOURCES)
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}"

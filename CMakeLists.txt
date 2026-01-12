@@ -122,7 +122,6 @@ else()
 endif()
 
 # Add library for static standalone
-# This is then used for CLI as a way for testing the library
 add_library(resources-static-standalone STATIC IMPORTED GLOBAL)
 add_dependencies(resources-static-standalone resources)
 
