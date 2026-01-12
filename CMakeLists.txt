@@ -101,6 +101,7 @@ if (WIN32)
                 $<TARGET_FILE:resources-tools-static-standalone>
                 /VERBOSE
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            BYPRODUCTS ${RESOURCES_STANDALONE_LIB_NAME}
         )
 
 elseif(APPLE)
@@ -114,6 +115,7 @@ elseif(APPLE)
                 $<TARGET_FILE:yaml-cpp::yaml-cpp>
                 $<TARGET_FILE:resources-tools-static-standalone>
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            BYPRODUCTS ${RESOURCES_STANDALONE_LIB_NAME}
         )
 
 else()
