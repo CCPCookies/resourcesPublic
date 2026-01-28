@@ -27,9 +27,6 @@
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
-      "cacheVariables": {
-        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded"
-      },
       "hidden": true
     },
     {
