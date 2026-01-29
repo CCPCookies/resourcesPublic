@@ -103,6 +103,13 @@
       }
     },
     {
+      "name": "x64-windows-release-with-dev-features",
+      "inherits": "x64-windows-release",
+      "cacheVariables": {
+        "DEV_FEATURES": "ON"
+      }
+    },
+    {
       "name": "arm64-osx-internal",
       "inherits": "arm64-osx",
       "cacheVariables": {
