@@ -13,7 +13,10 @@
       "cacheVariables": {
         "VCPKG_USE_HOST_TOOLS": "ON",
         "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
-        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/customized_toolchain/triplets"
+        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/customized_toolchain/triplets",
+        "BUILD_DOCUMENTATION": "ON",
+        "BUILD_TESTING": "ON",
+        "VCPKG_MANIFEST_FEATURES": "tests;docs"
       },
       "environment": {
         "VCPKG_ROOT": "${sourceDir}/vendor/github.com/microsoft/vcpkg"
