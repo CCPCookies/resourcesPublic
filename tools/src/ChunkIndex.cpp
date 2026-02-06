@@ -20,12 +20,11 @@ constexpr size_t BLOCKS_PER_FILE = TARGET_FILE_SIZE / CHUNK_BLOCK_SIZE;
 
 namespace ResourceTools
 {
-ChunkIndex::ChunkIndex( std::filesystem::path fileToIndex, uint32_t chunkSize, const std::filesystem::path& indexFolder /*, StatusCallback statusCallback*/ ) :
+ChunkIndex::ChunkIndex( std::filesystem::path fileToIndex, uint32_t chunkSize, const std::filesystem::path& indexFolder ) :
 	m_fileToIndex( fileToIndex ),
     m_chunkSize( chunkSize ),
     m_currentIndexFile( 0 ),
-    m_indexFolder( indexFolder )//,
-    //m_statusCallback( statusCallback )
+    m_indexFolder( indexFolder )
 {
 }
 
@@ -74,14 +73,6 @@ bool ChunkIndex::Flush( std::vector<std::pair<uint32_t, uint32_t>>& index )
 	streamOut.open( out, std::ios::out | std::ios::binary );
 	if( !streamOut )
 	{
-		/*
-		if( m_statusCallback )
-		{
-			std::stringstream ss;
-			ss << "Index generation failed. Failed to open path for writing: " << out;
-			m_statusCallback( 0,0, ss.str() );
-		}
-        */
 		return false;
 	}
 	m_indexFiles.push_back( out );
@@ -144,19 +135,12 @@ bool ChunkIndex::Generate()
 	{
 		if( !std::filesystem::create_directories( m_indexFolder ) )
 		{
-			/*
-			if( m_statusCallback )
-			{
-				m_statusCallback( 0,0, "Failed to create index directory: " + m_indexFolder.string() );
-			}
-            */
 			return false;
 		}
 	}
 
 	size_t fileSize = std::filesystem::file_size( m_fileToIndex );
 	size_t indexFileCount = fileSize / BLOCKS_PER_FILE;
-	size_t currentIndexFile{ 0 };
 
 	std::string fileData;
 	std::string backlog;
@@ -184,15 +168,7 @@ bool ChunkIndex::Generate()
 			{
 				checksum = GenerateRollingAdlerChecksum( backlog, backlogOffset, backlogOffset + m_chunkSize, checksum );
 			}
-			/*
-			if( m_statusCallback && !( ( backlogOffset + fileOffset ) % onePercentOfFileSize ) )
-			{
-				std::stringstream ss;
-				ss << "Generating index: " << GenerateIndexPath();
-				auto percentage = static_cast<unsigned int>( ( backlogOffset + fileOffset ) * 100 / fileSize );
-				m_statusCallback( percentage,0, ss.str() );
-			}
-            */
+
 			if( !IsRelevant( checksum.checksum ) )
 			{
 				++backlogOffset;
@@ -204,18 +180,8 @@ bool ChunkIndex::Generate()
 			++backlogOffset;
 			if( cachedChunks >= BLOCKS_PER_FILE )
 			{
-				/*
-				if( m_statusCallback )
-				{
-					std::filesystem::path filePath = GenerateIndexPath();
-					std::stringstream ss;
-					ss << "Generating index (" << currentIndexFile + 1 << "/" << indexFileCount << "): " << filePath;
-					auto percentage = static_cast<unsigned int>( 100 * currentIndexFile / indexFileCount );
-					m_statusCallback( percentage,0, ss.str() );
-				}
-                */
 				Flush( chunkToOffsets );
-				++currentIndexFile;
+
 				cachedChunks = 0;
 			}
 		}
@@ -227,20 +193,9 @@ bool ChunkIndex::Generate()
 			backlog = backlog.substr( m_chunkSize );
 		}
 	}
-	/*
-	if( m_statusCallback && indexFileCount > 0 )
-	{
-		auto percentage = static_cast<unsigned int>( currentIndexFile / indexFileCount );
-		m_statusCallback( percentage,0, "Generating index" );
-	}
-    */
+
 	Flush( chunkToOffsets );
-	/*
-	if( m_statusCallback )
-	{
-		m_statusCallback( 100,0, "Index generated" );
-	}
-    */
+
 	return true;
 }
 
