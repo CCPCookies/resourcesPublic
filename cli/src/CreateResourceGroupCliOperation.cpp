@@ -84,18 +84,16 @@ bool CreateResourceGroupCliOperation::Execute( std::string& returnErrorMessage )
 
     exportParams.outputDocumentVersion = createResourceGroupParams.outputDocumentVersion;
 
-	PrintStartBanner( createResourceGroupParams, exportParams );
+    if (ShowCliStatusUpdates())
+    {
+		PrintStartBanner( createResourceGroupParams, exportParams );
+    }
 
 	return CreateResourceGroup( createResourceGroupParams, exportParams );
 }
 
 void CreateResourceGroupCliOperation::PrintStartBanner( CarbonResources::CreateResourceGroupFromDirectoryParams& createResourceGroupFromDirectoryParams, CarbonResources::ResourceGroupExportToFileParams& ResourceGroupExportToFileParams ) const
 {
-	if( s_verbosityLevel == CarbonResources::StatusLevel::OFF )
-	{
-		return;
-	}
-
 	std::cout << "---Creating Resource Group---" << std::endl;
 
 	PrintCommonOperationHeaderInformation();
@@ -138,12 +136,13 @@ bool CreateResourceGroupCliOperation::CreateResourceGroup( CarbonResources::Crea
 {
 	CarbonResources::ResourceGroup resourceGroup;
 
-    createResourceGroupFromDirectoryParams.statusCallback = GetStatusCallback();
+	createResourceGroupFromDirectoryParams.callbackSettings.statusCallback = GetStatusCallback();
+	createResourceGroupFromDirectoryParams.callbackSettings.verbosityLevel = GetVerbosityLevel();
 
-	if( createResourceGroupFromDirectoryParams.statusCallback )
-	{
-		createResourceGroupFromDirectoryParams.statusCallback( CarbonResources::StatusLevel::OVERVIEW, CarbonResources::StatusProgressType::PERCENTAGE, 0, "Creating Resource Group from directory" );
-	}
+    if ( ShowCliStatusUpdates() )
+    {
+		CliStatusUpdate( "Creating resource group from directory." );
+    }
 
 	CarbonResources::Result createFromDirectoryResult = resourceGroup.CreateFromDirectory( createResourceGroupFromDirectoryParams );
 
@@ -154,11 +153,12 @@ bool CreateResourceGroupCliOperation::CreateResourceGroup( CarbonResources::Crea
 		return false;
 	}
 
-	ResourceGroupExportToFileParams.statusCallback = GetStatusCallback();
+    ResourceGroupExportToFileParams.callbackSettings.statusCallback = GetStatusCallback();
+	ResourceGroupExportToFileParams.callbackSettings.verbosityLevel = GetVerbosityLevel();
 
-	if( ResourceGroupExportToFileParams.statusCallback )
+    if( ShowCliStatusUpdates() )
 	{
-		ResourceGroupExportToFileParams.statusCallback( CarbonResources::StatusLevel::OVERVIEW, CarbonResources::StatusProgressType::PERCENTAGE, 50, "Exporting Resource Group to file." );
+		CliStatusUpdate( "Exporting resource group to file." );
 	}
 
 	CarbonResources::Result exportToFileResult = resourceGroup.ExportToFile( ResourceGroupExportToFileParams );
@@ -170,9 +170,9 @@ bool CreateResourceGroupCliOperation::CreateResourceGroup( CarbonResources::Crea
 		return false;
 	}
 
-	if( ResourceGroupExportToFileParams.statusCallback )
+    if( ShowCliStatusUpdates() )
 	{
-		ResourceGroupExportToFileParams.statusCallback( CarbonResources::StatusLevel::OVERVIEW, CarbonResources::StatusProgressType::PERCENTAGE, 100, "Resource Group successfully created from directory." );
+		CliStatusUpdate( "Operation complete." );
 	}
 
 	return true;

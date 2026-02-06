@@ -114,7 +114,7 @@ TEST_F( ResourcesCliTest, CreateOperationWithInvalidInput )
 	arguments.push_back( "create-group" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::filesystem::path inputDirectory = "INVALID_PATH";
 	arguments.push_back( inputDirectory.string() );
@@ -135,7 +135,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectory )
 	arguments.push_back( "create-group" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::filesystem::path inputDirectory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 	arguments.push_back( inputDirectory.string() );
@@ -167,7 +167,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryExportResources )
 	arguments.push_back( "create-group" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
     arguments.push_back( "--export-resources" );
 
@@ -210,7 +210,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryWithSkipCompression )
 	arguments.push_back( "create-group" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
     arguments.push_back( "--skip-compression" );
 
@@ -244,7 +244,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormat )
 	arguments.push_back( "create-group" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::filesystem::path inputDirectory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 	arguments.push_back( inputDirectory.string() );
@@ -279,7 +279,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormatWithP
 	arguments.push_back( "create-group" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::filesystem::path inputDirectory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 	arguments.push_back( inputDirectory.string() );
@@ -317,7 +317,7 @@ TEST_F( ResourcesCliTest, CreateBundle )
 	arguments.push_back( "create-bundle" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	arguments.push_back( GetTestFileFileAbsolutePath( "Bundle/resfileindexShort.txt" ).string() );
 
@@ -364,7 +364,7 @@ TEST_F( ResourcesCliTest, RemoveResourcesWithUnknownResourceIgnoreOnResourceNotF
 	arguments.push_back( "remove-resources" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
 
@@ -396,7 +396,7 @@ TEST_F( ResourcesCliTest, RemoveResourcesWithUnknownResourceWithInvalidPathToRes
 	arguments.push_back( "remove-resources" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
 
@@ -426,7 +426,7 @@ TEST_F( ResourcesCliTest, RemoveResourcesWithUnknownResource )
 	arguments.push_back( "remove-resources" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
 
@@ -456,7 +456,7 @@ TEST_F( ResourcesCliTest, RemoveResources )
 	arguments.push_back( "remove-resources" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
 
@@ -491,7 +491,7 @@ TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoAdditions )
 	arguments.push_back( "diff-group" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
 
@@ -530,7 +530,7 @@ TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoChanges )
 	arguments.push_back( "diff-group" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
 
@@ -569,7 +569,7 @@ TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoSubtractions )
 	arguments.push_back( "diff-group" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
 
@@ -608,7 +608,7 @@ TEST_F( ResourcesCliTest, MergeGroup )
 	arguments.push_back( "merge-group" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/BaseResourceGroup.yaml" ).string();
 
@@ -643,7 +643,7 @@ TEST_F( ResourcesCliTest, CreatePatch )
 	arguments.push_back( "create-patch" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string previousResourceGroupPath = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" ).string();
 
@@ -699,7 +699,7 @@ TEST_F( ResourcesCliTest, CreateGroup )
 	arguments.push_back( "create-group" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string directoryIn = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" ).string();
 
@@ -737,7 +737,7 @@ TEST_F( ResourcesCliTest, ApplyPatch )
 	arguments.push_back( "apply-patch" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string directoryIn = GetTestFileFileAbsolutePath( "Patch/PatchResourceGroup.yaml" ).string();
 
@@ -792,7 +792,7 @@ TEST_F( ResourcesCliTest, UnpackBundle )
 	arguments.push_back( "unpack-bundle" );
 
 	arguments.push_back( "--verbosity-level" );
-	arguments.push_back( "3" );
+	arguments.push_back( "-1" );
 
 	std::string directoryIn = GetTestFileFileAbsolutePath( "Bundle/BundleResourceGroup.yaml" ).string();
 
