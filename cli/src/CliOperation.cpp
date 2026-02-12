@@ -17,7 +17,7 @@ CliOperation::CliOperation( const std::string& name, const std::string& descript
 
 	m_argumentParser->add_description( description );
 
-	AddArgument( m_verbosityLevelId, "Set verbosity to level", false, false, "0", "0 - n to register for updates from n nested processes, -1 for all." );
+	AddArgument( m_verbosityLevelId, "Set verbosity to level", false, false, "0", "1 - n to register for updates from n nested processes, -1 for all, 0 for none." );
 }
 
 CliOperation ::~CliOperation()
@@ -160,7 +160,7 @@ void CliOperation::CarbonResourcesStatusUpdate( CarbonResources::StatusProgressT
 
     if (type == CarbonResources::StatusProgressType::START)
     {
-        // Don't process process starts
+        // Update function doesn need to process progress start types
 		return;
     }
 
@@ -180,9 +180,6 @@ void CliOperation::CarbonResourcesStatusUpdate( CarbonResources::StatusProgressT
 	ss << info;
 
 	std::string message = ss.str();
-
-	std::cout << "\r";
-
 	std::cout << message;
 	std::cout << std::endl;
     

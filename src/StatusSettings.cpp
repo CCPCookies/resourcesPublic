@@ -6,8 +6,9 @@ namespace CarbonResources
 {
 	
 StatusSettings::StatusSettings() :
-	m_nestingLevel( 0 ),
-	m_parent( nullptr )
+	m_parent( nullptr ),
+	m_nestingLevel( 0 )
+	
 {
 }
 

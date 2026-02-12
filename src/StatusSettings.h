@@ -50,6 +50,7 @@ private:
 
 private:
 	StatusUpdate m_lastUpdate;
+
 	StatusSettings* m_parent;
 
 	CallbackSettings m_callbackSettings;

@@ -38,11 +38,10 @@ enum class StatusProgressType
 };
 
 /** Status Callback function signature.
-    * @param statusLevel The status granularity level for the update.
     * @param statusProgressType Type of progress update to expect in update. Affects how progress parameter should be interpreted.
     * @param processProgress Current process progress (%), format is inferred from statusProgressType.
     * @param overallProgress Overall progress of job (%), format is inferred from statusProgressType.
-    * @param sizeOfJob The full size for the current process (%).
+    * @param percentageSizeOfJob The full size for the current process (%).
     * @param nestLevel The nesting level of the current job.
     * @param info Update message string giving information on the current process step.
     */

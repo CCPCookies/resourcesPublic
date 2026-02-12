@@ -161,7 +161,7 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 				}
 
 				float step = static_cast<float>( 100 * numProcessed );
-				float percentage = static_cast<float>( step / numResources );
+				float percentage = static_cast<float>( step / toBundle.size() );
 
 				innerStatusUpdate.Update( CarbonResources::StatusProgressType::PERCENTAGE, percentage, step, message );
 

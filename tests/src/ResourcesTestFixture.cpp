@@ -96,7 +96,7 @@ bool ResourcesTestFixture::DirectoryIsSubset( const std::filesystem::path& dir1,
 
 bool ResourcesTestFixture::StatusIsValid()
 {
-	return s_statusStateIsValid;
+	return s_statusInformation.statusStateIsValid;
 }
 
 bool FloatsAreEqual(const float v1, const float v2)
@@ -106,7 +106,7 @@ bool FloatsAreEqual(const float v1, const float v2)
 
 void ResourcesTestFixture::StatusUpdate( CarbonResources::StatusProgressType type, float processProgress, float overallProgress, float sizeOfJob, unsigned int nestingLevel, const std::string& info )
 {
-    if (!s_statusStateIsValid)
+	if( !s_statusInformation.statusStateIsValid )
     {
         // status state already reached an invalid state
         // stop checks at first failure
@@ -121,14 +121,14 @@ void ResourcesTestFixture::StatusUpdate( CarbonResources::StatusProgressType typ
     }
 
     // Check start of an overall process test
-	if( m_overallProgress < 0 )
+	if( s_statusInformation.overallProgress < 0 )
     {
         // Ensure that the first overall progress update is zero
         if (overallProgress != 0)
         {
 			// The progress should only increase and never decrease
-			s_statusStateIsValid = false;
-			s_statusStateInfo = "The overall progress started above the expected zero";
+			s_statusInformation.statusStateIsValid = false;
+			s_statusInformation.statusStateInfo = "The overall progress started above the expected zero";
 			return;
         }
 
@@ -137,36 +137,36 @@ void ResourcesTestFixture::StatusUpdate( CarbonResources::StatusProgressType typ
     {
         // Ensure that overall progress never decreases
         // It can remain the same
-		if( overallProgress < m_overallProgress )
+		if( overallProgress < s_statusInformation.overallProgress )
         {
 			// Overall progress should never decrease
-			s_statusStateIsValid = false;
-			s_statusStateInfo = "Overall progress decreased. Could be caused by out of order updates, or could there be a parent update missing in between nested jobs of the same level?";
+			s_statusInformation.statusStateIsValid = false;
+			s_statusInformation.statusStateInfo = "Overall progress decreased. Could be caused by out of order updates, or could there be a parent update missing in between nested jobs of the same level?";
 			return;
         }
     }
 
-    if (m_overallProgress > 100)
+    if( s_statusInformation.overallProgress > 100 )
     {
-		// Overall progress should never decrease
-		s_statusStateIsValid = false;
-		s_statusStateInfo = "Overall progress cannot exceed 100";
+		// Overall progress should never exceed 100
+		s_statusInformation.statusStateIsValid = false;
+		s_statusInformation.statusStateInfo = "Overall progress cannot exceed 100";
 		return;
     }
 
     // Store current state of overall progress
-	m_overallProgress = overallProgress;
+	s_statusInformation.overallProgress = overallProgress;
 
     // Test integrity of status updates
-    if (s_processStatuses.size() == 0)
+	if( s_statusInformation.processStatuses.empty() )
     {
 		// First process encountered
-		s_processStatuses.push( std::make_unique<ProcessStatus>( type, sizeOfJob, nestingLevel, info ) );
+		s_statusInformation.processStatuses.push( std::make_unique<ProcessStatus>( type, sizeOfJob, nestingLevel, info ) );
 
         return;
     }
 
-	ProcessStatus* lastStatus = s_processStatuses.top().get();
+	ProcessStatus* lastStatus = s_statusInformation.processStatuses.top().get();
 
     if (type == CarbonResources::StatusProgressType::UNBOUNDED)
     {
@@ -182,29 +182,29 @@ void ResourcesTestFixture::StatusUpdate( CarbonResources::StatusProgressType typ
         if (processProgress != 0)
         {
             // First update must have initial progress of zero
-			s_statusStateIsValid = false;
-			s_statusStateInfo = "New process started with a non zero progress initial call.";
+			s_statusInformation.statusStateIsValid = false;
+			s_statusInformation.statusStateInfo = "New process started with a non zero progress initial call.";
 			return;
         }
 
         if( sizeOfJob != 0 )
 		{
 			// First update only makes sense to have size of job be 0
-			s_statusStateIsValid = false;
-			s_statusStateInfo = "New processes should use a job size of 0, anything higher doesn't make sense for the status system.";
+			s_statusInformation.statusStateIsValid = false;
+			s_statusInformation.statusStateInfo = "New processes should use a job size of 0, anything higher doesn't make sense for the status system.";
 			return;
 		}
 
         if (lastStatus->m_nestingLevel == nestingLevel)
         {
-			// New process has the same nesting level as the previous process which is not valid
-			s_statusStateIsValid = false;
-			s_statusStateInfo = "New process has the same nesting level as the previous process which is not valid. Perhaps percentage update is incorrect?";
+			// New process must have a higher nesting level than previous process
+			s_statusInformation.statusStateIsValid = false;
+			s_statusInformation.statusStateInfo = "New process must have a higher nesting level than the previous process. Perhaps percentage update is incorrect?";
 			return;
         }
 
         // Indicates that a new job has been started or a process detail status has begun
-		s_processStatuses.push( std::make_unique<ProcessStatus>( type, sizeOfJob, nestingLevel, info ) );
+		s_statusInformation.processStatuses.push( std::make_unique<ProcessStatus>( type, sizeOfJob, nestingLevel, info ) );
 
         return;
     }
@@ -216,8 +216,8 @@ void ResourcesTestFixture::StatusUpdate( CarbonResources::StatusProgressType typ
         if (processProgress < lastStatus->m_progress)
         {
             // The progress should only increase and never decrease
-			s_statusStateIsValid = false;
-			s_statusStateInfo = "A processes progress appeared to decrease status calls.";
+			s_statusInformation.statusStateIsValid = false;
+			s_statusInformation.statusStateInfo = "A processes progress appeared to decrease status calls.";
 			return;
         }
 
@@ -225,9 +225,9 @@ void ResourcesTestFixture::StatusUpdate( CarbonResources::StatusProgressType typ
         if (lastStatus->m_nestingLevel > nestingLevel)
         {
             // The nesting level is expected to not have increased
-			s_statusStateIsValid = false;
-			s_statusStateInfo = "A nested process progress was updated before an initial call with new nest level was started \
-                                 or a child process fully completed";
+			s_statusInformation.statusStateIsValid = false;
+			s_statusInformation.statusStateInfo = "A nested process progress was updated before an initial call with new nest level was started \
+                                                    or a child process fully completed";
 			return;
         }
 
@@ -236,10 +236,10 @@ void ResourcesTestFixture::StatusUpdate( CarbonResources::StatusProgressType typ
 
         // Check for process finishing but with incorrect end type
 		if(( processProgress == 100 )
-			&&(type != CarbonResources::StatusProgressType::END))
+			&& (type != CarbonResources::StatusProgressType::END))
 		{
-			s_statusStateIsValid = false;
-			s_statusStateInfo = "Progress of 100 encountered with status type that is not StatusProgressType::END.";
+			s_statusInformation.statusStateIsValid = false;
+			s_statusInformation.statusStateInfo = "Progress of 100 encountered with status type that is not StatusProgressType::END.";
 			return;
 		}
 
@@ -247,26 +247,22 @@ void ResourcesTestFixture::StatusUpdate( CarbonResources::StatusProgressType typ
         if (type == CarbonResources::StatusProgressType::END)
         {
 			// Remove the process from stack
-			s_processStatuses.pop();
+			s_statusInformation.processStatuses.pop();
 
             // Reset overall progress state if this was the last status
-            if (s_processStatuses.size() == 0)
+			if( s_statusInformation.processStatuses.empty() )
             {
                 // Check that overall progress was approximately 100
-                if (!FloatsAreEqual(m_overallProgress, 100))
+				if( !FloatsAreEqual( s_statusInformation.overallProgress, 100 ) )
                 {
-					s_statusStateIsValid = false;
-					s_statusStateInfo = "At the end of the last process, overall progress was not approximately 100";
+					s_statusInformation.statusStateIsValid = false;
+					s_statusInformation.statusStateInfo = "At the end of the last process, overall progress was not approximately 100";
 					return;
                 }
 
-				m_overallProgress = -1;
+				s_statusInformation.overallProgress = -1;
             }
-			
-            
-
-
-            
+   
         }
     }
 }

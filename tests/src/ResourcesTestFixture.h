@@ -59,6 +59,17 @@ struct ProcessStatus
 
 };
 
+struct StatusInformation
+{
+	std::stack<std::unique_ptr<ProcessStatus>> processStatuses;
+
+	float overallProgress = -1;
+
+	bool statusStateIsValid = true;
+
+	std::string statusStateInfo = "";
+};
+
 struct ResourcesTestFixture : public ::testing::Test
 {
 	void SetUp();
@@ -77,13 +88,8 @@ struct ResourcesTestFixture : public ::testing::Test
 
     static void StatusUpdate( CarbonResources::StatusProgressType type, float processProgress, float overallProgress, float sizeOfJob, unsigned int nestingLevel, const std::string& info );
 
-    static inline std::stack<std::unique_ptr<ProcessStatus>> s_processStatuses;
+    static inline thread_local StatusInformation s_statusInformation;
 
-    static inline float m_overallProgress = -1;
-
-    static inline bool s_statusStateIsValid = true;
-
-    static inline std::string s_statusStateInfo = "";
 };
 
 #endif // CarbonResourcesTestFixture_H
