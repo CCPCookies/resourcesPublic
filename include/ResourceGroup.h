@@ -33,6 +33,20 @@ struct CallbackSettings
 	int verbosityLevel = -1;
 };
 
+/** @struct DownloadSettings
+    *  @brief Parameters relating downloading
+    *  @var DownloadSettings::retrySeconds
+    *  Delay before a failed download is retried (seconds)
+    *  @var DownloadSettings::retryCount
+    *  Number of times times a download is retried before failure. Note: a backoff is also applied before retry.
+    */
+struct DownloadSettings
+{
+	std::chrono::seconds retrySeconds{ 1 };
+
+	uintmax_t retryCount = 3;
+};
+
 /** @struct ResourceSourceSettings
     *  @brief Parameters to represent where and how a resource is sourced.
     *  @var ResourceSourceSettings::sourceType
@@ -77,7 +91,7 @@ struct ResourceDestinationSettings
     *  Size of chunks to read files in. Default is 10000000.
     *  @var BundleCreateParams::resourceBundleResourceGroupDestinationSettings
     *  Where to save the resulting BundleResourceGroup
-    *  @var BundleCreateParams::CallbackSettings
+    *  @var BundleCreateParams::callbackSettings
     *  Settings relating to status callback messaging
     *  @var BundleCreateParams::downloadRetrySeconds
     *  Delay before a failed download is retried (seconds)
@@ -119,15 +133,15 @@ struct BundleCreateParams
     *  Relative path for output PatchResourceGroup which will contain all the patches produced.
     *  @var PatchCreateParams::patchFileRelativePathPrefix
     *  Relative path prefix for produced patch binaries. Default is "Patches/Patch" which will produce patches such as Patches/Patch.1 ...
-    *  @var PatchCreateParams::resourceSourceSettingsFrom
+    *  @var PatchCreateParams::resourceSourceSettingsPrevious
     *  Where resources for the previous build will be sourced.
-    *  @var PatchCreateParams::resourceSourceSettingsTo
+    *  @var PatchCreateParams::resourceSourceSettingsNext
     *  Where resources for the current ResourceGroup build will be sourced.
     *  @var PatchCreateParams::resourcePatchBinaryDestinationSettings
     *  Where the produced binary patches will be saved.
     *  @var PatchCreateParams::resourcePatchResourceGroupDestinationSettings
     *  Where the produced PatchResourceGroup will be saved.
-    *  @var PatchCreateParams::CallbackSettings
+    *  @var PatchCreateParams::callbackSettings
     *  Settings relating to status callback messaging
     *  @var PatchCreateParams::downloadRetrySeconds
     *  Delay before a failed download is retried (seconds)
@@ -169,7 +183,7 @@ struct PatchCreateParams
     *  @brief Function Parameters required for CarbonResources::ResourceGroup::ImportFromFile
     *  @var ResourceGroupImportFromFileParams::filename
     *  Full filename of input file.
-    *  @var ResourceGroupImportFromFileParams::CallbackSettings
+    *  @var ResourceGroupImportFromFileParams::callbackSettings
     *  Settings relating to status callback messaging
     */
 struct ResourceGroupImportFromFileParams
@@ -185,7 +199,7 @@ struct ResourceGroupImportFromFileParams
     *  Full filename of output file. If directory doesn't exist it will be created.
     *  @var ResourceGroupExportToFileParams::outputDocumentVersion
     *  Document version to output. By default this will be latest supported by the library.
-    *  @var ResourceGroupExportToFileParams::CallbackSettings
+    *  @var ResourceGroupExportToFileParams::callbackSettings
     *  Settings relating to status callback messaging
     */
 struct ResourceGroupExportToFileParams
@@ -205,7 +219,7 @@ struct ResourceGroupExportToFileParams
     *  Files encountered that are above this the threshold value will be streamed in. Value is in bytes, default: 10000000
     *  @var CreateResourceGroupFromDirectoryParams::outputDocumentVersion
     *  Document version to output. By default this will be latest supported by the library.
-    *  @var CreateResourceGroupFromDirectoryParams::CallbackSettings
+    *  @var CreateResourceGroupFromDirectoryParams::callbackSettings
     *  Settings relating to status callback messaging
     *  @var CreateResourceGroupFromDirectoryParams::resourcePrefix
     *  Resource prefix setting, e.g. res.
@@ -217,6 +231,9 @@ struct ResourceGroupExportToFileParams
     *  @var CreateResourceGroupFromDirectoryParams::exportResourcesDestinationSettings
     *  If export resources is set, specifies where the produced PatchResourceGroup will be saved.
     *  @see CreateResourceGroupFromDirectoryParams::exportResources
+    *  @var CreateResourceGroupFromDirectoryParams::fileStreamChunkSize
+    *  Chunk size to stream in data
+    *  @see CreateResourceGroupFromDirectoryParams::resourceStreamThreshold
     */
 struct CreateResourceGroupFromDirectoryParams
 {
@@ -235,6 +252,99 @@ struct CreateResourceGroupFromDirectoryParams
     bool exportResources = false;
 
     ResourceDestinationSettings exportResourcesDestinationSettings = { CarbonResources::ResourceDestinationType::LOCAL_CDN, "ExportedResources" };
+
+    uintmax_t fileStreamChunkSize = 20971520;
+};
+
+/** @struct FilterSettings
+    *  @brief Function Parameters related to filtering
+    *  @var FilterSettings::filterFilePaths
+    *  Paths to filter files to apply
+    *  @var FilterSettings::prefixMapBasePath
+    *  Base directory used for prefixmap in filter files, refer to filter file spec.
+    */
+struct FilterSettings
+{
+	std::vector<std::filesystem::path> filterFilePaths = {};
+
+	std::filesystem::path prefixMapBasePath = "";
+};
+
+/** @struct ExportResourceSettings
+    *  @brief Function Parameters related to resource exporting
+    *  @var ExportResourceSettings::enabled
+    *  Specifies if export is turned on
+    *  @var ExportResourceSettings::destinationSettings
+    *  Destination settings related to exported resource
+    */
+struct ExportResourceSettings
+{
+	bool enabled = false;
+
+	ResourceDestinationSettings destinationSettings = {
+		CarbonResources::ResourceDestinationType::LOCAL_CDN,
+		"ExportedResources"
+	};
+};
+
+/** @struct CompressionCalculationSettings
+    *  @brief Function Parameters related to resource compression calculation
+    *  @var CompressionCalculationSettings::calculateCompressions
+    *  Specifies if compression will be calculated for resoures
+    *  @var CompressionCalculationSettings::remoteUrlToAttemptToGetCompression
+    *  Path to remote location to attempt to get compression information
+    *  @var CompressionCalculationSettings::downloadSettings
+    *  Download settings used, related to CompresionCalculationSettings::remoteUrlToAttemptToGetCompression
+    */
+struct CompressionCalculationSettings
+{
+	bool calculateCompressions = true;
+
+	std::filesystem::path remoteUrlToAttemptToGetCompression = "";
+
+	DownloadSettings downloadSettings;
+};
+
+/** @struct CreateResourceGroupFromFilterParams
+    *  @brief Function Parameters required for CarbonResources::ResourceGroup::CreateFromFilters
+    *  @var CreateResourceGroupFromFilterParams::fileStreamChunkSize
+    *  Chunk size to stream in data
+    *  @var CreateResourceGroupFromFilterParams::outputDocumentVersion
+    *  Document version to output. By default this will be latest supported by the library.
+    *  @var CreateResourceGroupFromFilterParams::callbackSettings
+    *  Settings relating to status callback messaging
+    *  @var CreateResourceGroupFromFilterParams::resourcePrefix
+    *  Resource prefix setting, e.g. res.
+    *  @var CreateResourceGroupFromFilterParams::skipNonExistentInputDirectories
+    *  If true will skip filter source directories that don't exist rather than error.
+    *  @var CreateResourceGroupFromFilterParams::compressionCalculationSettings
+    *  Settings related to compression calculations
+    *  @var CreateResourceGroupFromFilterParams::exportSettings
+    *  Settings related to exporting
+    *  @var CreateResourceGroupFromFilterParams::filterSettings
+    *  Settings related to filtering
+    *  @var CreateResourceGroupFromFilterParams::calculateBinaryOperation
+    *  Set true to include calculation of binary operation
+    */
+struct CreateResourceGroupFromFilterParams
+{
+	uintmax_t fileStreamChunkSize = 20971520;
+
+	Version outputDocumentVersion = S_DOCUMENT_VERSION;
+
+	CallbackSettings callbackSettings;
+
+	std::string resourcePrefix = "";
+
+	bool skipNonExistentInputDirectories = false;
+
+	CompressionCalculationSettings compressionCalculationSettings;
+
+	ExportResourceSettings exportSettings;
+
+	FilterSettings filterSettings;
+
+    bool calculateBinaryOperation = true;
 };
 
 /** @struct ResourceGroupMergeParams
@@ -243,7 +353,7 @@ struct CreateResourceGroupFromDirectoryParams
     *  ResourceGroup to merge
     *  @var ResourceGroupMergeParams::mergedResourceGroup
     *  Resulting ResourceGroup after merge
-    *  @var ResourceGroupMergeParams::CallbackSettings
+    *  @var ResourceGroupMergeParams::callbackSettings
     *  Settings relating to status callback messaging
     */
 struct ResourceGroupMergeParams
@@ -261,7 +371,7 @@ struct ResourceGroupMergeParams
     *  List of Resources to remove identified by RelativePath.
     *  @var ResourceGroupRemoveResourcesParams::errorIfResourceNotFound
     *  If true the function will return an error state if supplied Resource is not present in ResourceGroup
-    *  @var ResourceGroupRemoveResourcesParams::CallbackSettings
+    *  @var ResourceGroupRemoveResourcesParams::callbackSettings
     *  Settings relating to status callback messaging
     */
 struct ResourceGroupRemoveResourcesParams
@@ -281,7 +391,7 @@ struct ResourceGroupRemoveResourcesParams
     *  Output list of relative paths that have been added or modified on second group.
     *  @var ResourceGroupDiffAgainstGroupParams::subtractions
     *  Output list of relative paths that have been removed on second group.
-    *  @var ResourceGroupDiffAgainstGroupParams::CallbackSettings
+    *  @var ResourceGroupDiffAgainstGroupParams::callbackSettings
     *  Settings relating to status callback messaging
     */
 struct ResourceGroupDiffAgainstGroupParams
@@ -343,6 +453,11 @@ public:
 	/// @return Result see CarbonResources::Result for more details.
 	/// @note No file filtering supported
 	Result CreateFromDirectory( const CreateResourceGroupFromDirectoryParams& params );
+
+    /// @brief Creates a ResourceGroup from a supplied filter files.
+	/// @param params input parameters, See CreateResourceGroupFromFilterParams for more details.
+	/// @return Result see CarbonResources::Result for more details.
+	Result CreateFromFilter( const CreateResourceGroupFromFilterParams& params );
 
 	/// @brief Merges a supplied ResourceGroup with this one. Merge performed on RelativePath, merge ResourceGroup takes precedent.
 	/// @param params input parameters, See ResourceGroupMergeParams for more details.

@@ -16,6 +16,8 @@ set(SRC_FILES
         src/CreatePatchCliOperation.h
         src/CreateResourceGroupCliOperation.cpp
         src/CreateResourceGroupCliOperation.h
+        src/CreateResourceGroupFromFilterCliOperation.cpp
+        src/CreateResourceGroupFromFilterCliOperation.h
         src/Defines.h
         src/DiffResourceGroupCliOperation.cpp
         src/DiffResourceGroupCliOperation.h

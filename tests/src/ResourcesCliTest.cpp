@@ -726,6 +726,108 @@ TEST_F( ResourcesCliTest, CreateGroup )
 	EXPECT_TRUE( FilesMatch( goldFile, outputFilename ) );
 }
 
+TEST_F( ResourcesCliTest, CreateResourceGroupFromFilter )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "create-group-from-filter" );
+
+	arguments.push_back( "--verbosity-level" );
+
+	arguments.push_back( "-1" );
+
+	std::filesystem::path basePath = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+
+	arguments.push_back( "--filter-file-basepath" );
+
+	arguments.push_back( basePath.string() );
+
+	std::filesystem::path filterPath = GetTestFileFileAbsolutePath( "FilterFiles/filterToIncludeAllAtBaseDirectory.ini" );
+
+	arguments.push_back( "--filter-file " );
+
+	arguments.push_back( filterPath.string() );
+
+	std::filesystem::path outputFile = "ResourceGroups/ResourceGroup.yaml";
+
+	arguments.push_back( "--output-file" );
+
+	arguments.push_back( outputFile.string() );
+
+	int res = RunCli( arguments, output );
+
+	ASSERT_EQ( res, 0 );
+
+#if _WIN64
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+#elif __APPLE__
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+#else
+#error Unsupported platform
+#endif
+	EXPECT_TRUE( FilesMatch( goldFile, outputFile ) );
+}
+
+TEST_F( ResourcesCliTest, CreateResourceGroupFromFilterExportResources )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "create-group-from-filter" );
+
+	arguments.push_back( "--verbosity-level" );
+
+	arguments.push_back( "-1" );
+
+	std::filesystem::path basePath = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+
+	arguments.push_back( "--filter-file-basepath" );
+
+	arguments.push_back( basePath.string() );
+
+	std::filesystem::path filterPath = GetTestFileFileAbsolutePath( "FilterFiles/filterToIncludeAllAtBaseDirectory.ini" );
+
+	arguments.push_back( "--filter-file " );
+
+	arguments.push_back( filterPath.string() );
+
+	std::filesystem::path outputFile = "ResourceGroups/ResourceGroup.yaml";
+
+	arguments.push_back( "--output-file" );
+
+	arguments.push_back( outputFile.string() );
+
+	arguments.push_back( "--export-resources" );
+
+	arguments.push_back( "--export-resources-destination-type" );
+
+	arguments.push_back( "LOCAL_RELATIVE" );
+
+	std::filesystem::path exportedResourcesPath = "ExportedResources";
+
+	arguments.push_back( "--export-resources-destination-path" );
+
+	arguments.push_back( exportedResourcesPath.string() );
+
+	int res = RunCli( arguments, output );
+
+	ASSERT_EQ( res, 0 );
+
+#if _WIN64
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+#elif __APPLE__
+	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+#else
+#error Unsupported platform
+#endif
+	EXPECT_TRUE( FilesMatch( goldFile, outputFile ) );
+
+	EXPECT_TRUE( DirectoryIsSubset( exportedResourcesPath, basePath ) );
+}
+
 #ifdef DEV_FEATURES
 
 TEST_F( ResourcesCliTest, ApplyPatch )

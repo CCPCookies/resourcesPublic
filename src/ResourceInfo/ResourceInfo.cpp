@@ -33,11 +33,20 @@ std::string Location::CalculateLocationFromChecksums( const std::string& relativ
 	return ss.str();
 }
 
-Result Location::SetFromRelativePathAndDataChecksum( const std::filesystem::path& relativePath, const std::string& dataChecksum )
+Result Location::SetFromRelativePathAndDataChecksum( const std::filesystem::path& relativePath, const std::string& dataChecksum, const std::string& prefix /*=""*/ )
 {
 	std::string relativePathChecksum = "";
 
-	if( !ResourceTools::GenerateFowlerNollVoChecksum( relativePath.generic_string(), relativePathChecksum ) )
+    std::stringstream ss;
+
+	if( prefix != "" )
+	{
+		ss << ":/" << prefix;
+	}
+
+	ss << relativePath.generic_string();
+
+	if( !ResourceTools::GenerateFowlerNollVoChecksum( ss.str(), relativePathChecksum ) )
 	{
 		return Result{ ResultType::FAILED_TO_GENERATE_RELATIVE_PATH_CHECKSUM };
 	}
@@ -199,6 +208,30 @@ Result ResourceInfo::GetCompressedSize( uintmax_t& compressedSize ) const
 
 		return Result{ ResultType::SUCCESS };
 	}
+}
+
+Result ResourceInfo::GetDestinationPath( const ResourceDestinationSettings& destinationSettings, std::filesystem::path& path ) const
+{
+	switch( destinationSettings.destinationType )
+	{
+	case ResourceDestinationType::LOCAL_RELATIVE:
+
+		path = destinationSettings.basePath / m_relativePath.GetValue();
+
+		break;
+
+	case ResourceDestinationType::LOCAL_CDN:
+	case ResourceDestinationType::REMOTE_CDN:
+
+		path = destinationSettings.basePath / m_location.GetValue().ToString();
+
+		break;
+
+	default:
+		return Result{ ResultType::FAIL };
+	}
+
+	return Result{ ResultType::SUCCESS };
 }
 
 Result ResourceInfo::PutDataStream( ResourcePutDataStreamParams& params ) const

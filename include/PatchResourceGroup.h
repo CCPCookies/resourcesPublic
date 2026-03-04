@@ -16,7 +16,7 @@ namespace CarbonResources
 
 /** @struct PatchApplyParams
     *  @brief Function Parameters required for CarbonResources::PatchResourceGroup::Apply
-    *  @var PatchApplyParams::newBuildResourcesSourceSettings
+    *  @var PatchApplyParams::nextBuildResourcesSourceSettings
     *  Location where new resources can be sourced. Resources will be sourced from here if there are no patches related to them, indicating they are completely new files.
     *  @var PatchApplyParams::patchBinarySourceSettings
     *  Location where patch binaries can be sourced.
@@ -26,7 +26,7 @@ namespace CarbonResources
     *  Location where to place patched resources. This can match PatchApplyParams::resourcesToPatchSourceSettings to overwrite. Allows creation of staging area in case of failure.
     *  @var PatchApplyParams::temporaryFilePath
     *  Name of a temporary filename to use when patching large files. This file will be cleaned up on process completion. 
-    *  @var PatchApplyParams::CallbackSettings
+    *  @var PatchApplyParams::callbackSettings
     *  Settings relating to status callback messaging
     */
 struct PatchApplyParams final

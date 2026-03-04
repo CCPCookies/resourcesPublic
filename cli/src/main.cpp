@@ -10,6 +10,7 @@
 #include "Cli.h"
 #include "ApplyPatchCliOperation.h"
 #include "CreateResourceGroupCliOperation.h"
+#include "CreateResourceGroupFromFilterCliOperation.h"
 #include "CreatePatchCliOperation.h"
 #include "CreateBundleCliOperation.h"
 #include "UnpackBundleCliOperation.h"
@@ -38,6 +39,10 @@ int main( int argc, char** argv )
 	CreateResourceGroupCliOperation createResourceGroupOperation;
 
 	cli.AddOperation( &createResourceGroupOperation );
+
+    CreateResourceGroupFromFilterCliOperation createResourceGroupFromFilterOperation;
+
+	cli.AddOperation( &createResourceGroupFromFilterOperation );
 
 	CreatePatchCliOperation createPatchOperation;
 

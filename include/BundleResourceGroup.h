@@ -19,7 +19,7 @@ namespace CarbonResources
     *  Location where chunks can be sourced.
     *  @var BundleUnpackParams::resourceDestinationSettings
     *  Location where the unpacked resources should be saved.
-    *  @var BundleUnpackParams::CallbackSettings
+    *  @var BundleUnpackParams::callbackSettings
     *  Settings relating to status callback messaging
     */
 struct BundleUnpackParams final

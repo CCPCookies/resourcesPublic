@@ -10,7 +10,7 @@
 
 #include <gtest/gtest.h>
 
-#include "ResourcesTestFixture.h"
+#include "ResourceToolsTest.h"
 #include "ChunkIndex.h"
 #include "FileDataStreamIn.h"
 #include "FileDataStreamOut.h"
@@ -20,10 +20,6 @@
 #include "Md5ChecksumStream.h"
 #include "Patching.h"
 #include "RollingChecksum.h"
-
-struct ResourceToolsTest : public ResourcesTestFixture
-{
-};
 
 TEST_F( ResourceToolsTest, Md5ChecksumGeneration )
 {
@@ -126,6 +122,52 @@ TEST_F( ResourceToolsTest, DownloadFile )
 	std::string checksum;
 	ResourceTools::GenerateMd5Checksum( downloadedData, checksum );
 	EXPECT_STREQ( checksum.c_str(), "6ccf6b7e2e263646f5a78e77b9ba3168" );
+}
+
+TEST_F( ResourceToolsTest, DownloadHeader )
+{
+	const char* FOLDER_NAME = "a9";
+	const char* FILE_NAME = "a9d1721dd5cc6d54_e6bbb2df307e5a9527159a4c971034b5";
+
+	const char* testDataPathStr = TEST_DATA_BASE_PATH;
+	ASSERT_TRUE( testDataPathStr );
+	ResourceTools::Downloader downloader;
+	std::filesystem::path testDataPath( testDataPathStr );
+
+	std::filesystem::path sourcePath = testDataPath / "resourcesLocal" / FOLDER_NAME / FILE_NAME;
+	std::string sourcePathString( sourcePath.string() );
+	std::string url = "file://" + sourcePathString;
+
+	std::chrono::seconds retrySeconds{ 0 };
+	int retryCount = 3;
+	std::string response = "";
+	EXPECT_EQ( downloader.GetHeader( url, retryCount, retrySeconds, response ), ResourceTools::Response::SUCCESS );
+
+	EXPECT_NE( response, "" );
+
+	std::string contentLength;
+
+	EXPECT_TRUE( ResourceTools::Downloader::GetAttributeValueFromHeader( response, "Content-Length", contentLength ) );
+
+	// Get size of file from filesystem
+	auto fileSize = std::filesystem::file_size( sourcePath );
+
+	auto contentLengthNum = -1;
+
+	try
+	{
+		contentLengthNum = std::atoi( contentLength.c_str() );
+	}
+	catch( std::invalid_argument& )
+	{
+		FAIL();
+	}
+	catch( std::out_of_range& )
+	{
+		FAIL();
+	}
+
+	EXPECT_EQ( contentLengthNum, fileSize );
 }
 
 TEST_F( ResourceToolsTest, GZipCompressString )

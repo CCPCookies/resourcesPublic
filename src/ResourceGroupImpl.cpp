@@ -10,6 +10,7 @@
 #include <CompressedFileDataStreamOut.h>
 #include <Md5ChecksumStream.h>
 #include <GzipCompressionStream.h>
+#include <cctype>
 #include "ResourceInfo/PatchResourceGroupInfo.h"
 #include "ResourceInfo/BundleResourceGroupInfo.h"
 #include "ResourceInfo/ResourceGroupInfo.h"
@@ -19,6 +20,7 @@
 #include "BundleResourceGroupImpl.h"
 #include "ChunkIndex.h"
 #include "ResourceGroupFactory.h"
+#include "ResourceFilter.h"
 
 namespace CarbonResources
 {
@@ -149,7 +151,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromDirectory( const CreateResour
 
 					ResourceTools::GzipCompressionStream compressionStream( &compressedData );
 
-					ResourceTools::FileDataStreamIn fileStreamIn( params.resourceStreamThreshold );
+					ResourceTools::FileDataStreamIn fileStreamIn( params.fileStreamChunkSize );
 
 					if( params.calculateCompressions )
 					{
@@ -327,6 +329,543 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromDirectory( const CreateResour
 	}
 
 	return Result{ ResultType::SUCCESS };
+}
+
+Result ResourceGroup::ResourceGroupImpl::CreateFromFilter( const CreateResourceGroupFromFilterParams& params, StatusSettings& statusSettings )
+{
+	// Update status
+	statusSettings.Update( StatusProgressType::PERCENTAGE, 0, 5, "Creating resource group from filters" );
+
+	// Ensure document version is valid
+	VersionInternal documentVersion( params.outputDocumentVersion );
+
+	if( !documentVersion.isVersionValid() )
+	{
+		return Result{ ResultType::DOCUMENT_VERSION_UNSUPPORTED };
+	}
+
+	// Initialize ResourceFilter
+	if( params.filterSettings.filterFilePaths.empty() )
+	{
+		std::string errorMsg = "No filter files provided.";
+		return Result{ ResultType::FAILED_TO_INITIALIZE_RESOURCE_FILTER, errorMsg };
+	}
+
+	statusSettings.Update( StatusProgressType::PERCENTAGE, 0, 5, "Loading filter files" );
+
+	std::vector<std::unique_ptr<ResourceTools::ResourceFilter>> filters;
+
+	for( auto filterPath : params.filterSettings.filterFilePaths )
+	{
+		// Get filter file data
+		std::string filterData;
+
+		if( !ResourceTools::GetLocalFileData( filterPath, filterData ) )
+		{
+			std::string errorMsg = "Failed to open filter file: " + filterPath.string();
+			return Result{ ResultType::FAILED_TO_OPEN_FILE, errorMsg };
+		}
+
+		ResourceTools::FilterFile fileData;
+
+		try
+		{
+			ResourceTools::FilterFileReader::LoadFromIniFileData( filterData.data(), filterData.size(), fileData );
+		}
+		catch( const std::exception& e )
+		{
+			std::string errorMsg = "Failed to read filter file: " + std::string( e.what() );
+
+			return Result{ ResultType::FAILED_TO_INITIALIZE_RESOURCE_FILTER, errorMsg };
+		}
+
+		std::unique_ptr<ResourceTools::ResourceFilter> filter = std::make_unique<ResourceTools::ResourceFilter>();
+
+		if( !filter->SetFromFilterFileData( fileData ) )
+		{
+			return Result{ ResultType::FAILED_TO_INITIALIZE_RESOURCE_FILTER };
+		}
+
+		filters.emplace_back( std::move( filter ) );
+	}
+
+	// Populate the directories from the filter files
+	std::vector<std::filesystem::path> searchPaths;
+
+	for( auto& filter : filters )
+	{
+		const std::vector<std::filesystem::path>& filterPaths = filter->GetPrefixPaths();
+
+		for( auto& filterPath : filterPaths )
+		{
+			searchPaths.push_back( filterPath );
+		}
+	}
+
+	// Process all directories
+	// Apply filters if supplied
+	{
+		StatusSettings inputDirectoryStatus;
+		statusSettings.Update( StatusProgressType::PERCENTAGE, 10, 90, "Creating resource group from directories", &inputDirectoryStatus );
+
+		int i = 0;
+		for( auto searchPath : searchPaths )
+		{
+			std::filesystem::path inputDirectory = params.filterSettings.prefixMapBasePath / searchPath;
+
+			StatusSettings fileProcessingInnerStatusSettings;
+
+			if( inputDirectoryStatus.RequiresStatusUpdates() )
+			{
+				float step = static_cast<float>( 100.0 / searchPaths.size() );
+				float progress = static_cast<float>( i * step );
+				i++;
+				inputDirectoryStatus.Update( StatusProgressType::PERCENTAGE, progress, step, "Processing Directory: " + inputDirectory.string(), &fileProcessingInnerStatusSettings );
+			}
+
+			if( !std::filesystem::exists( inputDirectory ) )
+			{
+				if( params.skipNonExistentInputDirectories )
+				{
+					inputDirectoryStatus.Update( StatusProgressType::WARNING, 0, 0, "Skipping input directory as it doesn't exist." );
+
+					continue;
+				}
+				else
+				{
+					return Result{ ResultType::INPUT_DIRECTORY_DOESNT_EXIST, inputDirectory.string() };
+				}
+			}
+
+			// Walk directory and create a resource from each file using data
+			auto recursiveDirectoryIter = std::filesystem::recursive_directory_iterator( inputDirectory );
+			{
+
+				for( const std::filesystem::directory_entry& entry : recursiveDirectoryIter )
+				{
+					if( entry.is_regular_file() )
+					{
+						std::filesystem::path filePathRelativeToInputDirectory = std::filesystem::relative( entry.path(), params.filterSettings.prefixMapBasePath );
+
+						bool filterMatchDetected = false;
+						std::string matchSection = "";
+						std::string matchPath = "";
+						for( auto& filter : filters )
+						{
+							// Ensure that the search path is relevant to the filter
+							const std::vector<std::filesystem::path>& filterSearchPaths = filter->GetPrefixPaths();
+
+							bool searchPathInFilter = false;
+
+							for( auto& filterPath : filterSearchPaths )
+							{
+								if( searchPath == filterPath )
+								{
+									searchPathInFilter = true;
+									break;
+								}
+							}
+
+							if( !searchPathInFilter )
+							{
+								// The current search path isn't one that is present in the current filter
+								continue;
+							}
+
+							if( filter->CheckPath( filePathRelativeToInputDirectory, matchSection, matchPath ) )
+							{
+								filterMatchDetected = true;
+								break;
+							}
+						}
+
+						if( !filterMatchDetected )
+						{
+							//File doesn't meet any of the filters
+							fileProcessingInnerStatusSettings.Update( CarbonResources::StatusProgressType::UNBOUNDED, 0, 0, "Skipping File that didn't match filters: " + entry.path().string() );
+							continue;
+						}
+
+						// Create resource
+						std::stringstream ss;
+
+						ss << "Processing file: "
+						   << filePathRelativeToInputDirectory.string()
+						   << ", Match filter: "
+						   << matchSection
+						   << ", Match path: "
+						   << matchPath;
+
+						StatusSettings resourceProcessGranular;
+						fileProcessingInnerStatusSettings.Update( CarbonResources::StatusProgressType::UNBOUNDED, 0, 0, ss.str(), &resourceProcessGranular );
+
+						// Process data via streaming
+						ResourceTools::FileDataStreamIn fileStreamIn( params.fileStreamChunkSize );
+
+						ResourceTools::Md5ChecksumStream checksumStream;
+
+						std::filesystem::path resourceRelativePath = std::filesystem::relative( entry.path(), inputDirectory );
+
+						if( !fileStreamIn.StartRead( entry.path() ) )
+						{
+							return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
+						}
+
+						// Calculate without compression to get checksum
+						while( !fileStreamIn.IsFinished() )
+						{
+							// Update status
+							if( resourceProcessGranular.RequiresStatusUpdates() )
+							{
+								float step = static_cast<float>( 100.0 / fileStreamIn.Size() );
+								float percentage = static_cast<float>( fileStreamIn.GetCurrentPosition() * step );
+								resourceProcessGranular.Update( CarbonResources::StatusProgressType::PERCENTAGE, percentage, step, "Stream processing file attributes: " + entry.path().string() );
+							}
+
+							std::string fileData;
+
+							if( !( fileStreamIn >> fileData ) )
+							{
+								return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
+							}
+
+							if( !( checksumStream << fileData ) )
+							{
+								return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
+							}
+						}
+
+						// Get Checksum
+						std::string checksum;
+
+						if( !checksumStream.FinishAndRetrieve( checksum ) )
+						{
+							return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
+						}
+
+						// Create resource from parameters
+						ResourceInfoParams resourceParams;
+
+						resourceParams.relativePath = resourceRelativePath;
+
+						resourceParams.prefix = params.resourcePrefix;
+
+						resourceParams.uncompressedSize = entry.file_size();
+
+						resourceParams.compressedSize = 0; // If required this will be calculated later
+
+						resourceParams.checksum = checksum;
+
+						if( params.calculateBinaryOperation )
+						{
+							resourceParams.binaryOperation = ResourceTools::CalculateBinaryOperation( entry.path() );
+						}
+
+						Location l;
+
+						// Document version 0 requires lowercase relative paths
+						std::string relativePathNormalised = resourceParams.relativePath.string();
+						if( ( params.outputDocumentVersion.major == 0 ) && ( params.outputDocumentVersion.minor == 0 ) && ( params.outputDocumentVersion.patch == 0 ) )
+						{
+							std::transform( relativePathNormalised.begin(), relativePathNormalised.end(), relativePathNormalised.begin(), []( unsigned char c ) { return std::tolower( c ); } );
+						}
+
+
+						Result calculateLocationResult = l.SetFromRelativePathAndDataChecksum( relativePathNormalised, resourceParams.checksum, resourceParams.prefix );
+
+						if( calculateLocationResult.type != ResultType::SUCCESS )
+						{
+							return calculateLocationResult;
+						}
+
+						resourceParams.location = l.ToString();
+
+						std::unique_ptr<ResourceInfo> resource;
+						resource = std::make_unique<ResourceInfo>( resourceParams );
+
+						// If resource already exists in other include path then skip this resource
+						if( ResourceExists( *resource ) )
+						{
+							resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Skipping file as it was found in multiple paths: " + entry.path().string() );
+							continue;
+						}
+
+						// Setup export
+						std::filesystem::path resourceDestinationPath;
+
+						Result constructDestinationPathResult = resource->GetDestinationPath( params.exportSettings.destinationSettings, resourceDestinationPath );
+
+						if( constructDestinationPathResult.type != ResultType::SUCCESS )
+						{
+							return constructDestinationPathResult;
+						}
+
+						// If further calculation is required on the data then calculate here
+						if( params.compressionCalculationSettings.calculateCompressions || params.exportSettings.enabled )
+						{
+							if( !fileStreamIn.StartRead( entry.path() ) )
+							{
+								return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
+							}
+
+							ResourceTools::FileDataStreamOut exportResourceDataStreamOut;
+
+							std::filesystem::path resourceDestinationPath;
+
+							Result getDestionationResult = resource->GetDestinationPath( params.exportSettings.destinationSettings, resourceDestinationPath );
+
+							if( getDestionationResult.type != ResultType::SUCCESS )
+							{
+								return getDestionationResult;
+							}
+
+							std::string compressedData;
+
+							uintmax_t compressedDataSize = 0;
+
+							ResourceTools::GzipCompressionStream compressionStream( &compressedData );
+
+							// Compression will need to be calculated if specified or an exported resource requires it
+							bool calculateCompressions = params.compressionCalculationSettings.calculateCompressions;
+							bool exportResource = params.exportSettings.enabled;
+
+							// Check url for compression information if supplied
+							// If argument set to skip if file already exists in destination then
+							// Check for file and if to skip
+							if( params.compressionCalculationSettings.remoteUrlToAttemptToGetCompression != "" )
+							{
+
+								std::string location;
+
+								Result getLocationResult = resource->GetLocation( location );
+
+								if( getLocationResult.type != ResultType::SUCCESS )
+								{
+									return getLocationResult;
+								}
+
+								std::string resourceUrl = params.compressionCalculationSettings.remoteUrlToAttemptToGetCompression.string() + "/" + location;
+								std::replace( resourceUrl.begin(), resourceUrl.end(), '\\', '/' );
+
+								// Check if file exists in remote location
+								ResourceTools::Downloader downloader;
+
+								std::string response;
+
+								ResourceTools::Response downloadResponse;
+
+								downloadResponse = downloader.GetHeader( resourceUrl, params.compressionCalculationSettings.downloadSettings.retryCount, params.compressionCalculationSettings.downloadSettings.retrySeconds, response );
+
+								if( downloadResponse == ResourceTools::Response::SUCCESS )
+								{
+									resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Attempting to get compression data from remote: " + resourceUrl );
+
+									// Parse the header for the content size
+									std::string contentLengthStr;
+
+									if( ResourceTools::Downloader::GetAttributeValueFromHeader( response, "Content-Length", contentLengthStr ) )
+									{
+										// Parse content length
+										try
+										{
+											unsigned long in = std::stoul( contentLengthStr );
+											if( in > std::numeric_limits<uint32_t>::max() )
+											{
+												resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Invalid compression data from header information, compression will be calculated." + resourceUrl );
+											}
+											else
+											{
+												// Compression is from the existing file rather than new one.
+												compressedDataSize = static_cast<uint32_t>( in );
+												calculateCompressions = false;
+												exportResource = false;
+											}
+										}
+										catch( std::invalid_argument& )
+										{
+											resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Invalid compression data from header information, compression will be calculated." + resourceUrl );
+										}
+										catch( std::out_of_range& )
+										{
+											resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Invalid compression data from header information, compression will be calculated." + resourceUrl );
+										}
+									}
+								}
+								else if( downloadResponse == ResourceTools::Response::DOWNLOAD_ERROR )
+								{
+									std::stringstream ss;
+
+									ss << "Error while downloading header from: "
+									   << resourceUrl
+									   << " Response:\n"
+									   << response;
+
+									return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
+								}
+
+								if( calculateCompressions )
+								{
+									resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Resource not found at remote location, compression calculation will continue: " + resourceUrl );
+								}
+							}
+
+							if( exportResource )
+							{
+								if( !exportResourceDataStreamOut.StartWrite( resourceDestinationPath ) )
+								{
+									return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
+								}
+							}
+
+							if( ( exportResource && params.exportSettings.destinationSettings.destinationType == ResourceDestinationType::REMOTE_CDN ) )
+							{
+								calculateCompressions = true;
+							}
+
+							if( calculateCompressions )
+							{
+								if( !compressionStream.Start() )
+								{
+									return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
+								}
+							}
+
+							if( calculateCompressions || exportResource )
+							{
+								while( !fileStreamIn.IsFinished() )
+								{
+									// Update status
+									if( resourceProcessGranular.RequiresStatusUpdates() )
+									{
+										float step = static_cast<float>( 100.0 / fileStreamIn.Size() );
+										float percentage = static_cast<float>( fileStreamIn.GetCurrentPosition() * step );
+
+										std::string info;
+										if( calculateCompressions )
+										{
+											info += "Compressing";
+										}
+
+										if( exportResource )
+										{
+											if( info != "" )
+											{
+												info += " & ";
+											}
+
+											info += "Exporting";
+										}
+
+										info += " Resource: ";
+
+										resourceProcessGranular.Update( CarbonResources::StatusProgressType::PERCENTAGE, percentage, step, info + entry.path().string() );
+									}
+
+									std::string fileData;
+
+									if( !( fileStreamIn >> fileData ) )
+									{
+										return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
+									}
+
+									if( calculateCompressions )
+									{
+										if( !( compressionStream << &fileData ) )
+										{
+											return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
+										}
+									}
+
+									// If exporting resource then export the correct data
+									if( exportResource )
+									{
+										if( params.exportSettings.destinationSettings.destinationType == ResourceDestinationType::LOCAL_CDN || params.exportSettings.destinationSettings.destinationType == ResourceDestinationType::LOCAL_RELATIVE )
+										{
+											// Output Uncompressed Data
+											if( !( exportResourceDataStreamOut << fileData ) )
+											{
+												return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
+											}
+										}
+										else
+										{
+											// Output Compressed Data
+											if( !( exportResourceDataStreamOut << compressedData ) )
+											{
+												return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
+											}
+										}
+									}
+
+									compressedDataSize += compressedData.size();
+									compressedData.clear();
+								}
+							}
+
+							// Finish stream read in
+							fileStreamIn.Finish();
+
+							if( calculateCompressions )
+							{
+								if( !compressionStream.Finish() )
+								{
+									return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
+								}
+
+								// Add remaining compression data
+								compressedDataSize += compressedData.size();
+							}
+
+							if( params.compressionCalculationSettings.calculateCompressions )
+							{
+								// Set compressed size only if compression is calculated
+								// If export requires compression but calculation is skipped
+								// Then the calculations are not set as this may be unexpected
+								resource->SetCompressedSize( compressedDataSize );
+							}
+
+							if( exportResource )
+							{
+								if( params.exportSettings.destinationSettings.destinationType == ResourceDestinationType::REMOTE_CDN )
+								{
+									// Add remaining compression data
+									if( !( exportResourceDataStreamOut << compressedData ) )
+									{
+										return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
+									}
+								}
+
+								if( !exportResourceDataStreamOut.Finish() )
+								{
+									return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
+								}
+							}
+						}
+
+						// Add resource to group
+						Result addResourceResult = AddResource( resource.release() );
+
+						if( addResourceResult.type != ResultType::SUCCESS )
+						{
+							return addResourceResult;
+						}
+					}
+				}
+
+				if( !params.compressionCalculationSettings.calculateCompressions )
+				{
+					m_totalResourcesSizeCompressed.Reset();
+				}
+			}
+		}
+	}
+
+	return Result{ ResultType::SUCCESS };
+}
+
+bool ResourceGroup::ResourceGroupImpl::ResourceExists( ResourceInfo& resource )
+{
+	return m_resourcesParameter.Contains( &resource );
 }
 
 Result ResourceGroup::ResourceGroupImpl::ImportFromData( const std::string& data, StatusSettings& statusSettings, DocumentType documentType /* = DocumentType::YAML */ )

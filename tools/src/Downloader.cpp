@@ -5,6 +5,8 @@
 #include <fstream>
 #include <set>
 #include <thread>
+#include <sstream>
+#include <iostream>
 
 int s_activeDownloaders{ 0 };
 std::set<int> s_curl_retry_errors{
@@ -43,6 +45,16 @@ size_t WriteToFileStreamCallback( void* contents, size_t size, size_t nmemb, voi
 	return realSize;
 }
 
+size_t WriteToFileStringCallback( void* contents, size_t size, size_t nmemb, void* context )
+{
+	const char* charString = static_cast<const char*>( contents );
+	const size_t realSize = size * nmemb;
+	std::stringstream* out = static_cast<std::stringstream*>( context );
+	std::string str( charString, realSize );
+	*out << str;
+	return realSize;
+}
+
 namespace ResourceTools
 {
 Downloader::Downloader()
@@ -62,6 +74,44 @@ Downloader::~Downloader()
 	{
 		ShutDownCurl();
 	}
+}
+
+Response Downloader::GetHeader( const std::string& url, uintmax_t retryCount, const std::chrono::seconds& retrySeconds, std::string& response )
+{
+	std::stringstream out;
+	curl_easy_setopt( m_curlHandle, CURLOPT_URL, url.c_str() );
+	curl_easy_setopt( m_curlHandle, CURLOPT_NOBODY, 1L );
+	curl_easy_setopt( m_curlHandle, CURLOPT_HEADER, 1L );
+	curl_easy_setopt( m_curlHandle, CURLOPT_WRITEDATA, &out );
+	curl_easy_setopt( m_curlHandle, CURLOPT_WRITEFUNCTION, WriteToFileStringCallback );
+
+	for( unsigned int i = 0; i < retryCount; i++ )
+	{
+		CURLcode cc = curl_easy_perform( m_curlHandle );
+
+		if( cc == CURLE_OK )
+		{
+			// File exists
+			response = out.str();
+
+			return Response::SUCCESS;
+		}
+
+		if( cc == CURLE_REMOTE_FILE_NOT_FOUND )
+		{
+			// File doesn't exist
+			response = out.str();
+
+			return Response::FILE_NOT_FOUND;
+		}
+
+		// Wait and retry with simple backoff
+		std::this_thread::sleep_for( retrySeconds * ( i + 1 ) );
+	}
+
+	response = out.str();
+
+	return Response::DOWNLOAD_ERROR;
 }
 
 bool Downloader::DownloadFile( const std::string& url, const std::filesystem::path& outputPath, const std::chrono::seconds& retrySeconds )
@@ -105,6 +155,36 @@ bool Downloader::DownloadFile( const std::string& url, const std::filesystem::pa
 		}
 		sleepSeconds *= 2;
 	} while( true );
+}
+
+bool Downloader::GetAttributeValueFromHeader( const std::string& header, const std::string& attributeName, std::string& value )
+{
+	const std::string DELIMITER = ":";
+
+	std::string attributeNameMatch = attributeName + DELIMITER;
+
+	std::stringstream ss( header );
+
+	std::string line;
+	while( std::getline( ss, line ) )
+	{
+		auto findResult = line.find( attributeNameMatch );
+
+		if( findResult != std::string::npos )
+		{
+			// Attribute found
+			auto findResult = line.find( DELIMITER );
+
+			if( findResult != std::string::npos )
+			{
+				// Delimiter found
+				value = line.substr( findResult + 2 );
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 }

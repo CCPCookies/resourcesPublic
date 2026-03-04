@@ -52,6 +52,8 @@ public:
 
 	Result CreateFromDirectory( const CreateResourceGroupFromDirectoryParams& params, StatusSettings& statusSettings );
 
+    Result CreateFromFilter( const CreateResourceGroupFromFilterParams& params, StatusSettings& statusSettings );
+
 	Result ImportFromFile( const ResourceGroupImportFromFileParams& params, StatusSettings& statusSettings );
 
 	Result ImportFromData( const std::string& data, StatusSettings& statusSettings, DocumentType documentType = DocumentType::YAML );
@@ -120,6 +122,8 @@ private:
 	Result ProcessChunk( ResourceTools::GetChunk& chunkData, const std::filesystem::path& chunkRelativePath, BundleResourceGroup::BundleResourceGroupImpl& bundleResourceGroup, const ResourceDestinationSettings& chunkDestinationSettings ) const;
 
 	Result RemoveResource( ResourceInfo& relativePath );
+
+    bool ResourceExists( ResourceInfo& resource );
 
 protected:
 	// Document Parameters

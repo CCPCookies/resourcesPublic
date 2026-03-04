@@ -199,7 +199,7 @@ public:
 	{
 	}
 
-	Result SetFromRelativePathAndDataChecksum( const std::filesystem::path& relativePath, const std::string& dataChecksum );
+	Result SetFromRelativePathAndDataChecksum( const std::filesystem::path& relativePath, const std::string& dataChecksum, const std::string& prefix = "" );
 
 	std::string ToString()
 	{
@@ -328,6 +328,8 @@ public:
 	bool operator<( const ResourceInfo& other ) const;
 
 	static std::string TypeId();
+
+    Result GetDestinationPath( const ResourceDestinationSettings& destinationSettings, std::filesystem::path& path ) const;
 
 private:
 	Result GetDataLocalRelative( ResourceGetDataParams& params, const int basePathId ) const;
