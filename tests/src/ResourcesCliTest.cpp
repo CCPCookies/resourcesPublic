@@ -746,7 +746,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromFilter )
 
 	std::filesystem::path filterPath = GetTestFileFileAbsolutePath( "FilterFiles/filterToIncludeAllAtBaseDirectory.ini" );
 
-	arguments.push_back( "--filter-file " );
+	arguments.push_back( "--filter-file" );
 
 	arguments.push_back( filterPath.string() );
 
@@ -790,7 +790,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromFilterExportResources )
 
 	std::filesystem::path filterPath = GetTestFileFileAbsolutePath( "FilterFiles/filterToIncludeAllAtBaseDirectory.ini" );
 
-	arguments.push_back( "--filter-file " );
+	arguments.push_back( "--filter-file" );
 
 	arguments.push_back( filterPath.string() );
 
