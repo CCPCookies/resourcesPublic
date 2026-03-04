@@ -463,7 +463,7 @@ TEST_F( ResourceToolsTest, Filtering_MultiPrefixFilterIncludeWithLaterRespathExc
 						  "[testSection]\n"
 						  "filter = [ .type1 ]\n"
 						  "respaths = prefix1:/*\n"
-						  "           prefix1:/* ![ .type1 ]\n";
+						  "           prefix1:/* ![ .type1 ]\n"
 						  "           prefix2:/*";
 
 
