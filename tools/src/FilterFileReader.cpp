@@ -308,7 +308,7 @@ void FilterFileReader::ParseSectionResPathEntry( const std::string& filterStr, s
 
         auto prefixIter = prefixes.begin();
 
-		for( prefixIter; prefixIter != prefixes.end(); prefixIter++ )
+		for( ; prefixIter != prefixes.end(); prefixIter++ )
 		{
 			if( ( *prefixIter )->id == prefixPart )
 			{
