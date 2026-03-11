@@ -6,18 +6,20 @@
 #include <argparse/argparse.hpp>
 #include <ResourceGroup.h>
 #include <unordered_set>
+#include <FilterIndexMappingFile.h>
 
 CreateResourceGroupFromFilterCliOperation::CreateResourceGroupFromFilterCliOperation() :
-	CliOperation( "create-group-from-filter", "Create a Resource Group from a filter files." ),
-	m_outputFileArgumentId( "--output-file" ),
-	m_documentVersionArgumentId( "--document-version" ),
-	m_resourcePrefixArgumentId( "--resource-prefix" ),
+	CliOperation( "create-group-from-filter", "Create filtered Resource Group(s)." ),
+	m_filterIndexMappingFileId( "--filter-index-mapping-file" ),
+	m_filterFileBasePathId( "--filter-file-basepath" ),
+	m_resourceFileBasePathId( "--output-resource-file-basepath" ),
+	m_documentVersionId( "--document-version" ),
+	m_resourcePrefixId( "--resource-prefix" ),
 	m_skipCompressionId( "--skip-compression" ),
 	m_exportResourcesId( "--export-resources" ),
 	m_exportResourcesDestinationTypeId( "--export-resources-destination-type" ),
 	m_exportResourcesDestinationPathId( "--export-resources-destination-path" ),
-	m_filterFilesArgumentId( "--filter-file" ),
-	m_filterFilesBasePathArgumentId( "--filter-file-basepath" ),
+	m_prefixMapBasepathId( "--prefix-map-basepath" ),
 	m_skipNonExistentInputDirectoriesId( "--skip-non-existent-input-directories" ),
 	m_streamChunkSizeId( "--stream-chunk-size" ),
 	m_remoteUrlToGetCompressionId( "--remote-url-to-attempt-to-get-compression-info" ),
@@ -31,11 +33,15 @@ CreateResourceGroupFromFilterCliOperation::CreateResourceGroupFromFilterCliOpera
 
 	CarbonResources::ResourceGroupExportToFileParams defaultExportParams;
 
-	AddArgument( m_outputFileArgumentId, "Filename for created resource group.", false, false, defaultExportParams.filename.string() );
+	AddArgument( m_filterIndexMappingFileId, "Path to filter index mapping file for resource filtering. See carbon-resources documentation for file specification.", true, true, "" );
 
-	AddArgument( m_documentVersionArgumentId, "Document version for created resource group.", false, false, VersionToString( defaultImportParams.outputDocumentVersion ) );
+    AddArgument( m_filterFileBasePathId, "Base path to filter files.", true, true, "" );
 
-	AddArgument( m_resourcePrefixArgumentId, R"(Optional resource path prefix, such as "res" or "app")", false, false, "" );
+    AddArgument( m_resourceFileBasePathId, "Base path for output resource files.", false, true, "" );
+
+	AddArgument( m_documentVersionId, "Document version for created resource group.", false, false, VersionToString( defaultImportParams.outputDocumentVersion ) );
+
+	AddArgument( m_resourcePrefixId, R"(Optional resource path prefix, such as "res" or "app")", false, false, "" );
 
 	AddArgumentFlag( m_skipCompressionId, "Set skip compression calculations on resources." );
 
@@ -45,9 +51,7 @@ CreateResourceGroupFromFilterCliOperation::CreateResourceGroupFromFilterCliOpera
 
 	AddArgument( m_exportResourcesDestinationPathId, "Represents the base path where the exported resources will be saved. Requires --export-resources", false, false, defaultImportParams.exportSettings.destinationSettings.basePath.string() );
 
-	AddArgument( m_filterFilesArgumentId, "Path to filter file for resource filtering.", true, true, "" );
-
-	AddArgument( m_filterFilesBasePathArgumentId, "Base directory for prefix mappings defined in filter files.", false, false, "" );
+	AddArgument( m_prefixMapBasepathId, "Base directory for prefix mappings defined in filter files.", false, false, "" );
 
 	AddArgumentFlag( m_skipNonExistentInputDirectoriesId, "Skips input directories specified that don't exist rather than error." );
 
@@ -62,8 +66,6 @@ bool CreateResourceGroupFromFilterCliOperation::Execute( std::string& returnErro
 {
 	CarbonResources::CreateResourceGroupFromFilterParams createResourceGroupParams;
 
-	CarbonResources::ResourceGroupExportToFileParams exportParams;
-
 	try
 	{
 		createResourceGroupParams.fileStreamChunkSize = std::stoull( m_argumentParser->get( m_streamChunkSizeId ) );
@@ -77,7 +79,7 @@ bool CreateResourceGroupFromFilterCliOperation::Execute( std::string& returnErro
 		return false;
 	}
 
-	bool versionIsValid = ParseDocumentVersion( m_argumentParser->get( m_documentVersionArgumentId ), createResourceGroupParams.outputDocumentVersion );
+	bool versionIsValid = ParseDocumentVersion( m_argumentParser->get( m_documentVersionId ), createResourceGroupParams.outputDocumentVersion );
 
 	if( !versionIsValid )
 	{
@@ -86,7 +88,7 @@ bool CreateResourceGroupFromFilterCliOperation::Execute( std::string& returnErro
 		return false;
 	}
 
-	createResourceGroupParams.resourcePrefix = m_argumentParser->get( m_resourcePrefixArgumentId );
+	createResourceGroupParams.resourcePrefix = m_argumentParser->get( m_resourcePrefixId );
 
 	createResourceGroupParams.compressionCalculationSettings.calculateCompressions = !m_argumentParser->get<bool>( m_skipCompressionId );
 
@@ -110,25 +112,49 @@ bool CreateResourceGroupFromFilterCliOperation::Execute( std::string& returnErro
 		createResourceGroupParams.exportSettings.destinationSettings.basePath = m_argumentParser->get<std::string>( m_exportResourcesDestinationPathId );
 	}
 
-	exportParams.filename = m_argumentParser->get<std::string>( m_outputFileArgumentId );
+    // Load filter settings from file
+	std::filesystem::path basePathToFilterFiles = m_argumentParser->get<std::string>( m_filterFileBasePathId );
 
-	exportParams.outputDocumentVersion = createResourceGroupParams.outputDocumentVersion;
+    std::filesystem::path basePathRespourceFiles = m_argumentParser->get<std::string>( m_resourceFileBasePathId );
 
-	if( m_argumentParser->is_used( m_filterFilesArgumentId ) )
-	{
-		std::vector<std::filesystem::path> filterIniFilePaths;
-		auto iniFileStringVector = m_argumentParser->get<std::vector<std::string>>( m_filterFilesArgumentId );
+	std::filesystem::path filterIndexMappingPath = m_argumentParser->get<std::string>( m_filterIndexMappingFileId );
 
-		for( const auto& iniPathStr : iniFileStringVector )
-		{
-			if( !iniPathStr.empty() )
-			{
-				createResourceGroupParams.filterSettings.filterFilePaths.emplace_back( iniPathStr );
-			}
-		}
+    FilterIndexMappingFile filterIndexMappingFile;
 
-		createResourceGroupParams.filterSettings.prefixMapBasePath = m_argumentParser->get<std::string>( m_filterFilesBasePathArgumentId );
-	}
+    if (!filterIndexMappingFile.LoadFromFile(filterIndexMappingPath))
+    {
+		returnErrorMessage = "Failed to load filter index mappings from file provided: " + filterIndexMappingPath.string();
+
+		return false;
+    }
+
+    // Set the filters from file data
+	createResourceGroupParams.filterSettings.prefixMapBasePath = m_argumentParser->get<std::string>( m_prefixMapBasepathId );
+
+    const std::vector<std::unique_ptr<FilterMapping>>& mappings = filterIndexMappingFile.GetFilterMappings();
+
+    std::vector<std::unique_ptr<CarbonResources::ResourceGroupExportToFileParams>> exportParameters;
+
+    for (auto& mapping : mappings)
+    {
+		std::unique_ptr<CarbonResources::Filter> filter = std::make_unique<CarbonResources::Filter>();
+
+        for( auto filterPath : mapping->filterFilePaths )
+        {
+			filter->filterFilePaths.push_back( basePathToFilterFiles / filterPath );
+        }
+
+        createResourceGroupParams.filterSettings.filters.push_back( std::move( filter ) );
+
+        std::unique_ptr<CarbonResources::ResourceGroupExportToFileParams> exportParamter = std::make_unique<CarbonResources::ResourceGroupExportToFileParams>();
+
+        exportParamter->outputDocumentVersion = createResourceGroupParams.outputDocumentVersion;
+
+        exportParamter->filename = basePathRespourceFiles / mapping->outputPath;
+
+        exportParameters.push_back( std::move( exportParamter ) );
+
+    }
 
 	if( m_argumentParser->is_used( m_remoteUrlToGetCompressionId ) )
 	{
@@ -137,23 +163,24 @@ bool CreateResourceGroupFromFilterCliOperation::Execute( std::string& returnErro
 
 	if( ShowCliStatusUpdates() )
 	{
-		PrintStartBanner( createResourceGroupParams, exportParams );
+		PrintStartBanner( createResourceGroupParams, createResourceGroupParams.outputDocumentVersion, filterIndexMappingPath, basePathToFilterFiles, basePathRespourceFiles );
 	}
 
-	return CreateResourceGroup( createResourceGroupParams, exportParams );
+	return CreateResourceGroups( createResourceGroupParams, exportParameters );
 }
 
 void CreateResourceGroupFromFilterCliOperation::PrintStartBanner(
-	CarbonResources::CreateResourceGroupFromFilterParams& createResourceGroupFromFilterParams,
-	CarbonResources::ResourceGroupExportToFileParams& ResourceGroupExportToFileParams ) const
+	const CarbonResources::CreateResourceGroupFromFilterParams& createResourceGroupFromFilterParams,
+	const CarbonResources::Version& outputVersion,
+	const std::filesystem::path& filterIndexMappingFilePath,
+    const std::filesystem::path& basePathToFilterFiles,
+	const std::filesystem::path& basePathRespourceFiles ) const
 {
 	std::cout << "---Creating Resource Group---" << std::endl;
 
 	PrintCommonOperationHeaderInformation();
 
-	std::cout << "Output File: " << ResourceGroupExportToFileParams.filename << std::endl;
-
-	std::cout << "Output Document Version: " << VersionToString( ResourceGroupExportToFileParams.outputDocumentVersion ) << std::endl;
+	std::cout << "Output Document Version: " << VersionToString( outputVersion ) << std::endl;
 
 	std::cout << "Resource Prefix: " << createResourceGroupFromFilterParams.resourcePrefix << std::endl;
 
@@ -179,21 +206,13 @@ void CreateResourceGroupFromFilterCliOperation::PrintStartBanner(
 		std::cout << "Export Resources: Off" << std::endl;
 	}
 
-	if( !createResourceGroupFromFilterParams.filterSettings.filterFilePaths.empty() )
-	{
-		std::cout << "Resource Filter INI File(s): " << std::endl;
+	std::cout << "Resource filter index mapping file: " << filterIndexMappingFilePath << std::endl;
 
-		for( const auto& iniPath : createResourceGroupFromFilterParams.filterSettings.filterFilePaths )
-		{
-			std::cout << " - " << iniPath.generic_string() << std::endl;
-		}
+    std::cout << "Basepath to filter files: " << basePathToFilterFiles << std::endl;
 
-		std::cout << "Filter prefix base path: " << createResourceGroupFromFilterParams.filterSettings.prefixMapBasePath << std::endl;
-	}
-	else
-	{
-		std::cout << "Resource Filter INI File(s): None" << std::endl;
-	}
+    std::cout << "Basepath to resource files: " << basePathRespourceFiles << std::endl;
+
+    std::cout << "Prefix basepath: " << createResourceGroupFromFilterParams.filterSettings.prefixMapBasePath << std::endl;
 
 	if( createResourceGroupFromFilterParams.skipNonExistentInputDirectories )
 	{
@@ -224,21 +243,30 @@ void CreateResourceGroupFromFilterCliOperation::PrintStartBanner(
 			  << std::endl;
 }
 
-bool CreateResourceGroupFromFilterCliOperation::CreateResourceGroup(
+bool CreateResourceGroupFromFilterCliOperation::CreateResourceGroups(
 	CarbonResources::CreateResourceGroupFromFilterParams& createResourceGroupFromFilterParams,
-	CarbonResources::ResourceGroupExportToFileParams& ResourceGroupExportToFileParams ) const
+	std::vector<std::unique_ptr<CarbonResources::ResourceGroupExportToFileParams>>& exportParams ) const
 {
-	CarbonResources::ResourceGroup resourceGroup;
-
 	createResourceGroupFromFilterParams.callbackSettings.statusCallback = GetStatusCallback();
 	createResourceGroupFromFilterParams.callbackSettings.verbosityLevel = GetVerbosityLevel();
 
-	if( ShowCliStatusUpdates() )
+    if( ShowCliStatusUpdates() )
 	{
-		CliStatusUpdate( "Creating resource group from directory." );
+		CliStatusUpdate( "Creating resource group(s) from filter mappings." );
 	}
 
-	CarbonResources::Result createFromDirectoryResult = resourceGroup.CreateFromFilter( createResourceGroupFromFilterParams );
+    std::vector < std::unique_ptr<CarbonResources::ResourceGroup>> resourceGroups;
+
+    for (auto& filter : createResourceGroupFromFilterParams.filterSettings.filters)
+    {
+		std::unique_ptr<CarbonResources::ResourceGroup> resourceGroup = std::make_unique<CarbonResources::ResourceGroup>();
+
+		filter->outputResourceGroup = resourceGroup.get();
+
+        resourceGroups.push_back( std::move( resourceGroup ) );
+    }
+
+	CarbonResources::Result createFromDirectoryResult = CarbonResources::ResourceGroup::CreateFromFilter( createResourceGroupFromFilterParams );
 
 	if( createFromDirectoryResult.type != CarbonResources::ResultType::SUCCESS )
 	{
@@ -247,22 +275,30 @@ bool CreateResourceGroupFromFilterCliOperation::CreateResourceGroup(
 		return false;
 	}
 
-	ResourceGroupExportToFileParams.callbackSettings.statusCallback = GetStatusCallback();
-	ResourceGroupExportToFileParams.callbackSettings.verbosityLevel = GetVerbosityLevel();
 
+    // Export lists
 	if( ShowCliStatusUpdates() )
 	{
 		CliStatusUpdate( "Exporting resource group to file." );
 	}
 
-	CarbonResources::Result exportToFileResult = resourceGroup.ExportToFile( ResourceGroupExportToFileParams );
+	auto resourceIter = resourceGroups.begin();
+	for( auto exportIter = exportParams.begin(); exportIter != exportParams.end(); exportIter++, resourceIter++ )
+    {
+		CarbonResources::ResourceGroupExportToFileParams& exportParams = **exportIter;
 
-	if( exportToFileResult.type != CarbonResources::ResultType::SUCCESS )
-	{
-		PrintCarbonResourcesError( exportToFileResult );
+        exportParams.callbackSettings.statusCallback = GetStatusCallback();
+		exportParams.callbackSettings.verbosityLevel = GetVerbosityLevel();
 
-		return false;
-	}
+		CarbonResources::Result exportToFileResult = ( *resourceIter )->ExportToFile( exportParams );
+
+        if( exportToFileResult.type != CarbonResources::ResultType::SUCCESS )
+		{
+			PrintCarbonResourcesError( exportToFileResult );
+
+			return false;
+		}
+    }
 
 	if( ShowCliStatusUpdates() )
 	{

@@ -267,7 +267,7 @@ void ResourcesTestFixture::StatusUpdate( CarbonResources::StatusProgressType typ
     }
 }
 
-std::filesystem::path ResourcesTestFixture::GetTestFileFileAbsolutePath( const std::filesystem::path& relativePath )
+std::filesystem::path ResourcesTestFixture::GetTestFileAbsolutePath( const std::filesystem::path& relativePath )
 {
 	std::filesystem::path basePath( TEST_DATA_BASE_PATH );
 

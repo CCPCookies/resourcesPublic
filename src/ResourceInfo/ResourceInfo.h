@@ -277,6 +277,8 @@ class ResourceInfo
 public:
 	ResourceInfo( const ResourceInfoParams& params );
 
+    ResourceInfo( const ResourceInfo& resourceInfo );
+
 	virtual ~ResourceInfo();
 
 	void SetRelativePath( const std::filesystem::path& relativePath );

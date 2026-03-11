@@ -19,19 +19,27 @@ public:
 
 private:
 	void PrintStartBanner(
-		CarbonResources::CreateResourceGroupFromFilterParams& createResourceGroupFromFilterParams,
-		CarbonResources::ResourceGroupExportToFileParams& ResourceGroupExportToFileParams ) const;
+		const CarbonResources::CreateResourceGroupFromFilterParams& createResourceGroupFromFilterParams,
+		const CarbonResources::Version& outputVersion,
+		const std::filesystem::path& filterIndexMappingFilePath,
+		const std::filesystem::path& basePathToFilterFiles,
+		const std::filesystem::path& basePathRespourceFiles ) const;
 
-	bool CreateResourceGroup(
+	bool CreateResourceGroups(
 		CarbonResources::CreateResourceGroupFromFilterParams& createResourceGroupFromFilterParams,
-		CarbonResources::ResourceGroupExportToFileParams& ResourceGroupExportToFileParams ) const;
+		std::vector<std::unique_ptr<CarbonResources::ResourceGroupExportToFileParams>>& exportParams ) const;
 
 private:
-	std::string m_outputFileArgumentId;
 
-	std::string m_documentVersionArgumentId;
+    std::string m_filterIndexMappingFileId;
 
-	std::string m_resourcePrefixArgumentId;
+    std::string m_filterFileBasePathId;
+
+    std::string m_resourceFileBasePathId;
+
+	std::string m_documentVersionId;
+
+	std::string m_resourcePrefixId;
 
 	std::string m_skipCompressionId;
 
@@ -41,9 +49,7 @@ private:
 
 	std::string m_exportResourcesDestinationPathId;
 
-	std::string m_filterFilesArgumentId;
-
-	std::string m_filterFilesBasePathArgumentId;
+	std::string m_prefixMapBasepathId;
 
 	std::string m_skipNonExistentInputDirectoriesId;
 

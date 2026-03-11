@@ -70,7 +70,7 @@ protected:
 
 	std::string SecondsToString( std::chrono::seconds seconds ) const;
 
-	std::string VersionToString( CarbonResources::Version& version ) const;
+	std::string VersionToString( const CarbonResources::Version& version ) const;
 
 	std::string ResourceSourceTypeChoicesAsString() const;
 

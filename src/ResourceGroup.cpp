@@ -74,7 +74,7 @@ Result ResourceGroup::CreateFromFilter( const CreateResourceGroupFromFilterParam
 	statusSettings.SetCallbackSettings( params.callbackSettings );
 	statusSettings.Update( CarbonResources::StatusProgressType::START, 0, 0, "Starting Process" );
 
-	return m_impl->CreateFromFilter( params, statusSettings );
+	return ResourceGroupImpl::CreateFromFilter( params, statusSettings );
 }
 
 Result ResourceGroup::Merge( const ResourceGroupMergeParams& params ) const

@@ -227,12 +227,12 @@ TEST_F( ResourceToolsTest, FileDataStremOut )
 
 	EXPECT_TRUE( out.Finish() );
 
-	EXPECT_TRUE( FilesMatch( outputPath, GetTestFileFileAbsolutePath( "FileStream/FileDataStreamOut.txt" ) ) );
+	EXPECT_TRUE( FilesMatch( outputPath, GetTestFileAbsolutePath( "FileStream/FileDataStreamOut.txt" ) ) );
 }
 
 TEST_F( ResourceToolsTest, CompressedFileDataStremOut )
 {
-	std::filesystem::path goldFileUncompressedPath = GetTestFileFileAbsolutePath( "FileStream/FileDataStreamOut.txt" );
+	std::filesystem::path goldFileUncompressedPath = GetTestFileAbsolutePath( "FileStream/FileDataStreamOut.txt" );
 
 	ResourceTools::CompressedFileDataStreamOut out;
 
@@ -264,7 +264,7 @@ TEST_F( ResourceToolsTest, CompressedFileDataStremOut )
 
 	EXPECT_TRUE( ResourceTools::SaveFile( outputPathUncompressed, uncompressedData ) );
 
-	EXPECT_TRUE( FilesMatch( outputPathUncompressed, GetTestFileFileAbsolutePath( "FileStream/FileDataStreamOut.txt" ) ) );
+	EXPECT_TRUE( FilesMatch( outputPathUncompressed, GetTestFileAbsolutePath( "FileStream/FileDataStreamOut.txt" ) ) );
 }
 TEST_F( ResourceToolsTest, ResourceChunking )
 {
@@ -277,7 +277,7 @@ TEST_F( ResourceToolsTest, ResourceChunking )
 	// Add test resource1 data
 	std::string resource1Data;
 
-	std::filesystem::path resource1Path = GetTestFileFileAbsolutePath( "Bundle/TestResources/One.png" );
+	std::filesystem::path resource1Path = GetTestFileAbsolutePath( "Bundle/TestResources/One.png" );
 
 	EXPECT_TRUE( ResourceTools::GetLocalFileData( resource1Path, resource1Data ) );
 
@@ -294,7 +294,7 @@ TEST_F( ResourceToolsTest, ResourceChunking )
 	// Add test resource2 data
 	std::string resource2Data;
 
-	std::filesystem::path resource2Path = GetTestFileFileAbsolutePath( "Bundle/TestResources/Two.png" );
+	std::filesystem::path resource2Path = GetTestFileAbsolutePath( "Bundle/TestResources/Two.png" );
 
 	EXPECT_TRUE( ResourceTools::GetLocalFileData( resource2Path, resource2Data ) );
 
@@ -311,7 +311,7 @@ TEST_F( ResourceToolsTest, ResourceChunking )
 	// Add test resource3 data
 	std::string resource3Data;
 
-	std::filesystem::path resource3Path = GetTestFileFileAbsolutePath( "Bundle/TestResources/Three.png" );
+	std::filesystem::path resource3Path = GetTestFileAbsolutePath( "Bundle/TestResources/Three.png" );
 
 	EXPECT_TRUE( ResourceTools::GetLocalFileData( resource3Path, resource3Data ) );
 
@@ -465,7 +465,7 @@ TEST_F( ResourceToolsTest, ResourceChunking )
 TEST_F( ResourceToolsTest, GZipUncompressTestFile )
 {
 
-	std::filesystem::path resourcePath = GetTestFileFileAbsolutePath( "CompressedFiles/ab5cde4fbbf82fb6_6a9d6d4c6015616877b77865209c5064" );
+	std::filesystem::path resourcePath = GetTestFileAbsolutePath( "CompressedFiles/ab5cde4fbbf82fb6_6a9d6d4c6015616877b77865209c5064" );
 
 	std::string resourceData;
 

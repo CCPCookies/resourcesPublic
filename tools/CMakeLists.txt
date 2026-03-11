@@ -14,6 +14,7 @@ set(SRC_FILES
         include/FileDataStreamIn.h
         include/FileDataStreamOut.h
         include/FilterFileReader.h
+        include/FilterIndexMappingFile.h
         include/GzipCompressionStream.h
         include/GzipDecompressionStream.h
         include/Md5ChecksumStream.h
@@ -31,6 +32,7 @@ set(SRC_FILES
         src/FileDataStreamIn.cpp
         src/FileDataStreamOut.cpp
         src/FilterFileReader.cpp
+        src/FilterIndexMappingFile.cpp
         src/GzipCompressionStream.cpp
         src/GzipDecompressionStream.cpp
         src/Md5ChecksumStream.cpp

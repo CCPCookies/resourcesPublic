@@ -1,8 +1,6 @@
 // Copyright © 2025 CCP ehf.
 
 #include "ResourceFilter.h"
-
-#include <regex>
 #include <algorithm>
 
 namespace ResourceTools
@@ -23,7 +21,7 @@ bool ResourceFilter::SetFromFilterFileData( const FilterFile& fileData )
 	// Populate prefix paths
 	for( auto& prefix : fileData.prefixes )
 	{
-		for( auto& prefixPath : prefix.second->paths )
+		for( auto& prefixPath : prefix->paths )
 		{
 			m_prefixPaths.push_back( prefixPath );
 		}
@@ -38,6 +36,8 @@ bool ResourceFilter::SetFromFilterFileData( const FilterFile& fileData )
 		// Add section rules
 		includeRules.insert( filterSection->includeRules.begin(), filterSection->includeRules.end() );
 		excludeRules.insert( filterSection->excludeRules.begin(), filterSection->excludeRules.end() );
+
+        bool containsNonWildcardResPath = false;
 
 		for( auto& resPath : filterSection->respaths )
 		{
@@ -71,7 +71,16 @@ bool ResourceFilter::SetFromFilterFileData( const FilterFile& fileData )
 					filterPath->path = filterPath->path.substr( 1 );
 				}
 
-				ConvertResPathToPattern( filterPath->path, filterPath->matchPattern );
+                bool wildcardReplacedInMatchPattern = false;
+
+				ConvertResPathToPattern( filterPath->path, filterPath->matchPattern);
+
+                if( wildcardReplacedInMatchPattern )
+                {
+					containsNonWildcardResPath = true;
+                }
+
+                filterPath->matchPatternRegex = std::regex( filterPath->matchPattern, std::regex::ECMAScript | std::regex::icase );
 
 				filterPath->prefixId = resPath->prefix->id;
 
@@ -85,46 +94,47 @@ bool ResourceFilter::SetFromFilterFileData( const FilterFile& fileData )
 				// Very specific behaviour is triggered in this case
 				filterPath->containsLocalIncludeExcludeRules = ( resPath->includeRules.size() + resPath->excludeRules.size() ) > 0;
 
-				m_paths.emplace_back( std::move( filterPath ) );
+				m_paths[filterSection->id].emplace_back( std::move( filterPath ) );
 			}
 		}
+
+        filterSection->containsNonWildcardResPath = containsNonWildcardResPath;
 	}
 
 	return true;
 }
 
-void ResourceFilter::ConvertResPathToPattern( const std::string& resPath, std::string& pattern ) const
+void ResourceFilter::ConvertResPathToPattern( std::string resPath, std::string& pattern ) const
 {
-	std::string resPathString = resPath;
 
 	// Replace any "..." with a unique token (RECURSIVE_FOLDER_ELLIPSES_WILDCARD)
 	constexpr char RECURSIVE_FOLDER_ELLIPSES_WILDCARD = '\x01';
 	size_t pos;
-	while( ( pos = resPathString.find( "..." ) ) != std::string::npos )
+	while( ( pos = resPath.find( "..." ) ) != std::string::npos )
 	{
-		resPathString.replace( pos, 3, std::string( 1, RECURSIVE_FOLDER_ELLIPSES_WILDCARD ) );
+		resPath.replace( pos, 3, std::string( 1, RECURSIVE_FOLDER_ELLIPSES_WILDCARD ) );
 	}
 
 	// Escape special characters and deal with wildcards ("*" and "..." i.e. RECURSIVE_FOLDER_ELLIPSES_WILDCARD)
-	for( size_t i = 0; i < resPathString.size(); ++i )
+	for( size_t i = 0; i < resPath.size(); ++i )
 	{
-		if( resPathString[i] == '*' )
+		if( resPath[i] == '*' )
 		{
 			pattern += "[^/]*";
 		}
-		else if( resPathString[i] == RECURSIVE_FOLDER_ELLIPSES_WILDCARD )
+		else if( resPath[i] == RECURSIVE_FOLDER_ELLIPSES_WILDCARD )
 		{
 			pattern += ".*";
 		}
-		else if( std::string( ".^$|()[]{}+?\\" ).find( resPathString[i] ) != std::string::npos )
+		else if( std::string( ".^$|()[]{}+?\\" ).find( resPath[i] ) != std::string::npos )
 		{
 			// Regex special characters that need escaping
 			pattern += '\\';
-			pattern += resPathString[i];
+			pattern += resPath[i];
 		}
 		else
 		{
-			pattern += resPathString[i];
+			pattern += resPath[i];
 		}
 	}
 }
@@ -138,100 +148,116 @@ bool ResourceFilter::CheckPath( const std::filesystem::path& path ) const
 
 bool ResourceFilter::CheckPath( const std::filesystem::path& path, std::string& matchSectionId, std::string& matchPath ) const
 {
-	for( auto& filterPath : m_paths )
+	std::string resolvedPathStr = path.generic_string();
+
+	for( auto& sectionFilterPath : m_paths )
 	{
-		std::string resolvedPathStr = path.string();
+		bool includeOrExcludeRulesFailedForSection = false;
 
-		std::replace( resolvedPathStr.begin(), resolvedPathStr.end(), '\\', '/' );
-
-		// Check for directly specified file
-		bool specificFileMatch = filterPath->path == resolvedPathStr;
-
-		if( !specificFileMatch )
+		for( auto& filterPath : sectionFilterPath.second )
 		{
-			// Attempt to match using pattern
-			try
+			// Check for directly specified file
+			bool specificFileMatch = filterPath->path == resolvedPathStr;
+
+			if( specificFileMatch )
 			{
-				std::regex re( filterPath->matchPattern, std::regex::ECMAScript | std::regex::icase );
-				if( !std::regex_match( resolvedPathStr, re ) )
+				if( filterPath->containsLocalIncludeExcludeRules )
 				{
+					// If a local include or exclude is defined here then always fail
+					// This is to match behaviour in current system, likely a bug
 					continue;
 				}
-			}
-			catch( const std::regex_error& e )
-			{
-				std::string errorMsg = "Regex Exception during WildcardMatching - regexPattern: " + filterPath->matchPattern + " checkString: " + resolvedPathStr + " - error details: " + e.what();
-				throw std::runtime_error( errorMsg );
-			}
-			catch( const std::exception& e )
-			{
-				std::string errorMsg = "Standard Exception during WildcardMatching - regexPattern: " + filterPath->matchPattern + " checkString: " + resolvedPathStr + " - error details: " + e.what();
-				throw std::runtime_error( errorMsg );
-			}
-		}
-
-		// Apply include/exclude rules
-		if( specificFileMatch )
-		{
-			if( filterPath->containsLocalIncludeExcludeRules )
-			{
-				// If a local include or exclude is defined here then always fail
-				// This is to match behaviour in current system, likely a bug
-				continue;
+				else
+				{
+					// Ignore all other rules and match this file
+					matchSectionId = filterPath->sectionId;
+					matchPath = filterPath->path;
+					return true;
+				}
 			}
 			else
 			{
-				// Ignore all other rules and match this file
-				matchSectionId = filterPath->sectionId;
-				matchPath = filterPath->path;
-				return true;
-			}
-		}
+                // If a previous include or exclude rule was failed
+                // Then the rest will also fail
+                // The section cannot be completely skipped as
+                // There may be specific files specified by full path
+                // That don't have to match filter rules.
+                if (includeOrExcludeRulesFailedForSection)
+                {
+					continue;
+                }
 
-		// Includes
-		if( !filterPath->includeRules.empty() )
-		{
-			bool includeRulesPassed = false;
+				// Check exclude rules
+				bool excludeRulesPassed = true;
 
-			for( auto& includeRule : filterPath->includeRules )
-			{
-				if( resolvedPathStr.find( includeRule ) != std::string::npos )
+				for( auto& excludeRule : filterPath->excludeRules )
 				{
-					includeRulesPassed = true;
-					break;
+					if( resolvedPathStr.find( excludeRule ) != std::string::npos )
+					{
+						// Exclude rule met
+						excludeRulesPassed = false;
+						break;
+					}
+				}
+
+				if( !excludeRulesPassed )
+				{
+					// exclude rules are present and have not been met
+					includeOrExcludeRulesFailedForSection = true;
+					continue;
+				}
+
+				// Check include rules
+				if( !filterPath->includeRules.empty() )
+				{
+					bool includeRulesPassed = false;
+
+					for( auto& includeRule : filterPath->includeRules )
+					{
+						if( resolvedPathStr.find( includeRule ) != std::string::npos )
+						{
+							includeRulesPassed = true;
+							break;
+						}
+					}
+
+					if( !includeRulesPassed )
+					{
+						// Include rules are present and have not been met
+						includeOrExcludeRulesFailedForSection = true;
+						continue;
+					}
+				}
+
+				// Perform regex on filter pattern
+				try
+				{
+					if( !std::regex_match( resolvedPathStr, filterPath->matchPatternRegex ) )
+					{
+						continue;
+					}
+					else
+					{
+						matchSectionId = filterPath->sectionId;
+
+						matchPath = filterPath->path;
+
+						return true;
+					}
+				}
+				catch( const std::regex_error& e )
+				{
+					std::string errorMsg = "Regex Exception during WildcardMatching - regexPattern: " + filterPath->matchPattern + " checkString: " + resolvedPathStr + " - error details: " + e.what();
+					throw std::runtime_error( errorMsg );
+				}
+				catch( const std::exception& e )
+				{
+					std::string errorMsg = "Standard Exception during WildcardMatching - regexPattern: " + filterPath->matchPattern + " checkString: " + resolvedPathStr + " - error details: " + e.what();
+					throw std::runtime_error( errorMsg );
 				}
 			}
-
-			if( !includeRulesPassed )
-			{
-				// Include rules are present and have not been met
-				continue;
-			}
 		}
 
-		// Excludes
-		bool excludeRulesPassed = true;
-
-		for( auto& excludeRule : filterPath->excludeRules )
-		{
-			if( resolvedPathStr.find( excludeRule ) != std::string::npos )
-			{
-				// Exclude rule met
-				excludeRulesPassed = false;
-				break;
-			}
-		}
-
-		if( !excludeRulesPassed )
-		{
-			// Include rules are present and have not been met
-			continue;
-		}
-
-		// Pattern matched and include/exclude rules met
-		matchSectionId = filterPath->sectionId;
-		matchPath = filterPath->path;
-		return true;
 	}
 
 	return false;

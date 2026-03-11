@@ -40,11 +40,13 @@ struct FilterSection
 	std::set<std::string> excludeRules;
 
 	std::vector<std::unique_ptr<ResPath>> respaths;
+
+    bool containsNonWildcardResPath;
 };
 
 struct FilterFile
 {
-	std::unordered_map<std::string, std::shared_ptr<Prefix>> prefixes;
+	std::vector<std::shared_ptr<Prefix>> prefixes;
 
 	std::set<std::string> includeRules;
 
@@ -60,16 +62,16 @@ public:
 
 	~FilterFileReader();
 
-	static void LoadFromIniFileData( const char* data, size_t dataSize, FilterFile& fileData );
+	static void LoadFromIniFileData( const char* data, size_t dataSize, FilterFile& fileData, bool ignoreCase = false );
 
 private:
-	static void ParsePrefixMappings( const std::string& prefixStr, std::unordered_map<std::string, std::shared_ptr<Prefix>>& prefixes );
+	static void ParsePrefixMappings( const std::string& prefixStr, std::vector<std::shared_ptr<Prefix>>& prefixes );
 
 	static void ParsePrefixPaths( const std::string& prefixPathsStr, std::vector<std::filesystem::path>& paths );
 
-	static void ParseIncludeExcludeRules( const std::string& rulesStr, std::set<std::string>& includeRules, std::set<std::string>& excludeRules );
+	static void ParseIncludeExcludeRules( const std::string& rulesStr, std::set<std::string>& includeRules, std::set<std::string>& excludeRules, bool ignoreCase );
 
-	static void ParseSectionResPathEntry( const std::string& filterStr, std::vector<std::unique_ptr<ResPath>>& resPaths, std::unordered_map<std::string, std::shared_ptr<Prefix>>& prefixes );
+	static void ParseSectionResPathEntry( const std::string& filterStr, std::vector<std::unique_ptr<ResPath>>& resPaths, std::vector<std::shared_ptr<Prefix>>& prefixes, bool ignoreCase );
 };
 }
 

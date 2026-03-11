@@ -256,16 +256,30 @@ struct CreateResourceGroupFromDirectoryParams
     uintmax_t fileStreamChunkSize = 20971520;
 };
 
-/** @struct FilterSettings
-    *  @brief Function Parameters related to filtering
+/** @struct Filter
+    *  @brief Function Parameters related to filters
     *  @var FilterSettings::filterFilePaths
     *  Paths to filter files to apply
+    *  @var FilterSettings::outputResourceGroup
+    *  Output resource group to populate with filtered resources
+    */
+struct Filter
+{
+	std::vector<std::filesystem::path> filterFilePaths = {};
+
+	ResourceGroup* outputResourceGroup = nullptr;
+};
+
+/** @struct FilterSettings
+    *  @brief Function Parameters related to filtering
+    *  @var FilterSettings::filters
+    *  Filters to apply
     *  @var FilterSettings::prefixMapBasePath
     *  Base directory used for prefixmap in filter files, refer to filter file spec.
     */
 struct FilterSettings
 {
-	std::vector<std::filesystem::path> filterFilePaths = {};
+	std::vector<std::unique_ptr<Filter>> filters = {};
 
 	std::filesystem::path prefixMapBasePath = "";
 };
@@ -454,10 +468,10 @@ public:
 	/// @note No file filtering supported
 	Result CreateFromDirectory( const CreateResourceGroupFromDirectoryParams& params );
 
-    /// @brief Creates a ResourceGroup from a supplied filter files.
+    /// @brief Creates a filtered ResourceGroup.
 	/// @param params input parameters, See CreateResourceGroupFromFilterParams for more details.
 	/// @return Result see CarbonResources::Result for more details.
-	Result CreateFromFilter( const CreateResourceGroupFromFilterParams& params );
+	static Result CreateFromFilter( const CreateResourceGroupFromFilterParams& params );
 
 	/// @brief Merges a supplied ResourceGroup with this one. Merge performed on RelativePath, merge ResourceGroup takes precedent.
 	/// @param params input parameters, See ResourceGroupMergeParams for more details.

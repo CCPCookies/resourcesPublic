@@ -76,7 +76,7 @@ struct ResourcesTestFixture : public ::testing::Test
 
 	void TearDown();
 
-	std::filesystem::path GetTestFileFileAbsolutePath( const std::filesystem::path& relativePath );
+	std::filesystem::path GetTestFileAbsolutePath( const std::filesystem::path& relativePath );
 
 	bool FileExists( const std::filesystem::path& filePath );
 

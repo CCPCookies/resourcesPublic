@@ -5,6 +5,7 @@
 #include <INIReader.h>
 #include <cctype>
 #include <sstream>
+#include <algorithm>
 
 namespace ResourceTools
 {
@@ -17,7 +18,7 @@ FilterFileReader::~FilterFileReader()
 {
 }
 
-void FilterFileReader::LoadFromIniFileData( const char* data, size_t dataSize, FilterFile& fileData )
+void FilterFileReader::LoadFromIniFileData( const char* data, size_t dataSize, FilterFile& fileData, bool ignoreCase /*= false*/ )
 {
 
 	INIReader reader( data, dataSize );
@@ -39,9 +40,9 @@ void FilterFileReader::LoadFromIniFileData( const char* data, size_t dataSize, F
 
 	std::string globalFiltersStr = reader.Get( "DEFAULT", "filter", "" );
 
-	ParseIncludeExcludeRules( globalFiltersStr, fileData.includeRules, fileData.excludeRules );
+	ParseIncludeExcludeRules( globalFiltersStr, fileData.includeRules, fileData.excludeRules, ignoreCase );
 
-	// Get section infomration
+	// Get section information
 	for( const auto& sectionName : reader.Sections() )
 	{
 		if( sectionName == "default" || sectionName == "DEFAULT" )
@@ -56,18 +57,18 @@ void FilterFileReader::LoadFromIniFileData( const char* data, size_t dataSize, F
 		// Filter is optional
 		std::string filter = reader.Get( sectionName, "filter", "" );
 
-		ParseIncludeExcludeRules( filter, filterSection->includeRules, filterSection->excludeRules );
+		ParseIncludeExcludeRules( filter, filterSection->includeRules, filterSection->excludeRules, ignoreCase );
 
 		// Respaths is required
 		std::string respathsStr = reader.Get( sectionName, "respaths", "" );
 
-		ParseSectionResPathEntry( respathsStr, filterSection->respaths, fileData.prefixes );
+		ParseSectionResPathEntry( respathsStr, filterSection->respaths, fileData.prefixes, ignoreCase );
 
 		fileData.filterSections.push_back( std::move( filterSection ) );
 	}
 }
 
-void FilterFileReader::ParsePrefixMappings( const std::string& prefixStr, std::unordered_map<std::string, std::shared_ptr<Prefix>>& prefixes )
+void FilterFileReader::ParsePrefixMappings( const std::string& prefixStr, std::vector<std::shared_ptr<Prefix>>& prefixes )
 {
 
 	std::size_t pos = 0;
@@ -100,16 +101,30 @@ void FilterFileReader::ParsePrefixMappings( const std::string& prefixStr, std::u
 			throw std::invalid_argument( "Invalid prefixmap format: No paths defined for prefix: " + prefix );
 		}
 
-		auto it = prefixes.find( prefix );
-		if( it == prefixes.end() )
+        bool prefixFound = false;
+
+		std::shared_ptr<Prefix> currentPrefix;
+
+		for( auto iter = prefixes.begin(); iter != prefixes.end(); iter++ )
 		{
-			prefixes.emplace( prefix, std::make_shared<Prefix>() );
-			it = prefixes.find( prefix );
+			if( ( *iter )->id == prefix )
+			{
+				prefixFound = true;
+				currentPrefix = *iter;
+				break;
+			}
 		}
 
-		it->second->id = prefix;
+		if( !prefixFound )
+		{
+			currentPrefix = std::make_shared<Prefix>();
 
-		ParsePrefixPaths( rawPaths, it->second->paths );
+			currentPrefix->id = prefix;
+
+			prefixes.push_back( currentPrefix );
+		}
+
+		ParsePrefixPaths( rawPaths, currentPrefix->paths );
 
 		// Go to the next token in the rawPrefixMap (or break if at end)
 		if( nextSpace == std::string::npos )
@@ -151,48 +166,47 @@ void FilterFileReader::ParsePrefixPaths( const std::string& prefixPathsStr, std:
 	}
 }
 
-void FilterFileReader::ParseIncludeExcludeRules( const std::string& rulesStr, std::set<std::string>& includeRules, std::set<std::string>& excludeRules )
+void FilterFileReader::ParseIncludeExcludeRules( const std::string& rulesStr, std::set<std::string>& includeRules, std::set<std::string>& excludeRules, bool ignoreCase )
 {
 
-	std::string s = rulesStr;
 	size_t pos = 0;
-	while( pos < s.size() )
+	while( pos < rulesStr.size() )
 	{
 		// Skip whitespaces
-		while( pos < s.size() && std::isspace( static_cast<unsigned char>( s[pos] ) ) )
+		while( pos < rulesStr.size() && std::isspace( static_cast<unsigned char>( rulesStr[pos] ) ) )
 		{
 			++pos;
 		}
-		if( pos >= s.size() )
+		if( pos >= rulesStr.size() )
 		{
 			break;
 		}
 
 		// Check for exclude filter marker '!'
 		bool isExclude = false;
-		if( s[pos] == '!' )
+		if( rulesStr[pos] == '!' )
 		{
 			// We have an exclude filter, advance the position by one and skip whitespace(s)
 			isExclude = true;
 			++pos;
-			while( pos < s.size() && std::isspace( static_cast<unsigned char>( s[pos] ) ) )
+			while( pos < rulesStr.size() && std::isspace( static_cast<unsigned char>( rulesStr[pos] ) ) )
 			{
 				++pos;
 			}
-			if( pos >= s.size() )
+			if( pos >= rulesStr.size() )
 			{
 				throw std::invalid_argument( "Invalid filter format: exclude filter marker found without a [ token ] section" );
 			}
 		}
 
-		if( pos >= s.size() || s[pos] != '[' )
+		if( pos >= rulesStr.size() || rulesStr[pos] != '[' )
 		{
 			throw std::invalid_argument( "Invalid filter format: missing '['" );
 		}
 		++pos; // skip '['
 
-		size_t endBracket = s.find( ']', pos );
-		size_t nextStartBracket = s.find( '[', pos );
+		size_t endBracket = rulesStr.find( ']', pos );
+		size_t nextStartBracket = rulesStr.find( '[', pos );
 		if( nextStartBracket != std::string::npos && nextStartBracket < endBracket )
 		{
 			throw std::invalid_argument( "Invalid filter format: matching end bracket ']' not present before the next start bracket '['" );
@@ -203,7 +217,7 @@ void FilterFileReader::ParseIncludeExcludeRules( const std::string& rulesStr, st
 			throw std::invalid_argument( "Invalid filter format: missing ']'" );
 		}
 
-		std::string entries = s.substr( pos, endBracket - pos );
+		std::string entries = rulesStr.substr( pos, endBracket - pos );
 		std::istringstream iss( entries );
 		std::string token;
 		while( iss >> token )
@@ -222,6 +236,11 @@ void FilterFileReader::ParseIncludeExcludeRules( const std::string& rulesStr, st
 				continue;
 			}
 
+            if (ignoreCase)
+            {
+				std::transform( token.begin(), token.end(), token.begin(), []( unsigned char c ) { return std::tolower( c ); } );
+            }
+
 			if( isExclude )
 			{
 				excludeRules.insert( token );
@@ -235,7 +254,7 @@ void FilterFileReader::ParseIncludeExcludeRules( const std::string& rulesStr, st
 	}
 }
 
-void FilterFileReader::ParseSectionResPathEntry( const std::string& filterStr, std::vector<std::unique_ptr<ResPath>>& resPaths, std::unordered_map<std::string, std::shared_ptr<Prefix>>& prefixes )
+void FilterFileReader::ParseSectionResPathEntry( const std::string& filterStr, std::vector<std::unique_ptr<ResPath>>& resPaths, std::vector<std::shared_ptr<Prefix>>& prefixes, bool ignoreCase )
 {
 
 	// Split rawPathFileAttrib into lines (in case of multiline attribute)
@@ -280,16 +299,29 @@ void FilterFileReader::ParseSectionResPathEntry( const std::string& filterStr, s
 
 		std::unique_ptr resPath = std::make_unique<ResPath>();
 
+        if (ignoreCase)
+        {
+			std::transform( pathPart.begin(), pathPart.end(), pathPart.begin(), []( unsigned char c ) { return std::tolower( c ); } );
+        }
+
 		resPath->path = pathPart;
 
-		auto prefixIter = prefixes.find( prefixPart );
+        auto prefixIter = prefixes.begin();
+
+		for( prefixIter; prefixIter != prefixes.end(); prefixIter++ )
+		{
+			if( ( *prefixIter )->id == prefixPart )
+			{
+				break;
+			}
+		}
 
 		if( prefixIter == prefixes.end() )
 		{
 			throw std::invalid_argument( "Respath referencing unknown prefix: " + rawPathLine );
 		}
 
-		resPath->prefix = prefixIter->second;
+		resPath->prefix = *prefixIter;
 
 		if( !iss.eof() )
 		{
@@ -297,7 +329,7 @@ void FilterFileReader::ParseSectionResPathEntry( const std::string& filterStr, s
 			std::string rawOptionalFilterPart;
 			std::getline( iss, rawOptionalFilterPart );
 
-			ParseIncludeExcludeRules( rawOptionalFilterPart, resPath->includeRules, resPath->excludeRules );
+			ParseIncludeExcludeRules( rawOptionalFilterPart, resPath->includeRules, resPath->excludeRules, ignoreCase );
 		}
 
 		resPaths.push_back( std::move( resPath ) );

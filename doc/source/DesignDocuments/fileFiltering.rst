@@ -14,8 +14,8 @@ or through the CLI via the ``--create-group-from-filter`` operation.
 
 .. _file-format:
 
-File Format
-***********
+Filter File Format
+******************
 
 Filtering is achieved by providing a filter file that follows the following structure:
 
@@ -103,8 +103,8 @@ There are 3 pattern variations that are supported which can be seen in the follo
 
     [section1]                              # Filter section
         respaths = prefix1:/Path/*          # 1. Path with asterisk path wildcard
-        respaths = prefix2:/Path/...        # 2. Path with elipsis recursive path wildcard
-        respaths = prefix3:/Path/File.txt   # 3. Exact path specification
+                   prefix2:/Path/...        # 2. Path with elipsis recursive path wildcard
+                   prefix3:/Path/File.txt   # 3. Exact path specification
 
 Respaths can also include inlined include and exclude patterns:
 
@@ -175,7 +175,7 @@ Patterns can be provided at three different levels.
 
 1. Globally in the ``[DEFAULT]`` section using ``filter =`` .
 2. Section locally in sections using ``filter =`` .
-3. Semi locally to respath adding include/exclude rules to each path ``respaths = prefix1:/* [ include ] ![ exclude ]``
+3. Locally to respath adding rules to each path ``respaths = prefix1:/* [ include ] ![ exclude ]``
 
 If no include pattern matches are specified then all files will be included. Only if an include is provided will files be excluded if they don't match the include patterns.
 
@@ -220,7 +220,7 @@ There are 3 filter patterns and understanding how these combine to include or ex
 
 2. Section local filters are combined with any filters specified in global filters.
 
-3. respaths filters combine with both global and section filters and importantly these add for all subsequent paths. This is explained more in the following examples.
+3. respaths filters combine with both global and section filters and importantly these add for all subsequent paths in the section. This is explained more in the following examples.
 
 This is easier to see by example:
 
@@ -242,21 +242,24 @@ Creating a Resource Group with the following filter file:
     [exampleSection]
         filter = [ include2 ]                   # 2. Section local include
         respaths = prefix1:/*                   # 3. respath1
-        respaths = prefix1:/* [ include3 ]      # 4. respath2 with respath include
-        respaths = prefix2:/*                   # 5. respath3 referencing another prefix
+                   prefix1:/* [ include3 ]      # 4. respath2 with respath include
+                   prefix2:/*                   # 5. respath3 referencing another prefix
 
 Two paths will be tested for inclusion: 
 
 ``#3`` will use ``respaths = prefix1:/*`` and combine global and section local patterns ``include1`` and ``include2``. This will match the following from the source files:
+
 1. ``include1.txt``
 2. ``include2.txt``
 
 ``#4`` will use ``respaths = prefix1:/* [ include3 ]`` which will extend the section local patterns to include ``include3``. This will match the following source files:
+
 1. ``include1.txt``
 2. ``include2.txt``
 3. ``include3.txt``
 
 ``#5`` will use ``respaths = prefix2:/*`` and doesn't sepecify any include rules. It will apply the include rules that have been constructed for the section at this point ``include1``, ``include2`` and ``include3``. This may be suprising. So this will match the following source files:
+
 1. ``Path/include3.txt``
 
 So in this example all files were matched.
@@ -266,3 +269,38 @@ Order is important. Swapping the last two paths will give result in ``Path/inclu
 .. warning::
 
     When include and exclude patterns are specified as part of a ``respath`` they are added to the whole set of include and exclude patterns for the section and apply to subsequent entries. Order is important.
+
+.. warning::
+
+    If a resource is specified directly it will not match filters if include and exclude rules are supplied at the end of the line. This peculiarty has been brought across from a predecessor.
+
+
+Filter index mapping File Format
+********************************
+
+When running filtering using the CLI the filter options are supplied via a filter index mapping file.
+
+The file is standard yaml:
+
+.. code-block:: yaml
+
+    # Filter index mappings used by resources job in CI
+    Version: 1.0.0
+    FilterIndexMappings:
+
+    - FilterMapping:
+        - FilterFile: filter1.ini
+        OutputIndexFilename: ResourceGroup1.yaml
+
+    - FilterMapping:
+        - FilterFile: filter2.ini
+        - FilterFile: filter3.ini
+        OutputIndexFilename: ResourceGroup2.yaml
+
+The example file above will create two Resource Groups ``ResourceGroup1.yaml`` and ``ResourceGroup2.yaml``.
+
+1. ``ResourceGroup1.yaml`` will apply filters from ``filter1.ini``
+2. ``ResourceGroup2.yaml`` will apply filters from ``filter2.ini`` and ``filter3.ini``
+
+For extra information regarding further arguments required to create filtered resource groups through CLI can be found via the CLI.
+    
