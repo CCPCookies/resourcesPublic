@@ -44,7 +44,7 @@ enum class DocumentType
 	YAML
 };
 
-class ResourceGroup::ResourceGroupImpl;
+class ResourceGroupImpl;
 
 struct FilterGroup
 {
