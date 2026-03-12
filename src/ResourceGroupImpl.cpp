@@ -548,10 +548,9 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromFilter( const CreateResourceG
 								filterMatchInformation += matchSection;
 								filterMatchInformation += ",matched path - ";
 								filterMatchInformation += matchPath;
-								goto nextFilterGroup;
+								break;
 							}
 						}
-					    nextFilterGroup:;
 
 					}
 
