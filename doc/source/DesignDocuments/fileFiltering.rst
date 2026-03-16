@@ -28,7 +28,7 @@ Filtering is achieved by providing a filter file that follows the following stru
     [exampleSection]                                    # [OPTIONAL] Filter section
         filter = [ include ] ![ exclude ]               # [OPTIONAL] Section local include and exclude patterns
         respaths = prefix1:/*                           # [OPTIONAL] Path pattern
-        respaths = prefix1:/* [ include ] ![ exclude ]  # [OPTIONAL] Path pattern with extra include and exclude patterns
+                   prefix1:/* [ include ] ![ exclude ]  # [OPTIONAL] Path pattern with extra include and exclude patterns
 
 Prefixmap
 =========

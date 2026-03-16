@@ -17,9 +17,9 @@ struct FilterMapping
 class FilterIndexMappingFile
 {
 public:
-	FilterIndexMappingFile();
+	FilterIndexMappingFile() = default;
 
-	~FilterIndexMappingFile( );
+	~FilterIndexMappingFile( ) = default;
 
     bool LoadFromFile( const std::filesystem::path& path );
 

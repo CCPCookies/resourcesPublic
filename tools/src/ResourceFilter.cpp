@@ -6,14 +6,6 @@
 namespace ResourceTools
 {
 
-ResourceFilter::ResourceFilter()
-{
-}
-
-ResourceFilter::~ResourceFilter()
-{
-}
-
 bool ResourceFilter::SetFromFilterFileData( const FilterFile& fileData )
 {
 	m_paths.clear();

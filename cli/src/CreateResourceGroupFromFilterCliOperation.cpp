@@ -12,7 +12,7 @@ CreateResourceGroupFromFilterCliOperation::CreateResourceGroupFromFilterCliOpera
 	CliOperation( "create-group-from-filter", "Create filtered Resource Group(s)." ),
 	m_filterIndexMappingFileId( "--filter-index-mapping-file" ),
 	m_filterFileBasePathId( "--filter-file-basepath" ),
-	m_resourceFileBasePathId( "--output-resource-file-basepath" ),
+	m_outputResourceFileBasePathId( "--output-resource-file-basepath" ),
 	m_documentVersionId( "--document-version" ),
 	m_resourcePrefixId( "--resource-prefix" ),
 	m_skipCompressionId( "--skip-compression" ),
@@ -37,7 +37,7 @@ CreateResourceGroupFromFilterCliOperation::CreateResourceGroupFromFilterCliOpera
 
     AddArgument( m_filterFileBasePathId, "Base path to filter files.", true, true, "" );
 
-    AddArgument( m_resourceFileBasePathId, "Base path for output resource files.", false, true, "" );
+    AddArgument( m_outputResourceFileBasePathId, "Base path for output resource files.", false, true, "" );
 
 	AddArgument( m_documentVersionId, "Document version for created resource group.", false, false, VersionToString( defaultImportParams.outputDocumentVersion ) );
 
@@ -115,7 +115,7 @@ bool CreateResourceGroupFromFilterCliOperation::Execute( std::string& returnErro
     // Load filter settings from file
 	std::filesystem::path basePathToFilterFiles = m_argumentParser->get<std::string>( m_filterFileBasePathId );
 
-    std::filesystem::path basePathRespourceFiles = m_argumentParser->get<std::string>( m_resourceFileBasePathId );
+    std::filesystem::path basePathResourceFiles = m_argumentParser->get<std::string>( m_outputResourceFileBasePathId );
 
 	std::filesystem::path filterIndexMappingPath = m_argumentParser->get<std::string>( m_filterIndexMappingFileId );
 
@@ -150,7 +150,7 @@ bool CreateResourceGroupFromFilterCliOperation::Execute( std::string& returnErro
 
         exportParamter->outputDocumentVersion = createResourceGroupParams.outputDocumentVersion;
 
-        exportParamter->filename = basePathRespourceFiles / mapping->outputPath;
+        exportParamter->filename = basePathResourceFiles / mapping->outputPath;
 
         exportParameters.push_back( std::move( exportParamter ) );
 
@@ -163,7 +163,7 @@ bool CreateResourceGroupFromFilterCliOperation::Execute( std::string& returnErro
 
 	if( ShowCliStatusUpdates() )
 	{
-		PrintStartBanner( createResourceGroupParams, createResourceGroupParams.outputDocumentVersion, filterIndexMappingPath, basePathToFilterFiles, basePathRespourceFiles );
+		PrintStartBanner( createResourceGroupParams, createResourceGroupParams.outputDocumentVersion, filterIndexMappingPath, basePathToFilterFiles, basePathResourceFiles );
 	}
 
 	return CreateResourceGroups( createResourceGroupParams, exportParameters );
@@ -276,7 +276,7 @@ bool CreateResourceGroupFromFilterCliOperation::CreateResourceGroups(
 	}
 
 
-    // Export lists
+    // Export Resource Groups
 	if( ShowCliStatusUpdates() )
 	{
 		CliStatusUpdate( "Exporting resource group to file." );

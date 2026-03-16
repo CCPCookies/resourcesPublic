@@ -244,6 +244,8 @@ static const Version S_LIBRARY_VERSION = { VERSION_MAJOR, VERSION_MINOR, VERSION
 
 static const Version S_DOCUMENT_VERSION = { 0, 1, 0 }; /*!< Maximum document version supported by resources */
 
+static const Version S_CSV_DOCUMENT_VERSION = { 0, 0, 0 }; /*!< Document version for old style CSV */
+
 static const std::vector S_VALID_DOCUMENT_VERSIONS = {
 	Version{ 0, 0, 0 },
 	Version{ 0, 1, 0 }

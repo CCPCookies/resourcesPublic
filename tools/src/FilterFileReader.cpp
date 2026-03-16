@@ -10,13 +10,6 @@
 namespace ResourceTools
 {
 
-FilterFileReader::FilterFileReader()
-{
-}
-
-FilterFileReader::~FilterFileReader()
-{
-}
 
 void FilterFileReader::LoadFromIniFileData( const char* data, size_t dataSize, FilterFile& fileData, bool ignoreCase /*= false*/ )
 {

@@ -21,6 +21,10 @@ They can be saved/loaded from a filetype which supersedes resfileindex files.
 Input Parameters
 ----------------
 
+.. doxygenvariable:: DEFAULT_FILE_STREAM_SIZE
+
+.. doxygenvariable:: DEFAULT_STREAM_THRESHOLD_SIZE
+
 .. doxygenstruct:: CarbonResources::ResourceGroupImportFromFileParams
     :members:
 

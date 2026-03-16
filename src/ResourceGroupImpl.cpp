@@ -343,7 +343,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromFilter( const CreateResourceG
 
     bool ignoreCase = false;
 
-    if (documentVersion == VersionInternal(0, 0, 0))
+    if( documentVersion == VersionInternal( S_CSV_DOCUMENT_VERSION ) )
     {
 		ignoreCase = true;
     }
@@ -919,11 +919,6 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromFilter( const CreateResourceG
 	}
 
 	return Result{ ResultType::SUCCESS };
-}
-
-bool ResourceGroup::ResourceGroupImpl::ResourceExists( ResourceInfo& resource )
-{
-	return m_resourcesParameter.Contains( &resource );
 }
 
 Result ResourceGroup::ResourceGroupImpl::ImportFromData( const std::string& data, StatusSettings& statusSettings, DocumentType documentType /* = DocumentType::YAML */ )

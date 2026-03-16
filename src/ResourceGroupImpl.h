@@ -133,8 +133,6 @@ private:
 
 	Result RemoveResource( ResourceInfo& relativePath );
 
-    bool ResourceExists( ResourceInfo& resource );
-
 protected:
 	// Document Parameters
 	DocumentParameter<VersionInternal> m_versionParameter = DocumentParameter<VersionInternal>( VERSION, TypeId() );

@@ -20,6 +20,20 @@ class PatchResourceGroup;
 class BundleResourceGroup;
 struct Result;
 
+/** 
+ * @brief Default file stream size.
+ * 
+ * 20mb index aligned.
+ */
+const uintmax_t DEFAULT_FILE_STREAM_SIZE = 20971520;
+
+/** 
+ * @brief Default resource stream threshold size.
+ * 
+ * 500mb index aligned.
+ */
+const uintmax_t DEFAULT_STREAM_THRESHOLD_SIZE = 524288000;
+
 /** @struct CallbackSettings
     *  @brief Parameters relating to status callback.
     *  @var CallbackSettings::statusCallback
@@ -239,7 +253,7 @@ struct CreateResourceGroupFromDirectoryParams
 {
 	std::filesystem::path directory = "";
 
-	uintmax_t resourceStreamThreshold = 524288000;
+	uintmax_t resourceStreamThreshold = DEFAULT_STREAM_THRESHOLD_SIZE;
 
 	Version outputDocumentVersion = S_DOCUMENT_VERSION;
 
@@ -253,7 +267,7 @@ struct CreateResourceGroupFromDirectoryParams
 
     ResourceDestinationSettings exportResourcesDestinationSettings = { CarbonResources::ResourceDestinationType::LOCAL_CDN, "ExportedResources" };
 
-    uintmax_t fileStreamChunkSize = 20971520;
+    uintmax_t fileStreamChunkSize = DEFAULT_FILE_STREAM_SIZE;
 };
 
 /** @struct Filter
@@ -342,7 +356,7 @@ struct CompressionCalculationSettings
     */
 struct CreateResourceGroupFromFilterParams
 {
-	uintmax_t fileStreamChunkSize = 20971520;
+	uintmax_t fileStreamChunkSize = DEFAULT_FILE_STREAM_SIZE;
 
 	Version outputDocumentVersion = S_DOCUMENT_VERSION;
 

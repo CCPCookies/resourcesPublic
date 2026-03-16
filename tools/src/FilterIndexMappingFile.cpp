@@ -4,18 +4,9 @@
 
 #include <yaml-cpp/yaml.h>
 
-FilterIndexMappingFile::FilterIndexMappingFile()
-{
-}
-
-FilterIndexMappingFile::~FilterIndexMappingFile()
-{
-}
-
 bool FilterIndexMappingFile::LoadFromFile( const std::filesystem::path& path )
 {
 
-	// TODO add returns for invalid file
 	YAML::Node file;
 	try
 	{

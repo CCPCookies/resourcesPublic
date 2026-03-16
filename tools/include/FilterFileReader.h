@@ -58,9 +58,9 @@ struct FilterFile
 class FilterFileReader
 {
 public:
-	FilterFileReader();
+	FilterFileReader() = default;
 
-	~FilterFileReader();
+	~FilterFileReader() = default;
 
 	static void LoadFromIniFileData( const char* data, size_t dataSize, FilterFile& fileData, bool ignoreCase = false );
 

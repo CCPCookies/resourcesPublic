@@ -36,9 +36,9 @@ struct FilterPath
 class ResourceFilter
 {
 public:
-	ResourceFilter();
+	ResourceFilter() = default;
 
-	~ResourceFilter();
+	~ResourceFilter() = default;
 
 	bool SetFromFilterFileData( const FilterFile& fileData );
 

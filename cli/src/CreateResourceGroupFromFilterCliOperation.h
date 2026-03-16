@@ -35,7 +35,7 @@ private:
 
     std::string m_filterFileBasePathId;
 
-    std::string m_resourceFileBasePathId;
+    std::string m_outputResourceFileBasePathId;
 
 	std::string m_documentVersionId;
 
