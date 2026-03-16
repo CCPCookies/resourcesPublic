@@ -1,0 +1,8 @@
+# Filter index mappings used by resources job in CI
+Version: 1.0.0
+FilterIndexMappings:
+
+  - FilterMapping:
+    - FilterFile: filterToIncludeAllAtBaseDirectory.ini
+    OutputIndexFilename: ResourceGroup.yaml
+    

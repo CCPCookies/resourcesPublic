@@ -137,7 +137,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectory )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::filesystem::path inputDirectory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+	std::filesystem::path inputDirectory = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 	arguments.push_back( inputDirectory.string() );
 
 	arguments.push_back( "--output-file" );
@@ -149,9 +149,9 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectory )
 	ASSERT_EQ( res, 0 );
 
 #if _WIN64
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
 #elif __APPLE__
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
 #else
 #error Unsupported platform
 #endif
@@ -178,7 +178,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryExportResources )
 	std::string exportOutputPath = "ExportedResources";
 	arguments.push_back( exportOutputPath );
 
-	std::filesystem::path inputDirectory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+	std::filesystem::path inputDirectory = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 	arguments.push_back( inputDirectory.string() );
 
 	arguments.push_back( "--output-file" );
@@ -190,9 +190,9 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryExportResources )
 	ASSERT_EQ( res, 0 );
 
 #if _WIN64
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
 #elif __APPLE__
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
 #else
 #error Unsupported platform
 #endif
@@ -214,7 +214,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryWithSkipCompression )
 
     arguments.push_back( "--skip-compression" );
 
-	std::filesystem::path inputDirectory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+	std::filesystem::path inputDirectory = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 	arguments.push_back( inputDirectory.string() );
 
 	arguments.push_back( "--output-file" );
@@ -226,9 +226,9 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryWithSkipCompression )
 	ASSERT_EQ( res, 0 );
 
 #if _WIN64
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupSkipCompressionWindows.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupSkipCompressionWindows.yaml" );
 #elif __APPLE__
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupSkipCompressionMacOS.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupSkipCompressionMacOS.yaml" );
 #else
 #error Unsupported platform
 #endif
@@ -246,7 +246,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormat )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::filesystem::path inputDirectory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+	std::filesystem::path inputDirectory = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 	arguments.push_back( inputDirectory.string() );
 
 	arguments.push_back( "--output-file" );
@@ -261,9 +261,9 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormat )
 	ASSERT_EQ( res, 0 );
 
 #if _WIN64
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.csv" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.csv" );
 #elif __APPLE__
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.csv" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.csv" );
 #else
 #error Unsupported platform
 #endif
@@ -281,7 +281,7 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormatWithP
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::filesystem::path inputDirectory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+	std::filesystem::path inputDirectory = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 	arguments.push_back( inputDirectory.string() );
 
 	arguments.push_back( "--output-file" );
@@ -299,9 +299,9 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromDirectoryOldDocumentFormatWithP
 	ASSERT_EQ( res, 0 );
 
 #if _WIN64
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindowsPrefixed.csv" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindowsPrefixed.csv" );
 #elif __APPLE__
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOSPrefixed.csv" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOSPrefixed.csv" );
 #else
 #error Unsupported platform
 #endif
@@ -319,10 +319,10 @@ TEST_F( ResourcesCliTest, CreateBundle )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	arguments.push_back( GetTestFileFileAbsolutePath( "Bundle/resfileindexShort.txt" ).string() );
+	arguments.push_back( GetTestFileAbsolutePath( "Bundle/resfileindexShort.txt" ).string() );
 
 	arguments.push_back( "--resource-source-path" );
-	arguments.push_back( GetTestFileFileAbsolutePath( "Bundle/Res" ).string() );
+	arguments.push_back( GetTestFileAbsolutePath( "Bundle/Res" ).string() );
 
 	arguments.push_back( "--bundle-resourcegroup-relative-path" );
 	arguments.push_back( "BundleResourceGroup.yaml" );
@@ -348,10 +348,10 @@ TEST_F( ResourcesCliTest, CreateBundle )
 	EXPECT_EQ( res, 0 );
 
 	// Check expected outcome
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateBundle/BundleResourceGroup.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateBundle/BundleResourceGroup.yaml" );
 	EXPECT_TRUE( FilesMatch( goldFile, "BundleOut/BundleResourceGroup.yaml" ) );
 
-	std::filesystem::path goldDirectory = GetTestFileFileAbsolutePath( "CreateBundle/CreateBundleOut" );
+	std::filesystem::path goldDirectory = GetTestFileAbsolutePath( "CreateBundle/CreateBundleOut" );
 	EXPECT_TRUE( DirectoryIsSubset( goldDirectory, "CreateBundleOut" ) );
 }
 
@@ -366,11 +366,11 @@ TEST_F( ResourcesCliTest, RemoveResourcesWithUnknownResourceIgnoreOnResourceNotF
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
+	std::string resourceGroupPath = GetTestFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
 
 	arguments.push_back( resourceGroupPath );
 
-	std::string resourcesToRemoveFile = GetTestFileFileAbsolutePath( "RemoveResource/ResourcesToRemoveListWithUnknownResource.txt" ).string();
+	std::string resourcesToRemoveFile = GetTestFileAbsolutePath( "RemoveResource/ResourcesToRemoveListWithUnknownResource.txt" ).string();
 
 	arguments.push_back( resourcesToRemoveFile );
 
@@ -398,11 +398,11 @@ TEST_F( ResourcesCliTest, RemoveResourcesWithUnknownResourceWithInvalidPathToRes
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
+	std::string resourceGroupPath = GetTestFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
 
 	arguments.push_back( resourceGroupPath );
 
-	std::string resourcesToRemoveFile = GetTestFileFileAbsolutePath( "INVALID_PATH" ).string();
+	std::string resourcesToRemoveFile = GetTestFileAbsolutePath( "INVALID_PATH" ).string();
 
 	arguments.push_back( resourcesToRemoveFile );
 
@@ -428,11 +428,11 @@ TEST_F( ResourcesCliTest, RemoveResourcesWithUnknownResource )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
+	std::string resourceGroupPath = GetTestFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
 
 	arguments.push_back( resourceGroupPath );
 
-	std::string resourcesToRemoveFile = GetTestFileFileAbsolutePath( "RemoveResource/ResourcesToRemoveListWithUnknownResource.txt" ).string();
+	std::string resourcesToRemoveFile = GetTestFileAbsolutePath( "RemoveResource/ResourcesToRemoveListWithUnknownResource.txt" ).string();
 
 	arguments.push_back( resourcesToRemoveFile );
 
@@ -458,11 +458,11 @@ TEST_F( ResourcesCliTest, RemoveResources )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string resourceGroupPath = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
+	std::string resourceGroupPath = GetTestFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" ).string();
 
 	arguments.push_back( resourceGroupPath );
 
-	std::string resourcesToRemoveFile = GetTestFileFileAbsolutePath( "RemoveResource/ResourcesToRemoveList.txt" ).string();
+	std::string resourcesToRemoveFile = GetTestFileAbsolutePath( "RemoveResource/ResourcesToRemoveList.txt" ).string();
 
 	arguments.push_back( resourcesToRemoveFile );
 
@@ -477,7 +477,7 @@ TEST_F( ResourcesCliTest, RemoveResources )
 	EXPECT_EQ( res, 0 );
 
 	// Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "RemoveResource/ResourceGroupAfterRemove.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "RemoveResource/ResourceGroupAfterRemove.yaml" );
 
 	EXPECT_TRUE( FilesMatch( goldFile, resourceGroupAfterRemovePath ) );
 }
@@ -493,11 +493,11 @@ TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoAdditions )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
+	std::string baseResourceGroupPath = GetTestFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
 
 	arguments.push_back( baseResourceGroupPath );
 
-	std::string diffResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithAdditions.txt" ).string();
+	std::string diffResourceGroupPath = GetTestFileAbsolutePath( "DiffGroups/resFileIndexWithAdditions.txt" ).string();
 
 	arguments.push_back( diffResourceGroupPath );
 
@@ -512,7 +512,7 @@ TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoAdditions )
 	EXPECT_EQ( res, 0 );
 
 	// Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithAdditions.txt" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "DiffGroups/ExpectedDiffWithAdditions.txt" );
 
 	EXPECT_TRUE( FileExists( goldFile ) );
 
@@ -532,11 +532,11 @@ TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoChanges )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
+	std::string baseResourceGroupPath = GetTestFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
 
 	arguments.push_back( baseResourceGroupPath );
 
-	std::string diffResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithChanges.txt" ).string();
+	std::string diffResourceGroupPath = GetTestFileAbsolutePath( "DiffGroups/resFileIndexWithChanges.txt" ).string();
 
 	arguments.push_back( diffResourceGroupPath );
 
@@ -551,7 +551,7 @@ TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoChanges )
 	EXPECT_EQ( res, 0 );
 
 	// Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithChanges.txt" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "DiffGroups/ExpectedDiffWithChanges.txt" );
 
 	EXPECT_TRUE( FileExists( goldFile ) );
 
@@ -571,11 +571,11 @@ TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoSubtractions )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
+	std::string baseResourceGroupPath = GetTestFileAbsolutePath( "DiffGroups/resFileIndex.txt" ).string();
 
 	arguments.push_back( baseResourceGroupPath );
 
-	std::string diffResourceGroupPath = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithSubtractions.txt" ).string();
+	std::string diffResourceGroupPath = GetTestFileAbsolutePath( "DiffGroups/resFileIndexWithSubtractions.txt" ).string();
 
 	arguments.push_back( diffResourceGroupPath );
 
@@ -590,7 +590,7 @@ TEST_F( ResourcesCliTest, DiffResourceGroupsWithTwoSubtractions )
 	EXPECT_EQ( res, 0 );
 
 	// Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "DiffGroups/ExpectedDiffWithSubtractions.txt" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "DiffGroups/ExpectedDiffWithSubtractions.txt" );
 
 	EXPECT_TRUE( FileExists( goldFile ) );
 
@@ -610,11 +610,11 @@ TEST_F( ResourcesCliTest, MergeGroup )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string baseResourceGroupPath = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/BaseResourceGroup.yaml" ).string();
+	std::string baseResourceGroupPath = GetTestFileAbsolutePath( "MergeGroups/YamlAdditive/BaseResourceGroup.yaml" ).string();
 
 	arguments.push_back( baseResourceGroupPath );
 
-	std::string mergeResourceGroupPath = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/MergeResourceGroup.yaml" ).string();
+	std::string mergeResourceGroupPath = GetTestFileAbsolutePath( "MergeGroups/YamlAdditive/MergeResourceGroup.yaml" ).string();
 
 	arguments.push_back( mergeResourceGroupPath );
 
@@ -629,7 +629,7 @@ TEST_F( ResourcesCliTest, MergeGroup )
 	EXPECT_EQ( res, 0 );
 
 	// Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/ExpectedMergedResourceGroup.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "MergeGroups/YamlAdditive/ExpectedMergedResourceGroup.yaml" );
 
 	EXPECT_TRUE( FilesMatch( goldFile, mergedOutputPath ) );
 }
@@ -645,23 +645,23 @@ TEST_F( ResourcesCliTest, CreatePatch )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string previousResourceGroupPath = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" ).string();
+	std::string previousResourceGroupPath = GetTestFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" ).string();
 
 	arguments.push_back( previousResourceGroupPath );
 
-	std::string nextResourceGroupPath = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_next.txt" ).string();
+	std::string nextResourceGroupPath = GetTestFileAbsolutePath( "Patch/resfileindexShort_build_next.txt" ).string();
 
 	arguments.push_back( nextResourceGroupPath );
 
 	arguments.push_back( "--resource-source-type-previous" );
 	arguments.push_back( "LOCAL_RELATIVE" );
 
-	std::string nextResourcesLocation = GetTestFileFileAbsolutePath( "Patch/NextBuildResources" ).string();
+	std::string nextResourcesLocation = GetTestFileAbsolutePath( "Patch/NextBuildResources" ).string();
 
 	arguments.push_back( "--resource-source-base-path-next" );
 	arguments.push_back( nextResourcesLocation );
 
-	std::string previousResourcesLocation = GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources" ).string();
+	std::string previousResourcesLocation = GetTestFileAbsolutePath( "Patch/PreviousBuildResources" ).string();
 
 	arguments.push_back( "--resource-source-base-path-previous" );
 	arguments.push_back( previousResourcesLocation );
@@ -683,10 +683,10 @@ TEST_F( ResourcesCliTest, CreatePatch )
 	EXPECT_EQ( res, 0 );
 
 	// Check expected outcome
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "Patch/PatchResourceGroup.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "Patch/PatchResourceGroup.yaml" );
 	EXPECT_TRUE( FilesMatch( goldFile, "PatchOut/PatchResourceGroup.yaml" ) );
 
-	std::filesystem::path goldDirectory = GetTestFileFileAbsolutePath( "Patch/LocalCDNPatches" );
+	std::filesystem::path goldDirectory = GetTestFileAbsolutePath( "Patch/LocalCDNPatches" );
 	EXPECT_TRUE( DirectoryIsSubset( goldDirectory, "PatchOut/Patches" ) );
 }
 
@@ -701,7 +701,7 @@ TEST_F( ResourcesCliTest, CreateGroup )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string directoryIn = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" ).string();
+	std::string directoryIn = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" ).string();
 
 	arguments.push_back( directoryIn );
 
@@ -717,13 +717,122 @@ TEST_F( ResourcesCliTest, CreateGroup )
 
 // Check expected outcome
 #if _WIN64
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
 #elif __APPLE__
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
 #else
 #error Unsupported platform
 #endif
 	EXPECT_TRUE( FilesMatch( goldFile, outputFilename ) );
+}
+
+TEST_F( ResourcesCliTest, CreateResourceGroupFromFilter )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "create-group-from-filter" );
+
+	arguments.push_back( "--verbosity-level" );
+
+	arguments.push_back( "-1" );
+
+    arguments.push_back( "--filter-index-mapping-file" );
+
+    std::filesystem::path filterMappingFile = GetTestFileAbsolutePath( "FilterFiles/resFilterIndexMapping.yaml" );
+
+    arguments.push_back( filterMappingFile.string() );
+
+	std::filesystem::path filterFileBasepath = GetTestFileAbsolutePath( "FilterFiles/" );
+
+    arguments.push_back( "--filter-file-basepath" );
+
+	arguments.push_back( filterFileBasepath.string() );
+
+    arguments.push_back( "--prefix-map-basepath" );
+
+    std::filesystem::path prefixBasePath = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+
+    arguments.push_back( prefixBasePath.string() );
+
+	int res = RunCli( arguments, output );
+
+	ASSERT_EQ( res, 0 );
+
+#if _WIN64
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+#elif __APPLE__
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+#else
+#error Unsupported platform
+#endif
+
+    // Value is asertained from yaml mapping file
+    std::filesystem::path outputFile = "ResourceGroup.yaml";
+
+	EXPECT_TRUE( FilesMatch( goldFile, outputFile ) );
+}
+
+TEST_F( ResourcesCliTest, CreateResourceGroupFromFilterExportResources )
+{
+	std::string output;
+
+	std::vector<std::string> arguments;
+
+	arguments.push_back( "create-group-from-filter" );
+
+	arguments.push_back( "--verbosity-level" );
+
+	arguments.push_back( "-1" );
+
+	arguments.push_back( "--filter-index-mapping-file" );
+
+	std::filesystem::path filterMappingFile = GetTestFileAbsolutePath( "FilterFiles/resFilterIndexMapping.yaml" );
+
+	arguments.push_back( filterMappingFile.string() );
+
+	std::filesystem::path filterFileBasepath = GetTestFileAbsolutePath( "FilterFiles/" );
+
+	arguments.push_back( "--filter-file-basepath" );
+
+	arguments.push_back( filterFileBasepath.string() );
+
+	arguments.push_back( "--prefix-map-basepath" );
+
+	std::filesystem::path prefixBasePath = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+
+	arguments.push_back( prefixBasePath.string() );
+
+	arguments.push_back( "--export-resources" );
+
+	arguments.push_back( "--export-resources-destination-type" );
+
+	arguments.push_back( "LOCAL_RELATIVE" );
+
+	std::filesystem::path exportedResourcesPath = "ExportedResources";
+
+	arguments.push_back( "--export-resources-destination-path" );
+
+	arguments.push_back( exportedResourcesPath.string() );
+
+	int res = RunCli( arguments, output );
+
+	ASSERT_EQ( res, 0 );
+
+#if _WIN64
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+#elif __APPLE__
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+#else
+#error Unsupported platform
+#endif
+
+	std::filesystem::path outputFile = "ResourceGroup.yaml";
+
+	EXPECT_TRUE( FilesMatch( goldFile, outputFile ) );
+
+	EXPECT_TRUE( DirectoryIsSubset( exportedResourcesPath, prefixBasePath ) );
 }
 
 #ifdef DEV_FEATURES
@@ -739,25 +848,25 @@ TEST_F( ResourcesCliTest, ApplyPatch )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string directoryIn = GetTestFileFileAbsolutePath( "Patch/PatchResourceGroup.yaml" ).string();
+	std::string directoryIn = GetTestFileAbsolutePath( "Patch/PatchResourceGroup.yaml" ).string();
 
 	arguments.push_back( directoryIn );
 
 	arguments.push_back( "--patch-binaries-base-path" );
 
-	std::string patchBinariesBasePath = GetTestFileFileAbsolutePath( "Patch/LocalCDNPatches/" ).string();
+	std::string patchBinariesBasePath = GetTestFileAbsolutePath( "Patch/LocalCDNPatches/" ).string();
 
 	arguments.push_back( patchBinariesBasePath );
 
 	arguments.push_back( "--resources-to-patch-base-path" );
 
-	std::string resourcesToPatchBasePath = GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources/" ).string();
+	std::string resourcesToPatchBasePath = GetTestFileAbsolutePath( "Patch/PreviousBuildResources/" ).string();
 
 	arguments.push_back( resourcesToPatchBasePath );
 
 	arguments.push_back( "--next-resources-base-path" );
 
-	std::string nextResourcesBasePath = GetTestFileFileAbsolutePath( "Patch/NextBuildResources/" ).string();
+	std::string nextResourcesBasePath = GetTestFileAbsolutePath( "Patch/NextBuildResources/" ).string();
 
 	arguments.push_back( nextResourcesBasePath );
 
@@ -779,7 +888,7 @@ TEST_F( ResourcesCliTest, ApplyPatch )
 	EXPECT_EQ( res, 0 );
 
 	// Check expected outcome
-	std::filesystem::path goldDirectory = GetTestFileFileAbsolutePath( "Patch/NextBuildResources" );
+	std::filesystem::path goldDirectory = GetTestFileAbsolutePath( "Patch/NextBuildResources" );
 	EXPECT_TRUE( DirectoryIsSubset( outputBasePath, goldDirectory ) );
 }
 
@@ -794,13 +903,13 @@ TEST_F( ResourcesCliTest, UnpackBundle )
 	arguments.push_back( "--verbosity-level" );
 	arguments.push_back( "-1" );
 
-	std::string directoryIn = GetTestFileFileAbsolutePath( "Bundle/BundleResourceGroup.yaml" ).string();
+	std::string directoryIn = GetTestFileAbsolutePath( "Bundle/BundleResourceGroup.yaml" ).string();
 
 	arguments.push_back( directoryIn );
 
 	arguments.push_back( "--chunk-source-base-path" );
 
-	std::string chunkSourceBasePath = GetTestFileFileAbsolutePath( "Bundle/LocalRemoteChunks/" ).string();
+	std::string chunkSourceBasePath = GetTestFileAbsolutePath( "Bundle/LocalRemoteChunks/" ).string();
 
 	arguments.push_back( chunkSourceBasePath );
 
@@ -813,7 +922,7 @@ TEST_F( ResourcesCliTest, UnpackBundle )
 	EXPECT_EQ( res, 0 );
 
 	// Check expected outcome
-	EXPECT_TRUE( DirectoryIsSubset( GetTestFileFileAbsolutePath( "Bundle/Res" ), "UnpackBundleOut" ) );
+	EXPECT_TRUE( DirectoryIsSubset( GetTestFileAbsolutePath( "Bundle/Res" ), "UnpackBundleOut" ) );
 
 	EXPECT_TRUE( std::filesystem::exists( "UnpackBundleOut/ResourceGroup.yaml" ) );
 }

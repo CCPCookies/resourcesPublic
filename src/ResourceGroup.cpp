@@ -68,6 +68,15 @@ Result ResourceGroup::CreateFromDirectory( const CreateResourceGroupFromDirector
 	return m_impl->CreateFromDirectory( params, statusSettings );
 }
 
+Result ResourceGroup::CreateFromFilter( const CreateResourceGroupFromFilterParams& params )
+{
+	StatusSettings statusSettings;
+	statusSettings.SetCallbackSettings( params.callbackSettings );
+	statusSettings.Update( CarbonResources::StatusProgressType::START, 0, 0, "Starting Process" );
+
+	return ResourceGroupImpl::CreateFromFilter( params, statusSettings );
+}
+
 Result ResourceGroup::Merge( const ResourceGroupMergeParams& params ) const
 {
 	StatusSettings statusSettings;

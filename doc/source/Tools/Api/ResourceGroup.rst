@@ -7,7 +7,12 @@ ResourceGroups represent a collection of Resources.
 
 They can be saved/loaded from a filetype which supersedes resfileindex files.
 
-See :doc:`../../DesignDocuments/resourceGroupFileFormat` file specification for more details.
+
+.. note::
+
+    See :doc:`../../DesignDocuments/resourceGroupFileFormat` file specification for details on Resource Groups.
+
+    See :doc:`../../DesignDocuments/fileFiltering` for further information on filtering.
 
 .. doxygenclass:: CarbonResources::ResourceGroup
     :members:
@@ -16,6 +21,10 @@ See :doc:`../../DesignDocuments/resourceGroupFileFormat` file specification for 
 Input Parameters
 ----------------
 
+.. doxygenvariable:: DEFAULT_FILE_STREAM_SIZE
+
+.. doxygenvariable:: DEFAULT_STREAM_THRESHOLD_SIZE
+
 .. doxygenstruct:: CarbonResources::ResourceGroupImportFromFileParams
     :members:
 
@@ -23,6 +32,9 @@ Input Parameters
     :members:
 
 .. doxygenstruct:: CarbonResources::CreateResourceGroupFromDirectoryParams
+    :members:
+
+.. doxygenstruct:: CarbonResources::CreateResourceGroupFromFilterParams
     :members:
 
 .. doxygenstruct:: CarbonResources::PatchCreateParams
@@ -40,3 +52,11 @@ Input Parameters
 .. doxygenstruct:: CarbonResources::ResourceGroupRemoveResourcesParams
     :members:
 
+.. doxygenstruct:: CarbonResources::CompressionCalculationSettings
+    :members:
+
+.. doxygenstruct:: CarbonResources::ExportResourceSettings
+    :members:
+
+.. doxygenstruct:: CarbonResources::FilterSettings
+    :members:

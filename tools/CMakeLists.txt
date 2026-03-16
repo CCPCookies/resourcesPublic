@@ -3,6 +3,7 @@
 find_package(cryptopp CONFIG REQUIRED)
 find_package(CURL CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(unofficial-inih CONFIG REQUIRED)
 
 set(SRC_FILES
         include/BundleStreamIn.h
@@ -12,10 +13,13 @@ set(SRC_FILES
         include/Downloader.h
         include/FileDataStreamIn.h
         include/FileDataStreamOut.h
+        include/FilterFileReader.h
+        include/FilterIndexMappingFile.h
         include/GzipCompressionStream.h
         include/GzipDecompressionStream.h
         include/Md5ChecksumStream.h
         include/Patching.h
+        include/ResourceFilter.h
         include/ResourceTools.h
         include/RollingChecksum.h
         include/ScopedFile.h
@@ -27,9 +31,12 @@ set(SRC_FILES
         src/Downloader.cpp
         src/FileDataStreamIn.cpp
         src/FileDataStreamOut.cpp
+        src/FilterFileReader.cpp
+        src/FilterIndexMappingFile.cpp
         src/GzipCompressionStream.cpp
         src/GzipDecompressionStream.cpp
         src/Md5ChecksumStream.cpp
+        src/ResourceFilter.cpp
         src/ResourceTools.cpp
         src/ScopedFile.cpp
         src/Patching.cpp
@@ -50,6 +57,6 @@ if (WIN32)
     target_compile_definitions(resources-tools PRIVATE NOMINMAX) # Do not define min/max macros.
 endif ()
 
-target_link_libraries(resources-tools PRIVATE cryptopp::cryptopp CURL::libcurl ZLIB::ZLIB static_bsdiff)
+target_link_libraries(resources-tools PRIVATE cryptopp::cryptopp CURL::libcurl ZLIB::ZLIB static_bsdiff unofficial::inih::inireader)
 
 target_include_directories(resources-tools PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)

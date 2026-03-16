@@ -8,6 +8,7 @@
 #include "ResourceGroup.h"
 #include "ResourceInfo/ResourceInfo.h"
 #include <vector>
+#include <ResourceFilter.h>
 
 #include "VersionInternal.h"
 #include "ResourceInfo/PatchResourceInfo.h"
@@ -43,6 +44,15 @@ enum class DocumentType
 	YAML
 };
 
+class ResourceGroupImpl;
+
+struct FilterGroup
+{
+	std::vector<std::unique_ptr<ResourceTools::ResourceFilter>> filters;
+
+	ResourceGroup::ResourceGroupImpl* resourceGroup;
+};
+
 class ResourceGroup::ResourceGroupImpl
 {
 public:
@@ -51,6 +61,8 @@ public:
 	virtual ~ResourceGroupImpl();
 
 	Result CreateFromDirectory( const CreateResourceGroupFromDirectoryParams& params, StatusSettings& statusSettings );
+
+    static Result CreateFromFilter( const CreateResourceGroupFromFilterParams& params, StatusSettings& statusSettings );
 
 	Result ImportFromFile( const ResourceGroupImportFromFileParams& params, StatusSettings& statusSettings );
 

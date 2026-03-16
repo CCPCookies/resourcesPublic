@@ -124,6 +124,8 @@ using StatusCallback = std::function<void( StatusProgressType statusProgressType
     * Required resource not found
     * @var REQUIRED_INPUT_PARAMETER_NOT_SET
     * A required input parameter was not set
+    * @var FAILED_TO_INITIALIZE_RESOURCE_FILTER
+    * Failed to initialize ResourceFilter
     */
 enum class ResultType
 {
@@ -164,6 +166,7 @@ enum class ResultType
 	RESOURCE_LIST_NOT_SET,
 	RESOURCE_NOT_FOUND,
 	REQUIRED_INPUT_PARAMETER_NOT_SET,
+	FAILED_TO_INITIALIZE_RESOURCE_FILTER,
 	//NOTE: if adding to this enum, a complimentary entry must be added to resultToString.
 };
 
@@ -240,6 +243,8 @@ struct Version
 static const Version S_LIBRARY_VERSION = { VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH }; /*!< Current version of the resources */
 
 static const Version S_DOCUMENT_VERSION = { 0, 1, 0 }; /*!< Maximum document version supported by resources */
+
+static const Version S_CSV_DOCUMENT_VERSION = { 0, 0, 0 }; /*!< Document version for old style CSV */
 
 static const std::vector S_VALID_DOCUMENT_VERSIONS = {
 	Version{ 0, 0, 0 },

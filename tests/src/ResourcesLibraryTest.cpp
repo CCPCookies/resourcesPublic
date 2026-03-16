@@ -3,12 +3,13 @@
 #include <ResourceGroup.h>
 #include <BundleResourceGroup.h>
 #include <PatchResourceGroup.h>
+#include <gtest/gtest.h>
+#include <FileDataStreamOut.h>
+#include <FilterIndexMappingFile.h>
 
 #include "ResourcesTestFixture.h"
 
-#include <gtest/gtest.h>
 
-#include <FileDataStreamOut.h>
 
 struct ResourcesLibraryTest : public ResourcesTestFixture
 {
@@ -24,7 +25,7 @@ TEST_F( ResourcesLibraryTest, BinaryGroupImportExport_V_0_0_0_To_V_0_1_0 )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
-	importParams.filename = GetTestFileFileAbsolutePath( "Indicies/binaryFileIndex_v0_0_0.txt" );
+	importParams.filename = GetTestFileAbsolutePath( "Indicies/binaryFileIndex_v0_0_0.txt" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -42,7 +43,7 @@ TEST_F( ResourcesLibraryTest, BinaryGroupImportExport_V_0_0_0_To_V_0_1_0 )
 
     EXPECT_TRUE( StatusIsValid() );
 
-	std::filesystem::path goldStandardFilename = GetTestFileFileAbsolutePath( "Indicies/BinaryResourceGroup_v0_1_0.yaml" );
+	std::filesystem::path goldStandardFilename = GetTestFileAbsolutePath( "Indicies/BinaryResourceGroup_v0_1_0.yaml" );
 
 	EXPECT_TRUE( FilesMatch( exportParams.filename, goldStandardFilename ) );
 }
@@ -54,7 +55,7 @@ TEST_F( ResourcesLibraryTest, BinaryGroupImportExport_V_0_1_0 )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
-	importParams.filename = GetTestFileFileAbsolutePath( "Indicies/BinaryResourceGroup_v0_1_0.yaml" );
+	importParams.filename = GetTestFileAbsolutePath( "Indicies/BinaryResourceGroup_v0_1_0.yaml" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -84,7 +85,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupImportExport_V_0_0_0_To_V_0_1_0 )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
-	importParams.filename = GetTestFileFileAbsolutePath( "Indicies/resFileIndex_v0_0_0.txt" );
+	importParams.filename = GetTestFileAbsolutePath( "Indicies/resFileIndex_v0_0_0.txt" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -102,7 +103,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupImportExport_V_0_0_0_To_V_0_1_0 )
 
     EXPECT_TRUE( StatusIsValid() );
 
-	std::filesystem::path goldStandardFilename = GetTestFileFileAbsolutePath( "Indicies/ResourceGroup_v0_1_0.yaml" );
+	std::filesystem::path goldStandardFilename = GetTestFileAbsolutePath( "Indicies/ResourceGroup_v0_1_0.yaml" );
 
 	EXPECT_TRUE( FilesMatch( exportParams.filename, goldStandardFilename ) );
 }
@@ -111,7 +112,7 @@ TEST_F( ResourcesLibraryTest, ImportEmptyResourceGroup )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
-	importParams.filename = GetTestFileFileAbsolutePath( "ResourceGroups/EmptyResourceGroup.yaml" );
+	importParams.filename = GetTestFileAbsolutePath( "ResourceGroups/EmptyResourceGroup.yaml" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -124,7 +125,7 @@ TEST_F( ResourcesLibraryTest, ImportResourceGroupWithOutOfBoundsBinaryOperation 
 {
 	CarbonResources::ResourceGroup resourceGroup;
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
-	importParams.filename = GetTestFileFileAbsolutePath( "Indicies/resFileIndex_v0_0_0-OutOfBoundsBinaryOp.txt" );
+	importParams.filename = GetTestFileAbsolutePath( "Indicies/resFileIndex_v0_0_0-OutOfBoundsBinaryOp.txt" );
 
 	importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -166,7 +167,7 @@ CarbonResources::Result AttemptImportResourceGroupMissingParameter( const std::s
 // This should fail gracefully and give appropriate feedback to user
 TEST_F( ResourcesLibraryTest, ResourceGroupHandleImportMissingParametersForVersion )
 {
-	std::filesystem::path emptyResourceGroupPath = GetTestFileFileAbsolutePath( "ResourceGroups/EmptyResourceGroup.yaml" );
+	std::filesystem::path emptyResourceGroupPath = GetTestFileAbsolutePath( "ResourceGroups/EmptyResourceGroup.yaml" );
 	EXPECT_EQ( AttemptImportResourceGroupMissingParameter( "Version", emptyResourceGroupPath ).type, CarbonResources::ResultType::MALFORMED_RESOURCE_GROUP );
 	EXPECT_EQ( AttemptImportResourceGroupMissingParameter( "Type", emptyResourceGroupPath ).type, CarbonResources::ResultType::MALFORMED_RESOURCE_GROUP );
 	EXPECT_EQ( AttemptImportResourceGroupMissingParameter( "NumberOfResources", emptyResourceGroupPath ).type, CarbonResources::ResultType::MALFORMED_RESOURCE_GROUP );
@@ -181,7 +182,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupLoadInvalidYaml )
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
 	// Should try to load the group but fail to parse the yaml
-	importParams.filename = GetTestFileFileAbsolutePath( "ResourcesRemote/a9/a9d1721dd5cc6d54_4d7a8d216f4c8c5c6379476c0668fe84" );
+	importParams.filename = GetTestFileAbsolutePath( "ResourcesRemote/a9/a9d1721dd5cc6d54_4d7a8d216f4c8c5c6379476c0668fe84" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -197,7 +198,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupLoadInvalidCsv )
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
 	// Try and load group but fail to parse csv
-	importParams.filename = GetTestFileFileAbsolutePath( "Indicies/resFileIndex_v0_0_0_NONESENSE.txt" );
+	importParams.filename = GetTestFileAbsolutePath( "Indicies/resFileIndex_v0_0_0_NONESENSE.txt" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -213,7 +214,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupLoadCsvWithInvalidCompressedSizeField
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
 	// Try and load group but fail to parse csv
-	importParams.filename = GetTestFileFileAbsolutePath( "Indicies/resFileIndex_v0_0_0_INVALID.txt" );
+	importParams.filename = GetTestFileAbsolutePath( "Indicies/resFileIndex_v0_0_0_INVALID.txt" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -229,7 +230,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupLoadEmptyCsv )
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
 	// Try and load group, results in success but empty list
-	importParams.filename = GetTestFileFileAbsolutePath( "Indicies/resFileIndex_v0_0_0_EMPTY.txt" );
+	importParams.filename = GetTestFileAbsolutePath( "Indicies/resFileIndex_v0_0_0_EMPTY.txt" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -245,7 +246,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupLoadNonexistantFileFails )
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
 	// Load a file that does not exist
-	importParams.filename = GetTestFileFileAbsolutePath( "ResourcesRemote/a9/a9d1721dd5cc6d54_4d7a8d216f4c8c5c6379476c0668fe84.yaml" );
+	importParams.filename = GetTestFileAbsolutePath( "ResourcesRemote/a9/a9d1721dd5cc6d54_4d7a8d216f4c8c5c6379476c0668fe84.yaml" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -260,7 +261,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupWithInvalidExtensionFails )
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
 	// Load a file with a file extension indicating an unsupported format
-	importParams.filename = GetTestFileFileAbsolutePath( "Bundle/TestResources/One.png" );
+	importParams.filename = GetTestFileAbsolutePath( "Bundle/TestResources/One.png" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -276,7 +277,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupImportNewerMinorVersion )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
-	importParams.filename = GetTestFileFileAbsolutePath( "ResourceGroups/HigherMinorVersion.yaml" );
+	importParams.filename = GetTestFileAbsolutePath( "ResourceGroups/HigherMinorVersion.yaml" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -291,7 +292,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupImportNewerMajorVersion )
 {
 	CarbonResources::ResourceGroup resourceGroup;
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
-	importParams.filename = GetTestFileFileAbsolutePath( "ResourceGroups/HigherMajorVersion.yaml" );
+	importParams.filename = GetTestFileAbsolutePath( "ResourceGroups/HigherMajorVersion.yaml" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -308,7 +309,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupImportNonExistantFile )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
-	importParams.filename = GetTestFileFileAbsolutePath( "NonexistentFiles/ResourceGroup_which_does_not_exist.yaml" );
+	importParams.filename = GetTestFileAbsolutePath( "NonexistentFiles/ResourceGroup_which_does_not_exist.yaml" );
     
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -325,7 +326,7 @@ TEST_F( ResourcesLibraryTest, ResourceGroupImportExport_V_0_1_0 )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
-	importParams.filename = GetTestFileFileAbsolutePath( "Indicies/ResourceGroup_v0_1_0.yaml" );
+	importParams.filename = GetTestFileAbsolutePath( "Indicies/ResourceGroup_v0_1_0.yaml" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -353,7 +354,7 @@ TEST_F( ResourcesLibraryTest, UnpackBundle )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
 
-	importParamsPrevious.filename = GetTestFileFileAbsolutePath( "Bundle/BundleResourceGroup.yaml" );
+	importParamsPrevious.filename = GetTestFileAbsolutePath( "Bundle/BundleResourceGroup.yaml" );
 
     importParamsPrevious.callbackSettings.statusCallback = StatusUpdate;
 
@@ -366,7 +367,7 @@ TEST_F( ResourcesLibraryTest, UnpackBundle )
 
 	bundleUnpackParams.chunkSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
 
-	bundleUnpackParams.chunkSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Bundle/LocalRemoteChunks/" ) };
+	bundleUnpackParams.chunkSourceSettings.basePaths = { GetTestFileAbsolutePath( "Bundle/LocalRemoteChunks/" ) };
 
 	bundleUnpackParams.resourceDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
 
@@ -378,7 +379,7 @@ TEST_F( ResourcesLibraryTest, UnpackBundle )
 
     EXPECT_TRUE( StatusIsValid() );
 
-	EXPECT_TRUE( DirectoryIsSubset( GetTestFileFileAbsolutePath( "Bundle/Res" ), "UnpackBundleOut" ) );
+	EXPECT_TRUE( DirectoryIsSubset( GetTestFileAbsolutePath( "Bundle/Res" ), "UnpackBundleOut" ) );
 
 	EXPECT_TRUE( std::filesystem::exists( "UnpackBundleOut/ResourceGroup.yaml" ) );
 }
@@ -390,7 +391,7 @@ TEST_F( ResourcesLibraryTest, UnpackBundleExpectingRemoteCdnButPassedLocalCdn )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
 
-	importParamsPrevious.filename = GetTestFileFileAbsolutePath( "Bundle/BundleResourceGroup.yaml" );
+	importParamsPrevious.filename = GetTestFileAbsolutePath( "Bundle/BundleResourceGroup.yaml" );
 
     importParamsPrevious.callbackSettings.statusCallback = StatusUpdate;
 
@@ -403,7 +404,7 @@ TEST_F( ResourcesLibraryTest, UnpackBundleExpectingRemoteCdnButPassedLocalCdn )
 
 	bundleUnpackParams.chunkSourceSettings.sourceType = CarbonResources::ResourceSourceType::REMOTE_CDN; // source is LOCAL_CDN
 
-	bundleUnpackParams.chunkSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Bundle/LocalRemoteChunks/" ) };
+	bundleUnpackParams.chunkSourceSettings.basePaths = { GetTestFileAbsolutePath( "Bundle/LocalRemoteChunks/" ) };
 
 	bundleUnpackParams.resourceDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
 
@@ -422,7 +423,7 @@ TEST_F( ResourcesLibraryTest, UnpackRemoteBundleAsLocal )
 	// Import ResourceGroup
 	CarbonResources::ResourceGroup resourceGroup;
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
-	importParams.filename = GetTestFileFileAbsolutePath( "Bundle/resfileindexShort.txt" );
+	importParams.filename = GetTestFileAbsolutePath( "Bundle/resfileindexShort.txt" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -435,7 +436,7 @@ TEST_F( ResourcesLibraryTest, UnpackRemoteBundleAsLocal )
 	bundleCreateParams.resourceGroupRelativePath = "ResourceGroup.yaml";
 	bundleCreateParams.resourceGroupBundleRelativePath = "BundleResourceGroup.yaml";
 	bundleCreateParams.resourceSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
-	bundleCreateParams.resourceSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Bundle/Res/" ) };
+	bundleCreateParams.resourceSourceSettings.basePaths = { GetTestFileAbsolutePath( "Bundle/Res/" ) };
 	bundleCreateParams.chunkDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::REMOTE_CDN;
 	bundleCreateParams.chunkDestinationSettings.basePath = "UnpackRemoteBundleAsLocal/Chunks";
 	bundleCreateParams.resourceBundleResourceGroupDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
@@ -478,7 +479,7 @@ TEST_F( ResourcesLibraryTest, CreateBundleWithZeroChunkSize )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
-	importParams.filename = GetTestFileFileAbsolutePath( "Bundle/resfileindexShort.txt" );
+	importParams.filename = GetTestFileAbsolutePath( "Bundle/resfileindexShort.txt" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -496,7 +497,7 @@ TEST_F( ResourcesLibraryTest, CreateBundleWithZeroChunkSize )
 
 	bundleCreateParams.resourceSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	bundleCreateParams.resourceSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Bundle/Res/" ) };
+	bundleCreateParams.resourceSourceSettings.basePaths = { GetTestFileAbsolutePath( "Bundle/Res/" ) };
 
 	bundleCreateParams.chunkDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
 
@@ -522,7 +523,7 @@ TEST_F( ResourcesLibraryTest, CreateBundle )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
-	importParams.filename = GetTestFileFileAbsolutePath( "Bundle/resfileindexShort.txt" );
+	importParams.filename = GetTestFileAbsolutePath( "Bundle/resfileindexShort.txt" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -540,7 +541,7 @@ TEST_F( ResourcesLibraryTest, CreateBundle )
 
 	bundleCreateParams.resourceSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	bundleCreateParams.resourceSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Bundle/Res/" ) };
+	bundleCreateParams.resourceSourceSettings.basePaths = { GetTestFileAbsolutePath( "Bundle/Res/" ) };
 
 	bundleCreateParams.chunkDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
 
@@ -558,8 +559,8 @@ TEST_F( ResourcesLibraryTest, CreateBundle )
 
     EXPECT_TRUE( StatusIsValid() );
 
-	EXPECT_TRUE( FilesMatch( "resPath/BundleResourceGroup.yaml", GetTestFileFileAbsolutePath( "CreateBundle/BundleResourceGroup.yaml" ) ) );
-	EXPECT_TRUE( DirectoryIsSubset( "CreateBundleOut", GetTestFileFileAbsolutePath( "CreateBundle/CreateBundleOut" ) ) );
+	EXPECT_TRUE( FilesMatch( "resPath/BundleResourceGroup.yaml", GetTestFileAbsolutePath( "CreateBundle/BundleResourceGroup.yaml" ) ) );
+	EXPECT_TRUE( DirectoryIsSubset( "CreateBundleOut", GetTestFileAbsolutePath( "CreateBundle/CreateBundleOut" ) ) );
 }
 
 TEST_F( ResourcesLibraryTest, CreateAndUnpackBundle )
@@ -569,7 +570,7 @@ TEST_F( ResourcesLibraryTest, CreateAndUnpackBundle )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
-	importParams.filename = GetTestFileFileAbsolutePath( "Bundle/resfileindexShort.txt" );
+	importParams.filename = GetTestFileAbsolutePath( "Bundle/resfileindexShort.txt" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -587,7 +588,7 @@ TEST_F( ResourcesLibraryTest, CreateAndUnpackBundle )
 
 	bundleCreateParams.resourceSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	bundleCreateParams.resourceSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Bundle/Res/" ) };
+	bundleCreateParams.resourceSourceSettings.basePaths = { GetTestFileAbsolutePath( "Bundle/Res/" ) };
 
 	bundleCreateParams.chunkDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
 
@@ -650,7 +651,7 @@ TEST_F( ResourcesLibraryTest, ApplyPatch )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
 
-	importParamsPrevious.filename = GetTestFileFileAbsolutePath( "Patch/PatchResourceGroup.yaml" );
+	importParamsPrevious.filename = GetTestFileAbsolutePath( "Patch/PatchResourceGroup.yaml" );
 
     importParamsPrevious.callbackSettings.statusCallback = StatusUpdate;
 
@@ -664,15 +665,15 @@ TEST_F( ResourcesLibraryTest, ApplyPatch )
 
 	patchApplyParams.nextBuildResourcesSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchApplyParams.nextBuildResourcesSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Patch/NextBuildResources/" ) };
+	patchApplyParams.nextBuildResourcesSourceSettings.basePaths = { GetTestFileAbsolutePath( "Patch/NextBuildResources/" ) };
 
 	patchApplyParams.patchBinarySourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
 
-	patchApplyParams.patchBinarySourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Patch/LocalCDNPatches/" ) };
+	patchApplyParams.patchBinarySourceSettings.basePaths = { GetTestFileAbsolutePath( "Patch/LocalCDNPatches/" ) };
 
 	patchApplyParams.resourcesToPatchSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchApplyParams.resourcesToPatchSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources/" ) };
+	patchApplyParams.resourcesToPatchSourceSettings.basePaths = { GetTestFileAbsolutePath( "Patch/PreviousBuildResources/" ) };
 
 	patchApplyParams.resourcesToPatchDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
 
@@ -694,7 +695,7 @@ TEST_F( ResourcesLibraryTest, ApplyPatch )
     EXPECT_TRUE( StatusIsValid() );
 
 	// Check Expected Outcome
-	std::filesystem::path goldDirectory = GetTestFileFileAbsolutePath( "Patch/NextBuildResources" );
+	std::filesystem::path goldDirectory = GetTestFileAbsolutePath( "Patch/NextBuildResources" );
 	EXPECT_TRUE( DirectoryIsSubset( patchApplyParams.resourcesToPatchDestinationSettings.basePath, goldDirectory ) );
 }
 TEST_F( ResourcesLibraryTest, CreatePatchWhereBuildsHaveNoChanges )
@@ -704,7 +705,7 @@ TEST_F( ResourcesLibraryTest, CreatePatchWhereBuildsHaveNoChanges )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
 
-	importParamsPrevious.filename = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" );
+	importParamsPrevious.filename = GetTestFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" );
 
     importParamsPrevious.callbackSettings.statusCallback = StatusUpdate;
 
@@ -717,7 +718,7 @@ TEST_F( ResourcesLibraryTest, CreatePatchWhereBuildsHaveNoChanges )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsLatest;
 
-	importParamsLatest.filename = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" );
+	importParamsLatest.filename = GetTestFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" );
 
     importParamsLatest.callbackSettings.statusCallback = StatusUpdate;
 
@@ -734,11 +735,11 @@ TEST_F( ResourcesLibraryTest, CreatePatchWhereBuildsHaveNoChanges )
 
 	patchCreateParams.resourceSourceSettingsPrevious.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsPrevious.basePaths = { GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources" ) };
+	patchCreateParams.resourceSourceSettingsPrevious.basePaths = { GetTestFileAbsolutePath( "Patch/PreviousBuildResources" ) };
 
 	patchCreateParams.resourceSourceSettingsNext.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsNext.basePaths = { GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources" ) };
+	patchCreateParams.resourceSourceSettingsNext.basePaths = { GetTestFileAbsolutePath( "Patch/PreviousBuildResources" ) };
 
 	patchCreateParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
 
@@ -770,7 +771,7 @@ TEST_F( ResourcesLibraryTest, CreatePatch )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
 
-	importParamsPrevious.filename = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" );
+	importParamsPrevious.filename = GetTestFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" );
 
     importParamsPrevious.callbackSettings.statusCallback = StatusUpdate;
 
@@ -784,7 +785,7 @@ TEST_F( ResourcesLibraryTest, CreatePatch )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsLatest;
 
-	importParamsLatest.filename = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_next.txt" );
+	importParamsLatest.filename = GetTestFileAbsolutePath( "Patch/resfileindexShort_build_next.txt" );
 
     importParamsLatest.callbackSettings.statusCallback = StatusUpdate;
 
@@ -801,11 +802,11 @@ TEST_F( ResourcesLibraryTest, CreatePatch )
 
 	patchCreateParams.resourceSourceSettingsPrevious.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsPrevious.basePaths = { GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources" ) };
+	patchCreateParams.resourceSourceSettingsPrevious.basePaths = { GetTestFileAbsolutePath( "Patch/PreviousBuildResources" ) };
 
 	patchCreateParams.resourceSourceSettingsNext.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsNext.basePaths = { GetTestFileFileAbsolutePath( "Patch/NextBuildResources" ) };
+	patchCreateParams.resourceSourceSettingsNext.basePaths = { GetTestFileAbsolutePath( "Patch/NextBuildResources" ) };
 
 	patchCreateParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
 
@@ -828,10 +829,10 @@ TEST_F( ResourcesLibraryTest, CreatePatch )
     EXPECT_TRUE( StatusIsValid() );
 
 	// Check expected outcome
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "Patch/PatchResourceGroup.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "Patch/PatchResourceGroup.yaml" );
 	EXPECT_TRUE( FilesMatch( goldFile, patchCreateParams.resourcePatchResourceGroupDestinationSettings.basePath / "PatchResourceGroup.yaml" ) );
 
-	std::filesystem::path goldDirectory = GetTestFileFileAbsolutePath( "Patch/LocalCDNPatches" );
+	std::filesystem::path goldDirectory = GetTestFileAbsolutePath( "Patch/LocalCDNPatches" );
 	EXPECT_TRUE( DirectoryIsSubset( goldDirectory, patchCreateParams.resourcePatchBinaryDestinationSettings.basePath ) );
 }
 
@@ -842,7 +843,7 @@ TEST_F( ResourcesLibraryTest, CreatePatchZeroInputChunkSize )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
 
-	importParamsPrevious.filename = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" );
+	importParamsPrevious.filename = GetTestFileAbsolutePath( "Patch/resfileindexShort_build_previous.txt" );
 
     importParamsPrevious.callbackSettings.statusCallback = StatusUpdate;
 
@@ -856,7 +857,7 @@ TEST_F( ResourcesLibraryTest, CreatePatchZeroInputChunkSize )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsLatest;
 
-	importParamsLatest.filename = GetTestFileFileAbsolutePath( "Patch/resfileindexShort_build_next.txt" );
+	importParamsLatest.filename = GetTestFileAbsolutePath( "Patch/resfileindexShort_build_next.txt" );
 
     importParamsLatest.callbackSettings.statusCallback = StatusUpdate;
 
@@ -873,11 +874,11 @@ TEST_F( ResourcesLibraryTest, CreatePatchZeroInputChunkSize )
 
 	patchCreateParams.resourceSourceSettingsPrevious.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsPrevious.basePaths = { GetTestFileFileAbsolutePath( "Patch/PreviousBuildResources" ) };
+	patchCreateParams.resourceSourceSettingsPrevious.basePaths = { GetTestFileAbsolutePath( "Patch/PreviousBuildResources" ) };
 
 	patchCreateParams.resourceSourceSettingsNext.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsNext.basePaths = { GetTestFileFileAbsolutePath( "Patch/NextBuildResources" ) };
+	patchCreateParams.resourceSourceSettingsNext.basePaths = { GetTestFileAbsolutePath( "Patch/NextBuildResources" ) };
 
 	patchCreateParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
 
@@ -907,7 +908,7 @@ TEST_F( ResourcesLibraryTest, ApplyPatchWithChunking )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
 
-	importParamsPrevious.filename = GetTestFileFileAbsolutePath( "PatchWithInputChunk/PatchResourceGroup_previousBuild_latestBuild.yaml" );
+	importParamsPrevious.filename = GetTestFileAbsolutePath( "PatchWithInputChunk/PatchResourceGroup_previousBuild_latestBuild.yaml" );
 
     importParamsPrevious.callbackSettings.statusCallback = StatusUpdate;
 
@@ -921,15 +922,15 @@ TEST_F( ResourcesLibraryTest, ApplyPatchWithChunking )
 
 	patchApplyParams.nextBuildResourcesSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchApplyParams.nextBuildResourcesSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/" ) };
+	patchApplyParams.nextBuildResourcesSourceSettings.basePaths = { GetTestFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/" ) };
 
 	patchApplyParams.patchBinarySourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_CDN;
 
-	patchApplyParams.patchBinarySourceSettings.basePaths = { GetTestFileFileAbsolutePath( "PatchWithInputChunk/LocalCDNPatches/" ) };
+	patchApplyParams.patchBinarySourceSettings.basePaths = { GetTestFileAbsolutePath( "PatchWithInputChunk/LocalCDNPatches/" ) };
 
 	patchApplyParams.resourcesToPatchSourceSettings.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchApplyParams.resourcesToPatchSourceSettings.basePaths = { GetTestFileFileAbsolutePath( "PatchWithInputChunk/PreviousBuildResources/" ) };
+	patchApplyParams.resourcesToPatchSourceSettings.basePaths = { GetTestFileAbsolutePath( "PatchWithInputChunk/PreviousBuildResources/" ) };
 
 	patchApplyParams.resourcesToPatchDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
 
@@ -943,11 +944,11 @@ TEST_F( ResourcesLibraryTest, ApplyPatchWithChunking )
 
     EXPECT_TRUE( StatusIsValid() );
 
-	std::filesystem::path nextIntroMovie = GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/introMovie.txt" );
+	std::filesystem::path nextIntroMovie = GetTestFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/introMovie.txt" );
 	EXPECT_TRUE( FilesMatch( nextIntroMovie, patchApplyParams.resourcesToPatchDestinationSettings.basePath / "introMovie.txt" ) );
-	std::filesystem::path nextIntroMoviePrefixed = GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/introMoviePrefixed.txt" );
+	std::filesystem::path nextIntroMoviePrefixed = GetTestFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/introMoviePrefixed.txt" );
 	EXPECT_TRUE( FilesMatch( nextIntroMoviePrefixed, patchApplyParams.resourcesToPatchDestinationSettings.basePath / "introMoviePrefixed.txt" ) );
-	std::filesystem::path nextTestResource = GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/testresource2.txt" );
+	std::filesystem::path nextTestResource = GetTestFileAbsolutePath( "PatchWithInputChunk/NextBuildResources/testresource2.txt" );
 	EXPECT_TRUE( FilesMatch( nextTestResource, patchApplyParams.resourcesToPatchDestinationSettings.basePath / "testresource2.txt" ) );
 }
 
@@ -958,7 +959,7 @@ TEST_F( ResourcesLibraryTest, CreatePatchWithChunking )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsPrevious;
 
-	importParamsPrevious.filename = GetTestFileFileAbsolutePath( "PatchWithInputChunk/resfileindexShort_build_previous.txt" );
+	importParamsPrevious.filename = GetTestFileAbsolutePath( "PatchWithInputChunk/resfileindexShort_build_previous.txt" );
 
     importParamsPrevious.callbackSettings.statusCallback = StatusUpdate;
 
@@ -971,7 +972,7 @@ TEST_F( ResourcesLibraryTest, CreatePatchWithChunking )
 
 	CarbonResources::ResourceGroupImportFromFileParams importParamsLatest;
 
-	importParamsLatest.filename = GetTestFileFileAbsolutePath( "PatchWithInputChunk/resfileindexShort_build_next.txt" );
+	importParamsLatest.filename = GetTestFileAbsolutePath( "PatchWithInputChunk/resfileindexShort_build_next.txt" );
 
     importParamsLatest.callbackSettings.statusCallback = StatusUpdate;
 
@@ -990,11 +991,11 @@ TEST_F( ResourcesLibraryTest, CreatePatchWithChunking )
 
 	patchCreateParams.resourceSourceSettingsPrevious.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsPrevious.basePaths = { GetTestFileFileAbsolutePath( "PatchWithInputChunk/PreviousBuildResources" ) };
+	patchCreateParams.resourceSourceSettingsPrevious.basePaths = { GetTestFileAbsolutePath( "PatchWithInputChunk/PreviousBuildResources" ) };
 
 	patchCreateParams.resourceSourceSettingsNext.sourceType = CarbonResources::ResourceSourceType::LOCAL_RELATIVE;
 
-	patchCreateParams.resourceSourceSettingsNext.basePaths = { GetTestFileFileAbsolutePath( "PatchWithInputChunk/NextBuildResources" ) };
+	patchCreateParams.resourceSourceSettingsNext.basePaths = { GetTestFileAbsolutePath( "PatchWithInputChunk/NextBuildResources" ) };
 
 	patchCreateParams.resourcePatchBinaryDestinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_CDN;
 
@@ -1016,10 +1017,10 @@ TEST_F( ResourcesLibraryTest, CreatePatchWithChunking )
 
     EXPECT_TRUE( StatusIsValid() );
 
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "PatchWithInputChunk/PatchResourceGroup_previousBuild_latestBuild.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "PatchWithInputChunk/PatchResourceGroup_previousBuild_latestBuild.yaml" );
 	EXPECT_TRUE( FilesMatch( goldFile, patchCreateParams.resourcePatchResourceGroupDestinationSettings.basePath / "PatchResourceGroup_previousBuild_latestBuild.yaml" ) );
 
-	std::filesystem::path goldDirectory = GetTestFileFileAbsolutePath( "PatchWithInputChunk/LocalCDNPatches" );
+	std::filesystem::path goldDirectory = GetTestFileAbsolutePath( "PatchWithInputChunk/LocalCDNPatches" );
 	EXPECT_TRUE( DirectoryIsSubset( goldDirectory, patchCreateParams.resourcePatchBinaryDestinationSettings.basePath ) );
 }
 
@@ -1029,28 +1030,64 @@ TEST_F( ResourcesLibraryTest, CreateResourceGroupFromDirectory )
 
 	CarbonResources::CreateResourceGroupFromDirectoryParams createResourceGroupParams;
 
-	createResourceGroupParams.directory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+	createResourceGroupParams.directory = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 
-    createResourceGroupParams.callbackSettings.statusCallback = StatusUpdate;
+	createResourceGroupParams.callbackSettings.statusCallback = StatusUpdate;
 
 	EXPECT_EQ( resourceGroup.CreateFromDirectory( createResourceGroupParams ).type, CarbonResources::ResultType::SUCCESS );
 
-    EXPECT_TRUE( StatusIsValid() );
+	EXPECT_TRUE( StatusIsValid() );
 
 	CarbonResources::ResourceGroupExportToFileParams exportParams;
 
 	exportParams.filename = "ResourceGroups/ResourceGroup.yaml";
 
-    exportParams.callbackSettings.statusCallback = StatusUpdate;
+	exportParams.callbackSettings.statusCallback = StatusUpdate;
 
 	EXPECT_EQ( resourceGroup.ExportToFile( exportParams ).type, CarbonResources::ResultType::SUCCESS );
 
-    EXPECT_TRUE( StatusIsValid() );
+	EXPECT_TRUE( StatusIsValid() );
 
 #if _WIN64
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
 #elif __APPLE__
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+#else
+#error Unsupported platform
+#endif
+	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
+}
+
+TEST_F( ResourcesLibraryTest, CreateResourceGroupFromDirectoryWithStreaming )
+{
+	CarbonResources::ResourceGroup resourceGroup;
+
+	CarbonResources::CreateResourceGroupFromDirectoryParams createResourceGroupParams;
+
+	createResourceGroupParams.directory = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+
+	createResourceGroupParams.callbackSettings.statusCallback = StatusUpdate;
+
+	createResourceGroupParams.resourceStreamThreshold = 0;
+
+	EXPECT_EQ( resourceGroup.CreateFromDirectory( createResourceGroupParams ).type, CarbonResources::ResultType::SUCCESS );
+
+	EXPECT_TRUE( StatusIsValid() );
+
+	CarbonResources::ResourceGroupExportToFileParams exportParams;
+
+	exportParams.filename = "ResourceGroups/ResourceGroup.yaml";
+
+	exportParams.callbackSettings.statusCallback = StatusUpdate;
+
+	EXPECT_EQ( resourceGroup.ExportToFile( exportParams ).type, CarbonResources::ResultType::SUCCESS );
+
+	EXPECT_TRUE( StatusIsValid() );
+
+#if _WIN64
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+#elif __APPLE__
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
 #else
 #error Unsupported platform
 #endif
@@ -1063,7 +1100,7 @@ TEST_F( ResourcesLibraryTest, CreateResourceGroupFromDirectoryExportResources )
 
 	CarbonResources::CreateResourceGroupFromDirectoryParams createResourceGroupParams;
 
-	createResourceGroupParams.directory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+	createResourceGroupParams.directory = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 
     createResourceGroupParams.exportResources = true;
 
@@ -1086,9 +1123,9 @@ TEST_F( ResourcesLibraryTest, CreateResourceGroupFromDirectoryExportResources )
     EXPECT_TRUE( StatusIsValid() );
 
 #if _WIN64
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
 #elif __APPLE__
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
 #else
 #error Unsupported platform
 #endif
@@ -1103,7 +1140,7 @@ TEST_F( ResourcesLibraryTest, CreateResourceGroupFromDirectorySkipCompression )
 
 	CarbonResources::CreateResourceGroupFromDirectoryParams createResourceGroupParams;
 
-	createResourceGroupParams.directory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+	createResourceGroupParams.directory = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 
     createResourceGroupParams.calculateCompressions = false;
 
@@ -1124,9 +1161,9 @@ TEST_F( ResourcesLibraryTest, CreateResourceGroupFromDirectorySkipCompression )
     EXPECT_TRUE( StatusIsValid() );
 
 #if _WIN64
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupSkipCompressionWindows.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupSkipCompressionWindows.yaml" );
 #elif __APPLE__
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceGroupSkipCompressionMacOS.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupSkipCompressionMacOS.yaml" );
 #else
 #error Unsupported platform
 #endif
@@ -1139,7 +1176,7 @@ TEST_F( ResourcesLibraryTest, CreateResourceGroupFromDirectoryOutputPathIsInvali
 
 	CarbonResources::CreateResourceGroupFromDirectoryParams createResourceGroupParams;
 
-	createResourceGroupParams.directory = GetTestFileFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+	createResourceGroupParams.directory = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
 
     createResourceGroupParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1180,7 +1217,7 @@ TEST_F( ResourcesLibraryTest, DiffResourceGroupsWithTwoAdditions )
 
 	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
 
-	importFromFileParams.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" );
+	importFromFileParams.filename = GetTestFileAbsolutePath( "DiffGroups/resFileIndex.txt" );
 
     importFromFileParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1196,7 +1233,7 @@ TEST_F( ResourcesLibraryTest, DiffResourceGroupsWithTwoAdditions )
 
 	CarbonResources::ResourceGroupImportFromFileParams importFromFileParamsWithAdditions;
 
-	importFromFileParamsWithAdditions.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithAdditions.txt" );
+	importFromFileParamsWithAdditions.filename = GetTestFileAbsolutePath( "DiffGroups/resFileIndexWithAdditions.txt" );
 
     importFromFileParamsWithAdditions.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1240,7 +1277,7 @@ TEST_F( ResourcesLibraryTest, DiffResourceGroupsWithTwoChanges )
 
 	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
 
-	importFromFileParams.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" );
+	importFromFileParams.filename = GetTestFileAbsolutePath( "DiffGroups/resFileIndex.txt" );
 
     importFromFileParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1256,7 +1293,7 @@ TEST_F( ResourcesLibraryTest, DiffResourceGroupsWithTwoChanges )
 
 	CarbonResources::ResourceGroupImportFromFileParams importFromFileParamsWithChanges;
 
-	importFromFileParamsWithChanges.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithChanges.txt" );
+	importFromFileParamsWithChanges.filename = GetTestFileAbsolutePath( "DiffGroups/resFileIndexWithChanges.txt" );
 
     importFromFileParamsWithChanges.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1300,7 +1337,7 @@ TEST_F( ResourcesLibraryTest, DiffResourceGroupsWithTwoSubtractions )
 
 	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
 
-	importFromFileParams.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndex.txt" );
+	importFromFileParams.filename = GetTestFileAbsolutePath( "DiffGroups/resFileIndex.txt" );
 
     importFromFileParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1316,7 +1353,7 @@ TEST_F( ResourcesLibraryTest, DiffResourceGroupsWithTwoSubtractions )
 
 	CarbonResources::ResourceGroupImportFromFileParams importFromFileParamsWithSubtractions;
 
-	importFromFileParamsWithSubtractions.filename = GetTestFileFileAbsolutePath( "DiffGroups/resFileIndexWithSubtractions.txt" );
+	importFromFileParamsWithSubtractions.filename = GetTestFileAbsolutePath( "DiffGroups/resFileIndexWithSubtractions.txt" );
 
     importFromFileParamsWithSubtractions.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1359,7 +1396,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsAdditive )
 
 	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
 
-	importFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/BaseResourceGroup.yaml" );
+	importFromFileParams.filename = GetTestFileAbsolutePath( "MergeGroups/YamlAdditive/BaseResourceGroup.yaml" );
 
     importFromFileParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1374,7 +1411,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsAdditive )
 
 	CarbonResources::ResourceGroupImportFromFileParams mergeImportFromFileParams;
 
-	mergeImportFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/MergeResourceGroup.yaml" );
+	mergeImportFromFileParams.filename = GetTestFileAbsolutePath( "MergeGroups/YamlAdditive/MergeResourceGroup.yaml" );
 
     mergeImportFromFileParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1415,7 +1452,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsAdditive )
 	EXPECT_EQ( exportResult.type, CarbonResources::ResultType::SUCCESS );
 
 	// Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/YamlAdditive/ExpectedMergedResourceGroup.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "MergeGroups/YamlAdditive/ExpectedMergedResourceGroup.yaml" );
 
 	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
 }
@@ -1426,7 +1463,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsIdentical )
 
 	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
 
-	importFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/YamlIdentical/BaseResourceGroup.yaml" );
+	importFromFileParams.filename = GetTestFileAbsolutePath( "MergeGroups/YamlIdentical/BaseResourceGroup.yaml" );
 
     importFromFileParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1441,7 +1478,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsIdentical )
 
 	CarbonResources::ResourceGroupImportFromFileParams mergeImportFromFileParams;
 
-	mergeImportFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/YamlIdentical/MergeResourceGroup.yaml" );
+	mergeImportFromFileParams.filename = GetTestFileAbsolutePath( "MergeGroups/YamlIdentical/MergeResourceGroup.yaml" );
 
     mergeImportFromFileParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1482,7 +1519,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsIdentical )
 	EXPECT_EQ( exportResult.type, CarbonResources::ResultType::SUCCESS );
 
 	// Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/YamlIdentical/ExpectedMergedResourceGroup.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "MergeGroups/YamlIdentical/ExpectedMergedResourceGroup.yaml" );
 
 	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
 }
@@ -1493,7 +1530,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsWithIntersect_V_0_0_0 )
 
 	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
 
-	importFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/CSVWithIntersect/BaseResourceGroup.txt" );
+	importFromFileParams.filename = GetTestFileAbsolutePath( "MergeGroups/CSVWithIntersect/BaseResourceGroup.txt" );
 
     importFromFileParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1508,7 +1545,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsWithIntersect_V_0_0_0 )
 
 	CarbonResources::ResourceGroupImportFromFileParams mergeImportFromFileParams;
 
-	mergeImportFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/CSVWithIntersect/MergeResourceGroup.txt" );
+	mergeImportFromFileParams.filename = GetTestFileAbsolutePath( "MergeGroups/CSVWithIntersect/MergeResourceGroup.txt" );
 
     mergeImportFromFileParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1551,7 +1588,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsWithIntersect_V_0_0_0 )
 	EXPECT_EQ( exportResult.type, CarbonResources::ResultType::SUCCESS );
 
 	// Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/CSVWithIntersect/ExpectedMergedResourceGroup.txt" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "MergeGroups/CSVWithIntersect/ExpectedMergedResourceGroup.txt" );
 
 	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
 }
@@ -1562,7 +1599,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsAdditive_V_0_0_0 )
 
 	CarbonResources::ResourceGroupImportFromFileParams importFromFileParams;
 
-	importFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/CSVAdditive/BaseResourceGroup.txt" );
+	importFromFileParams.filename = GetTestFileAbsolutePath( "MergeGroups/CSVAdditive/BaseResourceGroup.txt" );
 
     importFromFileParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1577,7 +1614,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsAdditive_V_0_0_0 )
 
 	CarbonResources::ResourceGroupImportFromFileParams mergeImportFromFileParams;
 
-	mergeImportFromFileParams.filename = GetTestFileFileAbsolutePath( "MergeGroups/CSVAdditive/MergeResourceGroup.txt" );
+	mergeImportFromFileParams.filename = GetTestFileAbsolutePath( "MergeGroups/CSVAdditive/MergeResourceGroup.txt" );
 
     mergeImportFromFileParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1620,7 +1657,7 @@ TEST_F( ResourcesLibraryTest, MergeResourceGroupsAdditive_V_0_0_0 )
 	EXPECT_EQ( exportResult.type, CarbonResources::ResultType::SUCCESS );
 
 	// Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "MergeGroups/CSVAdditive/ExpectedMergedResourceGroup.txt" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "MergeGroups/CSVAdditive/ExpectedMergedResourceGroup.txt" );
 
 	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
 }
@@ -1632,7 +1669,7 @@ TEST_F( ResourcesLibraryTest, RemoveResource )
 	// Import ResourceGroup
 	CarbonResources::ResourceGroupImportFromFileParams importParams;
 
-	importParams.filename = GetTestFileFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" );
+	importParams.filename = GetTestFileAbsolutePath( "RemoveResource/BaseResourceGroup.yaml" );
 
     importParams.callbackSettings.statusCallback = StatusUpdate;
 
@@ -1676,7 +1713,118 @@ TEST_F( ResourcesLibraryTest, RemoveResource )
 
 
 	// Check output matches expected
-	std::filesystem::path goldFile = GetTestFileFileAbsolutePath( "RemoveResource/ResourceGroupAfterRemove.yaml" );
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "RemoveResource/ResourceGroupAfterRemove.yaml" );
 
 	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
+}
+
+TEST_F( ResourcesLibraryTest, CreateResourceGroupFromFilter )
+{
+
+	CarbonResources::ResourceGroup resourceGroup;
+
+	CarbonResources::CreateResourceGroupFromFilterParams params;
+
+	params.filterSettings.prefixMapBasePath = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+
+    std::unique_ptr<CarbonResources::Filter> filter = std::make_unique<CarbonResources::Filter>();
+
+    filter->filterFilePaths.push_back( GetTestFileAbsolutePath( "FilterFiles/filterToIncludeAllAtBaseDirectory.ini" ) );
+
+    filter->outputResourceGroup = &resourceGroup;
+
+    params.filterSettings.filters.push_back( std::move( filter ) );
+
+	params.callbackSettings.statusCallback = StatusUpdate;
+
+	EXPECT_EQ( resourceGroup.CreateFromFilter( params ).type, CarbonResources::ResultType::SUCCESS );
+
+	EXPECT_TRUE( StatusIsValid() );
+
+	CarbonResources::ResourceGroupExportToFileParams exportParams;
+
+	exportParams.filename = "ResourceGroups/ResourceGroup.yaml";
+
+	exportParams.callbackSettings.statusCallback = StatusUpdate;
+
+	EXPECT_EQ( resourceGroup.ExportToFile( exportParams ).type, CarbonResources::ResultType::SUCCESS );
+
+	EXPECT_TRUE( StatusIsValid() );
+
+#if _WIN64
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+#elif __APPLE__
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+#else
+#error Unsupported platform
+#endif
+	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
+}
+
+TEST_F( ResourcesLibraryTest, CreateResourceGroupFromFilterExportResources )
+{
+	CarbonResources::ResourceGroup resourceGroup;
+
+	CarbonResources::CreateResourceGroupFromFilterParams params;
+
+	params.filterSettings.prefixMapBasePath = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceFiles" );
+
+    std::unique_ptr<CarbonResources::Filter> filter = std::make_unique<CarbonResources::Filter>();
+
+    filter->filterFilePaths.push_back( GetTestFileAbsolutePath( "FilterFiles/filterToIncludeAllAtBaseDirectory.ini" ) );
+
+    filter->outputResourceGroup = &resourceGroup;
+
+    params.filterSettings.filters.push_back( std::move( filter ) );
+
+	params.exportSettings.enabled = true;
+
+	params.exportSettings.destinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
+
+	params.callbackSettings.statusCallback = StatusUpdate;
+
+	EXPECT_EQ( resourceGroup.CreateFromFilter( params ).type, CarbonResources::ResultType::SUCCESS );
+
+	EXPECT_TRUE( StatusIsValid() );
+
+	CarbonResources::ResourceGroupExportToFileParams exportParams;
+
+	exportParams.filename = "ResourceGroups/ResourceGroup.yaml";
+
+	exportParams.callbackSettings.statusCallback = StatusUpdate;
+
+	EXPECT_EQ( resourceGroup.ExportToFile( exportParams ).type, CarbonResources::ResultType::SUCCESS );
+
+	EXPECT_TRUE( StatusIsValid() );
+
+#if _WIN64
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupWindows.yaml" );
+#elif __APPLE__
+	std::filesystem::path goldFile = GetTestFileAbsolutePath( "CreateResourceFiles/ResourceGroupMacOS.yaml" );
+#else
+#error Unsupported platform
+#endif
+	EXPECT_TRUE( FilesMatch( goldFile, exportParams.filename ) );
+
+	EXPECT_TRUE( DirectoryIsSubset( params.exportSettings.destinationSettings.basePath, params.filterSettings.prefixMapBasePath ) );
+}
+
+TEST_F( ResourcesLibraryTest, LoadValidFilterIndexMappingFile )
+{
+	FilterIndexMappingFile file;
+
+    ASSERT_TRUE( file.LoadFromFile( GetTestFileAbsolutePath( "FilterFiles/resFilterIndexMapping.yaml" ) ) );
+
+    auto& mappings = file.GetFilterMappings();
+
+    ASSERT_EQ( mappings.size(), 1 );
+
+	const std::unique_ptr<FilterMapping>& mapping = mappings.at(0);
+
+    ASSERT_EQ( mapping->filterFilePaths.size(), 1 );
+
+	EXPECT_EQ(mapping->filterFilePaths.at(0),"filterToIncludeAllAtBaseDirectory.ini");
+
+	EXPECT_EQ( mapping->outputPath, "ResourceGroup.yaml" );
+
 }

@@ -324,7 +324,7 @@ std::string CliOperation::SecondsToString( std::chrono::seconds seconds ) const
 	return ss.str();
 }
 
-std::string CliOperation::VersionToString( CarbonResources::Version& version ) const
+std::string CliOperation::VersionToString( const CarbonResources::Version& version ) const
 {
 	std::stringstream ss;
 
