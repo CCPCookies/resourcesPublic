@@ -23,6 +23,7 @@ set(SRC_FILES
         include/ResourceTools.h
         include/RollingChecksum.h
         include/ScopedFile.h
+        include/ThreadPool.h
 
         src/BundleStreamIn.cpp
         src/BundleStreamOut.cpp

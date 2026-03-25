@@ -23,7 +23,11 @@ CreateResourceGroupFromFilterCliOperation::CreateResourceGroupFromFilterCliOpera
 	m_skipNonExistentInputDirectoriesId( "--skip-non-existent-input-directories" ),
 	m_streamChunkSizeId( "--stream-chunk-size" ),
 	m_remoteUrlToGetCompressionId( "--remote-url-to-attempt-to-get-compression-info" ),
-	m_skipBinaryOperationCalculationId( "--skip-binary-operation-calculation" )
+	m_skipBinaryOperationCalculationId( "--skip-binary-operation-calculation" ),
+	m_numberOfThreadsId( "--number-of-threads" ),
+	m_networkRetryCountId( "--network-retry-count" ),
+	m_networkRetryBackoffMultiplierId( "--network-retry-backoff-multiplier" )
+
 {
 
 	// Struct is inspected to ascertain default values
@@ -47,19 +51,25 @@ CreateResourceGroupFromFilterCliOperation::CreateResourceGroupFromFilterCliOpera
 
 	AddArgumentFlag( m_exportResourcesId, "Export resources after processing. see --export-resources-destination-type and --export-resources-destination-path" );
 
-	AddArgument( m_exportResourcesDestinationTypeId, "Represents the type of repository where exported resources will be saved. Requires --export-resources", false, false, DestinationTypeToString( defaultImportParams.exportSettings.destinationSettings.destinationType ), ResourceDestinationTypeChoicesAsString() );
+	AddArgument( m_exportResourcesDestinationTypeId, "Type of repository where exported resources will be saved. Requires --export-resources", false, false, DestinationTypeToString( defaultImportParams.exportSettings.destinationSettings.destinationType ), ResourceDestinationTypeChoicesAsString() );
 
-	AddArgument( m_exportResourcesDestinationPathId, "Represents the base path where the exported resources will be saved. Requires --export-resources", false, false, defaultImportParams.exportSettings.destinationSettings.basePath.string() );
+	AddArgument( m_exportResourcesDestinationPathId, "Base path where the exported resources will be saved. Requires --export-resources", false, false, defaultImportParams.exportSettings.destinationSettings.basePath.string() );
 
 	AddArgument( m_prefixMapBasepathId, "Base directory for prefix mappings defined in filter files.", false, false, "" );
 
 	AddArgumentFlag( m_skipNonExistentInputDirectoriesId, "Skips input directories specified that don't exist rather than error." );
 
-	AddArgument( m_streamChunkSizeId, "Represents the chunks streamed in bytes when streaming data.", false, false, SizeToString( defaultImportParams.fileStreamChunkSize ) );
+	AddArgument( m_streamChunkSizeId, "Chunks stream size in bytes for streaming data.", false, false, SizeToString( defaultImportParams.fileStreamChunkSize ) );
 
 	AddArgument( m_remoteUrlToGetCompressionId, "If supplied, url is checked to get compression information.", false, false, defaultImportParams.compressionCalculationSettings.remoteUrlToAttemptToGetCompression.string() );
 
 	AddArgumentFlag( m_skipBinaryOperationCalculationId, "Set skip to skip binary operation for resources" );
+
+    AddArgument( m_numberOfThreadsId, "Nnumber of threads to use for async processes.", false, false, SizeToString( defaultImportParams.asyncSettings.numberOfThreads ) );
+
+    AddArgument( m_networkRetryCountId, "Number of retries to attempt when encountering a failed download.", false, false, SizeToString( defaultImportParams.compressionCalculationSettings.downloadSettings.retryCount ) );
+
+    AddArgument( m_networkRetryBackoffMultiplierId, "Multiplier in seconds to wait for when retrying, value will multiply on each retry to backoff.", false, false, SizeToString( defaultImportParams.compressionCalculationSettings.downloadSettings.retrySeconds.count() ) );
 }
 
 bool CreateResourceGroupFromFilterCliOperation::Execute( std::string& returnErrorMessage ) const
@@ -69,6 +79,62 @@ bool CreateResourceGroupFromFilterCliOperation::Execute( std::string& returnErro
 	try
 	{
 		createResourceGroupParams.fileStreamChunkSize = std::stoull( m_argumentParser->get( m_streamChunkSizeId ) );
+	}
+	catch( std::invalid_argument& )
+	{
+		return false;
+	}
+	catch( std::out_of_range& )
+	{
+		return false;
+	}
+
+    try
+	{
+		unsigned long long numberOfThreadsUnsignedLongLong = std::stoull( m_argumentParser->get( m_numberOfThreadsId ) );
+
+        if( numberOfThreadsUnsignedLongLong > std::numeric_limits<uint32_t>::max() )
+		{
+			return false;
+		}
+
+		createResourceGroupParams.asyncSettings.numberOfThreads = static_cast<uint32_t>( numberOfThreadsUnsignedLongLong );
+
+	}
+	catch( std::invalid_argument& )
+	{
+		return false;
+	}
+	catch( std::out_of_range& )
+	{
+		return false;
+	}
+
+    try
+	{
+		unsigned long long networkRetryCountUnsignedLongLong = std::stoull( m_argumentParser->get( m_networkRetryCountId ) );
+
+		if( networkRetryCountUnsignedLongLong > std::numeric_limits<uint32_t>::max() )
+		{
+			return false;
+		}
+
+		createResourceGroupParams.compressionCalculationSettings.downloadSettings.retryCount = static_cast<uint32_t>( networkRetryCountUnsignedLongLong );
+	}
+	catch( std::invalid_argument& )
+	{
+		return false;
+	}
+	catch( std::out_of_range& )
+	{
+		return false;
+	}
+
+    try
+	{
+		unsigned long long networkRetryBackoffMultiplierLongLong = std::stoull( m_argumentParser->get( m_networkRetryBackoffMultiplierId ) );
+
+		createResourceGroupParams.compressionCalculationSettings.downloadSettings.retrySeconds = std::chrono::seconds( networkRetryBackoffMultiplierLongLong );
 	}
 	catch( std::invalid_argument& )
 	{
@@ -176,7 +242,7 @@ void CreateResourceGroupFromFilterCliOperation::PrintStartBanner(
     const std::filesystem::path& basePathToFilterFiles,
 	const std::filesystem::path& basePathRespourceFiles ) const
 {
-	std::cout << "---Creating Resource Group---" << std::endl;
+	std::cout << "---Creating Resource Groups From Filters---" << std::endl;
 
 	PrintCommonOperationHeaderInformation();
 
@@ -235,9 +301,15 @@ void CreateResourceGroupFromFilterCliOperation::PrintStartBanner(
 	if( createResourceGroupFromFilterParams.compressionCalculationSettings.remoteUrlToAttemptToGetCompression != "" )
 	{
 		std::cout << "Compression info check url: " << createResourceGroupFromFilterParams.compressionCalculationSettings.remoteUrlToAttemptToGetCompression << std::endl;
-	}
+	
+        std::cout << "Network retry count: " << createResourceGroupFromFilterParams.compressionCalculationSettings.downloadSettings.retryCount << std::endl;
+
+        std::cout << "Network retry backoff multiplier ( Seconds ): " << createResourceGroupFromFilterParams.compressionCalculationSettings.downloadSettings.retrySeconds.count() << std::endl;
+    }
 
 	std::cout << "File stream chunk Size: " << createResourceGroupFromFilterParams.fileStreamChunkSize << " Bytes" << std::endl;
+
+    std::cout << "Number of threads for async operations: " << createResourceGroupFromFilterParams.asyncSettings.numberOfThreads << std::endl;
 
 	std::cout << "----------------------------\n"
 			  << std::endl;
@@ -247,6 +319,7 @@ bool CreateResourceGroupFromFilterCliOperation::CreateResourceGroups(
 	CarbonResources::CreateResourceGroupFromFilterParams& createResourceGroupFromFilterParams,
 	std::vector<std::unique_ptr<CarbonResources::ResourceGroupExportToFileParams>>& exportParams ) const
 {
+
 	createResourceGroupFromFilterParams.callbackSettings.statusCallback = GetStatusCallback();
 	createResourceGroupFromFilterParams.callbackSettings.verbosityLevel = GetVerbosityLevel();
 
@@ -289,6 +362,7 @@ bool CreateResourceGroupFromFilterCliOperation::CreateResourceGroups(
 
         exportParams.callbackSettings.statusCallback = GetStatusCallback();
 		exportParams.callbackSettings.verbosityLevel = GetVerbosityLevel();
+		exportParams.callbackSettings.verbosityLevel = exportParams.callbackSettings.verbosityLevel > 2 || exportParams.callbackSettings.verbosityLevel == -1 ? 2 : exportParams.callbackSettings.verbosityLevel;
 
 		CarbonResources::Result exportToFileResult = ( *resourceIter )->ExportToFile( exportParams );
 

@@ -22,6 +22,12 @@ Md5ChecksumStream::~Md5ChecksumStream()
 	Finish();
 }
 
+void Md5ChecksumStream::Start()
+{
+	m_ss.str( std::string() );
+	m_hash->Restart();
+}
+
 void Md5ChecksumStream::Finish()
 {
 	if( m_encoder )
@@ -54,7 +60,7 @@ bool Md5ChecksumStream::operator<<( const std::string& data )
 	return true;
 }
 
-bool Md5ChecksumStream::FinishAndRetrieve( std::string& checksum )
+bool Md5ChecksumStream::Retrieve( std::string& checksum )
 {
 	if( !m_hash || !m_encoder )
 	{
@@ -76,7 +82,6 @@ bool Md5ChecksumStream::FinishAndRetrieve( std::string& checksum )
 		checksum = "0" + checksum;
 	}
 
-	Finish();
 	return true;
 }
 

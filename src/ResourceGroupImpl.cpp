@@ -23,6 +23,7 @@
 #include "ChunkIndex.h"
 #include "ResourceGroupFactory.h"
 #include "ResourceFilter.h"
+#include "ThreadPool.h"
 
 namespace CarbonResources
 {
@@ -217,7 +218,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromDirectory( const CreateResour
 
 					std::string checksum;
 
-					if( !checksumStream.FinishAndRetrieve( checksum ) )
+					if( !checksumStream.Retrieve( checksum ) )
 					{
 						return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
 					}
@@ -333,31 +334,663 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromDirectory( const CreateResour
 	return Result{ ResultType::SUCCESS };
 }
 
+struct ResourceGroupFromFilterPoolArguments
+{
+	bool backoff = false;
+
+	std::mutex backoffMutex;
+
+	std::condition_variable backoffConditional;
+
+	std::mutex resourceGroupMutex;
+
+    std::mutex checkedRelativePathsMutex;
+
+    std::map<std::string, int> checkedRelativePaths;
+
+	std::vector<std::shared_ptr<FilterGroup>> filterGroups;
+
+	bool ignoreCase;
+
+	const CreateResourceGroupFromFilterParams* params;
+
+    Result status = Result{ ResultType::SUCCESS };
+
+    bool checkForDuplicateRelativePaths = false;
+
+    int totalNumberOfResources = 0;
+
+    std::atomic<int> numberOfResourcesProcessed = 0;
+
+    std::atomic<int> numberOfResourcesSkipped = 0;
+
+    std::atomic<int> numberOfResourcesCompressed = 0;
+
+    std::mutex statusUpdateMutex;
+
+    StatusSettings statusSettings;
+
+    void RunStatusUpdate()
+    {
+        if (statusSettings.RequiresStatusUpdates())
+        {
+			{
+				std::unique_lock<std::mutex> lock( statusUpdateMutex );
+                if ((numberOfResourcesProcessed % 1000) == 0)
+                {
+				
+				        float step = static_cast<float>( 100.0 / totalNumberOfResources );
+				        float progress = step * numberOfResourcesProcessed;
+
+                        std::stringstream ss;
+
+                        ss << "Processed: " << std::to_string( numberOfResourcesProcessed )
+				           << ", Skipped: " << std::to_string( numberOfResourcesSkipped )
+				           << ", Compressed:" << std::to_string( numberOfResourcesCompressed );
+
+                        statusSettings.Update( StatusProgressType::PERCENTAGE, progress, step, ss.str() );
+				}
+            }
+        }
+    }
+
+    void ShowStatusWarning(const std::string& warningString)
+    {
+		{
+			std::unique_lock<std::mutex> lock( statusUpdateMutex );
+
+            statusSettings.Update( StatusProgressType::WARNING, 0, 0, warningString );
+		}
+    }
+};
+
+struct ResourceGroupFromFilterThreadArguments
+{
+	std::filesystem::path inputDirectory;
+
+	std::vector<std::filesystem::directory_entry> entryPaths;
+
+	std::filesystem::path searchPath;
+
+    ResourceTools::Downloader downloader;
+};
+
+void CreateResourceGroupsFromFilterWorker( std::shared_ptr<ResourceGroupFromFilterPoolArguments> commonArguments, std::shared_ptr<ResourceGroupFromFilterThreadArguments> threadArguments )
+{
+	ResourceTools::FileDataStreamIn fileStreamIn( commonArguments->params->fileStreamChunkSize );
+
+	ResourceTools::Md5ChecksumStream checksumStream;
+
+    int randomiser = 0;
+	for( auto entry : threadArguments->entryPaths )
+	{
+		randomiser++;
+
+		commonArguments->RunStatusUpdate();
+
+		std::filesystem::path entryPath = entry.path();
+
+		uintmax_t entrySize = entry.file_size();
+
+        commonArguments->numberOfResourcesProcessed++;
+
+		// Process file
+		// Check each filter group
+		std::vector<std::shared_ptr<FilterGroup>> matchedFilters;
+
+		std::filesystem::path filePathRelativeToInputDirectory = std::filesystem::relative( entryPath, commonArguments->params->filterSettings.prefixMapBasePath );
+
+		std::string normalisedRelativePath = filePathRelativeToInputDirectory.generic_string();
+
+		// Filtering is not case sensitive
+		if( commonArguments->ignoreCase )
+		{
+			std::transform( normalisedRelativePath.begin(), normalisedRelativePath.end(), normalisedRelativePath.begin(), []( unsigned char c ) { return std::tolower( c ); } );
+		}
+
+		for( auto& filterGroup : commonArguments->filterGroups )
+		{
+
+			// Check each filter in filter group
+			for( auto& filter : filterGroup->filters )
+			{
+
+				// Check that the current search path is relevant to the current filter
+				const std::vector<std::filesystem::path>& filterSearchPaths = filter->GetPrefixPaths();
+
+				bool searchPathInFilter = false;
+
+				for( auto& filterPath : filterSearchPaths )
+				{
+					if( threadArguments->searchPath == filterPath )
+					{
+						searchPathInFilter = true;
+						break;
+					}
+				}
+
+				if( !searchPathInFilter )
+				{
+					// The current search path isn't one that is present in the current filter
+					continue;
+				}
+
+				if( filter->CheckPath( normalisedRelativePath ) )
+				{
+					matchedFilters.push_back( filterGroup );
+
+					break;
+				}
+			}
+		}
+
+		// Check if any filters were matched
+		if( matchedFilters.empty() )
+		{
+			//File doesn't meet any of the filters
+            commonArguments->numberOfResourcesSkipped++;
+
+            continue;
+		}
+
+		// Process the file data via streaming
+		checksumStream.Start();
+
+		std::filesystem::path resourceRelativePath = std::filesystem::relative( entryPath, threadArguments->inputDirectory );
+
+		std::string resourceRelativePathString = resourceRelativePath.generic_string();
+
+		if( commonArguments->ignoreCase )
+		{
+			std::transform( resourceRelativePathString.begin(), resourceRelativePathString.end(), resourceRelativePathString.begin(), []( unsigned char c ) { return std::tolower( c ); } );
+		}
+
+        // Check to ensure path hasn't been checked before
+        bool duplicateFound = false;
+
+        if (commonArguments->checkForDuplicateRelativePaths)
+        {
+			{
+				std::unique_lock<std::mutex> lock( commonArguments->checkedRelativePathsMutex );
+				duplicateFound = commonArguments->checkedRelativePaths.find( resourceRelativePathString ) != commonArguments->checkedRelativePaths.end();
+			}
+        }
+
+        if (duplicateFound)
+        {
+			commonArguments->numberOfResourcesSkipped++;
+			continue;
+        }
+
+        // Add path to checked paths
+		{
+			std::unique_lock<std::mutex> lock( commonArguments->checkedRelativePathsMutex );
+			commonArguments->checkedRelativePaths[resourceRelativePathString] = 1;
+		}
+
+		if( !fileStreamIn.StartRead( entryPath ) )
+		{
+			{
+				std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+				commonArguments->status = Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
+			}
+			return;
+		}
+
+		// Calculate without compression to get checksum
+		while( !fileStreamIn.IsFinished() )
+		{
+			std::string fileData;
+
+			if( !( fileStreamIn >> fileData ) )
+			{
+				{
+					std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+					commonArguments->status = Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
+				}
+				return;
+			}
+
+			if( !( checksumStream << fileData ) )
+			{
+				{
+					std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+					commonArguments->status = Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
+				}
+				return;
+			}
+		}
+
+		// Get Checksum
+		std::string checksum;
+
+		if( !checksumStream.Retrieve( checksum ) )
+		{
+			{
+				std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+				commonArguments->status = Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
+			}
+			return;
+		}
+
+		// Create resource from parameters
+		ResourceInfoParams resourceParams;
+
+		resourceParams.relativePath = resourceRelativePathString;
+
+		resourceParams.prefix = commonArguments->params->resourcePrefix;
+
+		resourceParams.uncompressedSize = entrySize;
+
+		resourceParams.compressedSize = 0; // If required this will be calculated later
+
+		resourceParams.checksum = checksum;
+
+		if( commonArguments->params->calculateBinaryOperation )
+		{
+			resourceParams.binaryOperation = ResourceTools::CalculateBinaryOperation( entryPath );
+		}
+
+		Location location;
+
+		Result calculateLocationResult = location.SetFromRelativePathAndDataChecksum( resourceParams.relativePath, resourceParams.checksum, resourceParams.prefix );
+
+		if( calculateLocationResult.type != ResultType::SUCCESS )
+		{
+			{
+				std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+				commonArguments->status = calculateLocationResult;
+			}
+			return;
+		}
+
+		resourceParams.location = location.ToString();
+
+		ResourceInfo resource( resourceParams );
+
+		// Setup export
+		std::filesystem::path resourceDestinationPath;
+
+		Result constructDestinationPathResult = resource.GetDestinationPath( commonArguments->params->exportSettings.destinationSettings, resourceDestinationPath );
+
+		if( constructDestinationPathResult.type != ResultType::SUCCESS )
+		{
+			{
+				std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+				commonArguments->status = constructDestinationPathResult;
+			}
+			return;
+		}
+
+		// If further calculation is required on the data then calculate here
+		if( commonArguments->params->compressionCalculationSettings.calculateCompressions || commonArguments->params->exportSettings.enabled )
+		{
+			if( !fileStreamIn.StartRead( entryPath ) )
+			{
+				{
+					std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+					commonArguments->status = Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
+				}
+				return;
+			}
+
+			ResourceTools::FileDataStreamOut exportResourceDataStreamOut;
+
+			std::filesystem::path resourceDestinationPath;
+
+			Result getDestionationResult = resource.GetDestinationPath( commonArguments->params->exportSettings.destinationSettings, resourceDestinationPath );
+
+			if( getDestionationResult.type != ResultType::SUCCESS )
+			{
+				{
+					std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+					commonArguments->status = getDestionationResult;
+				}
+				return;
+			}
+
+			std::string compressedData;
+
+			uintmax_t compressedDataSize = 0;
+
+			ResourceTools::GzipCompressionStream compressionStream( &compressedData );
+
+			// Compression will need to be calculated if specified or an exported resource requires it
+			bool calculateCompressions = commonArguments->params->compressionCalculationSettings.calculateCompressions;
+			bool exportResource = commonArguments->params->exportSettings.enabled;
+
+			// Check url for compression information if supplied
+			// If argument set to skip if file already exists in destination then
+			// Check for file and if to skip
+			if( commonArguments->params->compressionCalculationSettings.remoteUrlToAttemptToGetCompression != "" )
+			{
+
+				std::string resourceUrl = commonArguments->params->compressionCalculationSettings.remoteUrlToAttemptToGetCompression.string() + "/" + resourceParams.location;
+
+				// Check if file exists in remote location
+				std::string response;
+
+				ResourceTools::Response downloadResponse = ResourceTools::Response::NONE;
+
+                {
+					std::unique_lock<std::mutex> lock( commonArguments->backoffMutex );
+
+					commonArguments->backoffConditional.wait( lock, [commonArguments] {
+						return !commonArguments->backoff;
+					} );
+				}
+
+                downloadResponse = threadArguments->downloader.GetHeader( resourceUrl, response );
+
+                auto retryCount = commonArguments->params->compressionCalculationSettings.downloadSettings.retryCount;
+				auto retrySeconds = commonArguments->params->compressionCalculationSettings.downloadSettings.retrySeconds;
+
+				if( downloadResponse == ResourceTools::Response::DOWNLOAD_ERROR )
+				{
+                    {
+						std::unique_lock<std::mutex> lock( commonArguments->backoffMutex );
+
+                        std::string warningMessage = "Download Info: Network error, requests backing off.";
+
+						commonArguments->ShowStatusWarning( warningMessage );
+
+                        commonArguments->backoff = true;
+
+						for( int i = 0; i < retryCount; i++ )
+						{
+
+							downloadResponse = threadArguments->downloader.GetHeader( resourceUrl, response );
+
+                            std::chrono::seconds backoffTime = retrySeconds * ( i + 1 );
+
+							if( downloadResponse != ResourceTools::Response::DOWNLOAD_ERROR )
+							{
+								std::string warningMessage = "Download Info: Network requests resuming.";
+
+								commonArguments->ShowStatusWarning( warningMessage );
+
+								commonArguments->backoff = false;
+
+                                commonArguments->backoffConditional.notify_all();
+
+								break;
+							}
+                            else
+                            {
+								std::stringstream ss;
+
+                                ss << "Download Info: Network error, retry ";
+								ss << i << " failed. requests backing off for ";
+								ss << backoffTime.count();
+								ss << " seconds.";
+
+								std::string warningMessage = ss.str();
+
+								commonArguments->ShowStatusWarning( warningMessage );
+                            }
+
+							std::this_thread::sleep_for( backoffTime );
+
+						}
+
+                        // No matter what unblock other threads anyway to continue execution.
+                        // The download may have still errored at this point
+                        commonArguments->backoff = false;
+
+                        commonArguments->backoffConditional.notify_all();
+
+					}
+				}
+                
+				if( downloadResponse == ResourceTools::Response::SUCCESS )
+				{
+					// Parse the header for the content size
+					std::string contentLengthStr;
+
+					if( ResourceTools::Downloader::GetAttributeValueFromHeader( response, "Content-Length", contentLengthStr ) )
+					{
+						// Parse content length
+						try
+						{
+							unsigned long in = std::stoul( contentLengthStr );
+							if( in > std::numeric_limits<uint32_t>::max() )
+							{
+								std::string warningMessage = "Invalid compression data from header information, compression will be calculated." + resourceUrl;
+								
+                                commonArguments->ShowStatusWarning( warningMessage );
+							}
+							else
+							{
+								// Compression is from the existing file rather than new one.
+								compressedDataSize = static_cast<uint32_t>( in );
+								
+                                calculateCompressions = false;
+								
+                                exportResource = false;
+							}
+						}
+						catch( std::invalid_argument& )
+						{
+							std::string warningMessage = "Invalid compression data from header information, compression will be calculated." + resourceUrl;
+							
+                            commonArguments->ShowStatusWarning( warningMessage );
+                        }
+						catch( std::out_of_range& )
+						{
+							std::string warningMessage = "Invalid compression data from header information, compression will be calculated." + resourceUrl;
+							
+                            commonArguments->ShowStatusWarning( warningMessage );
+                        }
+					}
+				}
+				else if( downloadResponse == ResourceTools::Response::DOWNLOAD_ERROR )
+				{
+                    // If download error persists after set retries then the resource
+                    // is treated as if new and computation continues
+
+					std::stringstream ss;
+
+					ss << "Error while downloading header from: "
+					   << resourceUrl
+					   << " After " << retryCount << " retries. Continuing and treating resource as new.";
+
+					std::string warningMessage = ss.str();
+
+					commonArguments->ShowStatusWarning( warningMessage );
+
+				}
+			}
+			
+
+			if( exportResource )
+			{
+				if( !exportResourceDataStreamOut.StartWrite( resourceDestinationPath ) )
+				{
+					{
+						std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+						commonArguments->status = Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
+					}
+					return;
+				}
+			}
+
+			if( ( exportResource && commonArguments->params->exportSettings.destinationSettings.destinationType == ResourceDestinationType::REMOTE_CDN ) )
+			{
+				calculateCompressions = true;
+			}
+
+			if( calculateCompressions )
+			{
+				commonArguments->numberOfResourcesCompressed++;
+
+				if( !compressionStream.Start() )
+				{
+					{
+						std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+						commonArguments->status = Result{ ResultType::FAILED_TO_COMPRESS_DATA };
+					}
+					return;
+				}
+			}
+
+			if( calculateCompressions || exportResource )
+			{
+				while( !fileStreamIn.IsFinished() )
+				{
+
+
+					std::string fileData;
+
+					if( !( fileStreamIn >> fileData ) )
+					{
+						{
+							std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+							commonArguments->status = Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
+						}
+						return;
+					}
+
+					if( calculateCompressions )
+					{
+						if( !( compressionStream << &fileData ) )
+						{
+							{
+								std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+								commonArguments->status = Result{ ResultType::FAILED_TO_COMPRESS_DATA };
+							}
+							return;
+						}
+					}
+
+					// If exporting resource then export the correct data
+					if( exportResource )
+					{
+						if( commonArguments->params->exportSettings.destinationSettings.destinationType == ResourceDestinationType::LOCAL_CDN || commonArguments->params->exportSettings.destinationSettings.destinationType == ResourceDestinationType::LOCAL_RELATIVE )
+						{
+							// Output Uncompressed Data
+							if( !( exportResourceDataStreamOut << fileData ) )
+							{
+								{
+									std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+									commonArguments->status = Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
+								}
+								return;
+							}
+						}
+						else
+						{
+							// Output Compressed Data
+							if( !( exportResourceDataStreamOut << compressedData ) )
+							{
+								{
+									std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+									commonArguments->status = Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
+								}
+								return;
+							}
+						}
+					}
+
+					compressedDataSize += compressedData.size();
+					compressedData.clear();
+				}
+			}
+
+			// Finish stream read in
+			fileStreamIn.Finish();
+
+			if( calculateCompressions )
+			{
+				if( !compressionStream.Finish() )
+				{
+					{
+						std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+						commonArguments->status = Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
+					}
+					return;
+				}
+
+				// Add remaining compression data
+				compressedDataSize += compressedData.size();
+			}
+
+			if( commonArguments->params->compressionCalculationSettings.calculateCompressions )
+			{
+				// Set compressed size only if compression is calculated
+				// If export requires compression but calculation is skipped
+				// Then the calculations are not set as this may be unexpected
+				resource.SetCompressedSize( compressedDataSize );
+			}
+
+			if( exportResource )
+			{
+				if( commonArguments->params->exportSettings.destinationSettings.destinationType == ResourceDestinationType::REMOTE_CDN )
+				{
+					// Add remaining compression data
+					if( !( exportResourceDataStreamOut << compressedData ) )
+					{
+						{
+							std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+							commonArguments->status = Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
+						}
+						return;
+					}
+				}
+
+				if( !exportResourceDataStreamOut.Finish() )
+				{
+					{
+						std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+						commonArguments->status = Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
+					}
+					return;
+				}
+			}
+		}
+
+		{
+			std::unique_lock<std::mutex> lock( commonArguments->resourceGroupMutex );
+
+			// Add entry to all relevant resource groups
+			for( auto& filterGroup : matchedFilters )
+			{
+				// Resource group takes ownership of resource info
+				filterGroup->resourceGroup->AddResource( new ResourceInfo( resource ) );
+			}
+		}
+
+	}
+
+	return;
+}
+
 Result ResourceGroup::ResourceGroupImpl::CreateFromFilter( const CreateResourceGroupFromFilterParams& params, StatusSettings& statusSettings )
 {
-	// Update status
+	ResourceTools::Downloader downloader;
+
+    // Update status
 	statusSettings.Update( StatusProgressType::PERCENTAGE, 0, 5, "Creating resource group from filters" );
+
+    std::shared_ptr<ResourceGroupFromFilterPoolArguments> poolArguments = std::make_shared<ResourceGroupFromFilterPoolArguments>();
+	poolArguments->ignoreCase = false;
+	poolArguments->params = &params;
 
 	// Ensure document version is valid
 	VersionInternal documentVersion( params.outputDocumentVersion );
 
-    bool ignoreCase = false;
-
-    if( documentVersion == VersionInternal( S_CSV_DOCUMENT_VERSION ) )
-    {
-		ignoreCase = true;
-    }
+	if( documentVersion == VersionInternal( S_CSV_DOCUMENT_VERSION ) )
+	{
+		poolArguments->ignoreCase = true;
+	}
 
 	if( !documentVersion.isVersionValid() )
 	{
 		return Result{ ResultType::DOCUMENT_VERSION_UNSUPPORTED };
 	}
 
-	statusSettings.Update( StatusProgressType::PERCENTAGE, 5, 10, "Loading filter files" );
+	statusSettings.Update( StatusProgressType::PERCENTAGE, 5, 5, "Loading filter files" );
 
 	// Initialise Resource Filters
-	std::vector<std::shared_ptr<FilterGroup>> filterGroups;
-
 	for( auto& filter : params.filterSettings.filters )
 	{
 		if( filter->filterFilePaths.empty() )
@@ -385,7 +1018,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromFilter( const CreateResourceG
 
 			try
 			{
-				ResourceTools::FilterFileReader::LoadFromIniFileData( filterData.data(), filterData.size(), fileData, ignoreCase );
+				ResourceTools::FilterFileReader::LoadFromIniFileData( filterData.data(), filterData.size(), fileData, poolArguments->ignoreCase );
 			}
 			catch( const std::exception& e )
 			{
@@ -404,13 +1037,13 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromFilter( const CreateResourceG
 			filterGroup->filters.push_back( std::move( filter ) );
 		}
 
-		filterGroups.push_back( std::move( filterGroup ) );
+		poolArguments->filterGroups.push_back( std::move( filterGroup ) );
 	}
 
 	// Populate all search paths
 	std::vector<std::filesystem::path> searchPaths;
 
-	for( auto& filterGroup : filterGroups )
+	for( auto& filterGroup : poolArguments->filterGroups )
 	{
 		for( auto& filter : filterGroup->filters )
 		{
@@ -428,37 +1061,40 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromFilter( const CreateResourceG
 
 	// Process files in search paths
 	{
-		StatusSettings inputDirectoryStatus;
-		statusSettings.Update( StatusProgressType::PERCENTAGE, 10, 90, "Creating resource group from directories", &inputDirectoryStatus );
+		StatusSettings directoryStatusSettings;
+		statusSettings.Update( StatusProgressType::PERCENTAGE, 10, 90, "Creating resource group from directories", &directoryStatusSettings );
 
-		std::map<std::string, int> checkedRelativePaths;
-		std::string matchSection = "";
-		std::string matchPath = "";
-		std::string filterMatchInformation = "";
-		ResourceTools::Downloader downloader;
-		ResourceTools::FileDataStreamIn fileStreamIn( params.fileStreamChunkSize );
+		// num threads must at least be 1
+		// If zero threads are passed via async settings then
+		// the job is done on the main thread
+		int numThreads = params.asyncSettings.numberOfThreads + 1;
 
-		int i = 0;
+		// numThreads-1 as the value passed is the number of threads to create
+		// If numThreads-1==0 then the tasks for the pool will all execute on this thread
+		ThreadPool<std::shared_ptr<ResourceGroupFromFilterPoolArguments>, std::shared_ptr<ResourceGroupFromFilterThreadArguments>> threadPool( numThreads - 1 );
+
+		threadPool.Start();
+
+		int searchPathIndex = 0;
+
+		float statusProgressStep = static_cast<float>(100.0 / searchPaths.size());
+
 		for( auto searchPath : searchPaths )
 		{
 			std::filesystem::path inputDirectory = params.filterSettings.prefixMapBasePath / searchPath;
 
-			StatusSettings fileProcessingInnerStatusSettings;
+            if (directoryStatusSettings.RequiresStatusUpdates())
+            {
+				float progress = statusProgressStep * searchPathIndex;
+				searchPathIndex++;
+				directoryStatusSettings.Update( StatusProgressType::PERCENTAGE, progress, statusProgressStep, "Checking directory: " + inputDirectory.lexically_normal().generic_string(), &poolArguments->statusSettings );
+            }
 
-			if( inputDirectoryStatus.RequiresStatusUpdates() )
-			{
-				float step = static_cast<float>( 100.0 / searchPaths.size() );
-				float progress = static_cast<float>( i * step );
-				i++;
-				inputDirectoryStatus.Update( StatusProgressType::PERCENTAGE, progress, step, "Processing Directory: " + inputDirectory.string(), &fileProcessingInnerStatusSettings );
-			}
-
-			// Check validity of search path
 			if( !std::filesystem::exists( inputDirectory ) )
 			{
 				if( params.skipNonExistentInputDirectories )
 				{
-					inputDirectoryStatus.Update( StatusProgressType::WARNING, 0, 0, "Skipping input directory as it doesn't exist." );
+					directoryStatusSettings.Update( StatusProgressType::WARNING, 0, 0, "Skipping input directory as it doesn't exist." );
 
 					continue;
 				}
@@ -468,6 +1104,22 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromFilter( const CreateResourceG
 				}
 			}
 
+			//Create thread structure
+			std::vector<std::shared_ptr<ResourceGroupFromFilterThreadArguments>> threadArguments;
+
+			for( int i = 0; i < numThreads; i++ )
+			{
+				std::shared_ptr<ResourceGroupFromFilterThreadArguments> arguments = std::make_shared<ResourceGroupFromFilterThreadArguments>();
+
+				arguments->inputDirectory = inputDirectory;
+
+				arguments->searchPath = searchPath;
+
+				threadArguments.push_back( std::move( arguments ) );
+			}
+
+			int threadId = 0;
+
 			// Walk directory
 			auto recursiveDirectoryIter = std::filesystem::recursive_directory_iterator( inputDirectory );
 			{
@@ -475,6 +1127,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromFilter( const CreateResourceG
 				// Walk entries
 				for( const std::filesystem::directory_entry& entry : recursiveDirectoryIter )
 				{
+
 					if( !entry.is_regular_file() )
 					{
 						// Not a file
@@ -483,438 +1136,40 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromFilter( const CreateResourceG
 
 					std::filesystem::path entryPath = entry.path();
 
-					std::string entryPathString;
+                    
 
-                    if (inputDirectoryStatus.RequiresStatusUpdates())
-                    {
-						entryPathString = entryPath.string();
-                    }
+					threadArguments.at( threadId )->entryPaths.push_back( entry );
 
-					// Process file
-					// Check each filter group
-					std::vector<std::shared_ptr<FilterGroup>> matchedFilters;
+                    poolArguments->totalNumberOfResources++;
 
-					std::filesystem::path filePathRelativeToInputDirectory = std::filesystem::relative( entryPath, params.filterSettings.prefixMapBasePath );
+					threadId++;
 
-                    std::string normalisedRelativePath = filePathRelativeToInputDirectory.generic_string();
-
-                    // Filtering is not case sensitive
-                    if (ignoreCase)
-                    {
-						std::transform( normalisedRelativePath.begin(), normalisedRelativePath.end(), normalisedRelativePath.begin(), []( unsigned char c ) { return std::tolower( c ); } );
-                    }
-
-					if( fileProcessingInnerStatusSettings.RequiresStatusUpdates() )
+					if( threadId >= numThreads )
 					{
-						filterMatchInformation = "";
-					}
-
-					for( auto& filterGroup : filterGroups )
-					{
-						if( fileProcessingInnerStatusSettings.RequiresStatusUpdates() )
-						{
-							filterMatchInformation = filterMatchInformation + "Filter:";
-						}
-
-						// Check each filter in filter group
-						for( auto& filter : filterGroup->filters )
-						{
-
-							// Check that the current search path is relevant to the current filter
-							const std::vector<std::filesystem::path>& filterSearchPaths = filter->GetPrefixPaths();
-
-							bool searchPathInFilter = false;
-
-							for( auto& filterPath : filterSearchPaths )
-							{
-								if( searchPath == filterPath )
-								{
-									searchPathInFilter = true;
-									break;
-								}
-							}
-
-							if( !searchPathInFilter )
-							{
-								// The current search path isn't one that is present in the current filter
-								continue;
-							}
-
-							if( filter->CheckPath( normalisedRelativePath, matchSection, matchPath ) )
-							{
-								matchedFilters.push_back( filterGroup );
-
-								filterMatchInformation += " matched section filter - ";
-								filterMatchInformation += matchSection;
-								filterMatchInformation += ",matched path - ";
-								filterMatchInformation += matchPath;
-								break;
-							}
-						}
-
-					}
-
-					// Check if any filters were matched
-					if( matchedFilters.empty() )
-					{
-						//File doesn't meet any of the filters
-						fileProcessingInnerStatusSettings.Update( CarbonResources::StatusProgressType::UNBOUNDED, 0, 0, "Skipping File that didn't match filters: " + entryPathString );
-						continue;
-					}
-
-					// Create resource
-					std::stringstream ss;
-
-					if( fileProcessingInnerStatusSettings.RequiresStatusUpdates() )
-					{
-						ss << "Processing file: "
-						   << filePathRelativeToInputDirectory.string()
-						   << " # "
-						   << filterMatchInformation;
-					}
-
-					StatusSettings resourceProcessGranular;
-					fileProcessingInnerStatusSettings.Update( CarbonResources::StatusProgressType::UNBOUNDED, 0, 0, ss.str(), &resourceProcessGranular );
-
-					// Process the file data via streaming
-					ResourceTools::Md5ChecksumStream checksumStream;
-
-					std::filesystem::path resourceRelativePath = std::filesystem::relative( entryPath, inputDirectory );
-
-                    std::string resourceRelativePathString = resourceRelativePath.generic_string();
-
-                    if( ignoreCase )
-					{
-						std::transform( resourceRelativePathString.begin(), resourceRelativePathString.end(), resourceRelativePathString.begin(), []( unsigned char c ) { return std::tolower( c ); } );
-					}
-
-					if( !fileStreamIn.StartRead( entryPath ) )
-					{
-						return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
-					}
-
-					// Calculate without compression to get checksum
-					while( !fileStreamIn.IsFinished() )
-					{
-						// Update status
-						if( resourceProcessGranular.RequiresStatusUpdates() )
-						{
-							float step = static_cast<float>( 100.0 / fileStreamIn.Size() );
-							float percentage = static_cast<float>( fileStreamIn.GetCurrentPosition() * step );
-							resourceProcessGranular.Update( CarbonResources::StatusProgressType::PERCENTAGE, percentage, step, "Stream processing file attributes: " + entryPathString );
-						}
-
-						std::string fileData;
-
-						if( !( fileStreamIn >> fileData ) )
-						{
-							return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
-						}
-
-						if( !( checksumStream << fileData ) )
-						{
-							return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
-						}
-					}
-
-					// Get Checksum
-					std::string checksum;
-
-					if( !checksumStream.FinishAndRetrieve( checksum ) )
-					{
-						return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
-					}
-
-					// Create resource from parameters
-					ResourceInfoParams resourceParams;
-
-					resourceParams.relativePath = resourceRelativePathString;
-
-					resourceParams.prefix = params.resourcePrefix;
-
-					resourceParams.uncompressedSize = entry.file_size();
-
-					resourceParams.compressedSize = 0; // If required this will be calculated later
-
-					resourceParams.checksum = checksum;
-
-					if( params.calculateBinaryOperation )
-					{
-						resourceParams.binaryOperation = ResourceTools::CalculateBinaryOperation( entryPath );
-					}
-
-					Location location;
-
-					Result calculateLocationResult = location.SetFromRelativePathAndDataChecksum( resourceParams.relativePath, resourceParams.checksum, resourceParams.prefix );
-
-					if( calculateLocationResult.type != ResultType::SUCCESS )
-					{
-						return calculateLocationResult;
-					}
-
-					resourceParams.location = location.ToString();
-
-					ResourceInfo resource( resourceParams );
-
-					// If resource already exists in other include path then skip this resource
-					if( checkedRelativePaths.find( resourceRelativePathString ) != checkedRelativePaths.end() )
-					{
-						resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Skipping file as it was found in multiple paths: " + entryPathString );
-						continue;
-					}
-					else
-					{
-						checkedRelativePaths[resourceRelativePathString] = 1;
-					}
-
-					// Setup export
-					std::filesystem::path resourceDestinationPath;
-
-					Result constructDestinationPathResult = resource.GetDestinationPath( params.exportSettings.destinationSettings, resourceDestinationPath );
-
-					if( constructDestinationPathResult.type != ResultType::SUCCESS )
-					{
-						return constructDestinationPathResult;
-					}
-
-					// If further calculation is required on the data then calculate here
-					if( params.compressionCalculationSettings.calculateCompressions || params.exportSettings.enabled )
-					{
-						if( !fileStreamIn.StartRead( entryPath ) )
-						{
-							return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
-						}
-
-						ResourceTools::FileDataStreamOut exportResourceDataStreamOut;
-
-						std::filesystem::path resourceDestinationPath;
-
-						Result getDestionationResult = resource.GetDestinationPath( params.exportSettings.destinationSettings, resourceDestinationPath );
-
-						if( getDestionationResult.type != ResultType::SUCCESS )
-						{
-							return getDestionationResult;
-						}
-
-						std::string compressedData;
-
-						uintmax_t compressedDataSize = 0;
-
-						ResourceTools::GzipCompressionStream compressionStream( &compressedData );
-
-						// Compression will need to be calculated if specified or an exported resource requires it
-						bool calculateCompressions = params.compressionCalculationSettings.calculateCompressions;
-						bool exportResource = params.exportSettings.enabled;
-
-						// Check url for compression information if supplied
-						// If argument set to skip if file already exists in destination then
-						// Check for file and if to skip
-						if( params.compressionCalculationSettings.remoteUrlToAttemptToGetCompression != "" )
-						{
-
-							std::string resourceUrl = params.compressionCalculationSettings.remoteUrlToAttemptToGetCompression.string() + "/" + resourceParams.location;
-
-							// Check if file exists in remote location
-							std::string response;
-
-							ResourceTools::Response downloadResponse;
-
-							downloadResponse = downloader.GetHeader( resourceUrl, params.compressionCalculationSettings.downloadSettings.retryCount, params.compressionCalculationSettings.downloadSettings.retrySeconds, response );
-
-							if( downloadResponse == ResourceTools::Response::SUCCESS )
-							{
-								resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Attempting to get compression data from remote: " + resourceUrl );
-
-								// Parse the header for the content size
-								std::string contentLengthStr;
-
-								if( ResourceTools::Downloader::GetAttributeValueFromHeader( response, "Content-Length", contentLengthStr ) )
-								{
-									// Parse content length
-									try
-									{
-										unsigned long in = std::stoul( contentLengthStr );
-										if( in > std::numeric_limits<uint32_t>::max() )
-										{
-											resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Invalid compression data from header information, compression will be calculated." + resourceUrl );
-										}
-										else
-										{
-											// Compression is from the existing file rather than new one.
-											compressedDataSize = static_cast<uint32_t>( in );
-											calculateCompressions = false;
-											exportResource = false;
-										}
-									}
-									catch( std::invalid_argument& )
-									{
-										resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Invalid compression data from header information, compression will be calculated." + resourceUrl );
-									}
-									catch( std::out_of_range& )
-									{
-										resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Invalid compression data from header information, compression will be calculated." + resourceUrl );
-									}
-								}
-							}
-							else if( downloadResponse == ResourceTools::Response::DOWNLOAD_ERROR )
-							{
-								std::stringstream ss;
-
-								ss << "Error while downloading header from: "
-								   << resourceUrl
-								   << " Response:\n"
-								   << response;
-
-								return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
-							}
-
-							if( calculateCompressions )
-							{
-								resourceProcessGranular.Update( CarbonResources::StatusProgressType::WARNING, 0, 0, "Resource not found at remote location, compression calculation will continue: " + resourceUrl );
-							}
-						}
-
-						if( exportResource )
-						{
-							if( !exportResourceDataStreamOut.StartWrite( resourceDestinationPath ) )
-							{
-								return Result{ ResultType::FAILED_TO_OPEN_FILE_STREAM };
-							}
-						}
-
-						if( ( exportResource && params.exportSettings.destinationSettings.destinationType == ResourceDestinationType::REMOTE_CDN ) )
-						{
-							calculateCompressions = true;
-						}
-
-						if( calculateCompressions )
-						{
-							if( !compressionStream.Start() )
-							{
-								return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
-							}
-						}
-
-						if( calculateCompressions || exportResource )
-						{
-							while( !fileStreamIn.IsFinished() )
-							{
-								// Update status
-								if( resourceProcessGranular.RequiresStatusUpdates() )
-								{
-									float step = static_cast<float>( 100.0 / fileStreamIn.Size() );
-									float percentage = static_cast<float>( fileStreamIn.GetCurrentPosition() * step );
-
-									std::string info;
-									if( calculateCompressions )
-									{
-										info += "Compressing";
-									}
-
-									if( exportResource )
-									{
-										if( info != "" )
-										{
-											info += " & ";
-										}
-
-										info += "Exporting";
-									}
-
-									info += " Resource: ";
-
-									resourceProcessGranular.Update( CarbonResources::StatusProgressType::PERCENTAGE, percentage, step, info + entryPathString );
-								}
-
-								std::string fileData;
-
-								if( !( fileStreamIn >> fileData ) )
-								{
-									return Result{ ResultType::FAILED_TO_READ_FROM_STREAM };
-								}
-
-								if( calculateCompressions )
-								{
-									if( !( compressionStream << &fileData ) )
-									{
-										return Result{ ResultType::FAILED_TO_COMPRESS_DATA };
-									}
-								}
-
-								// If exporting resource then export the correct data
-								if( exportResource )
-								{
-									if( params.exportSettings.destinationSettings.destinationType == ResourceDestinationType::LOCAL_CDN || params.exportSettings.destinationSettings.destinationType == ResourceDestinationType::LOCAL_RELATIVE )
-									{
-										// Output Uncompressed Data
-										if( !( exportResourceDataStreamOut << fileData ) )
-										{
-											return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
-										}
-									}
-									else
-									{
-										// Output Compressed Data
-										if( !( exportResourceDataStreamOut << compressedData ) )
-										{
-											return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
-										}
-									}
-								}
-
-								compressedDataSize += compressedData.size();
-								compressedData.clear();
-							}
-						}
-
-						// Finish stream read in
-						fileStreamIn.Finish();
-
-						if( calculateCompressions )
-						{
-							if( !compressionStream.Finish() )
-							{
-								return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
-							}
-
-							// Add remaining compression data
-							compressedDataSize += compressedData.size();
-						}
-
-						if( params.compressionCalculationSettings.calculateCompressions )
-						{
-							// Set compressed size only if compression is calculated
-							// If export requires compression but calculation is skipped
-							// Then the calculations are not set as this may be unexpected
-							resource.SetCompressedSize( compressedDataSize );
-						}
-
-						if( exportResource )
-						{
-							if( params.exportSettings.destinationSettings.destinationType == ResourceDestinationType::REMOTE_CDN )
-							{
-								// Add remaining compression data
-								if( !( exportResourceDataStreamOut << compressedData ) )
-								{
-									return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
-								}
-							}
-
-							if( !exportResourceDataStreamOut.Finish() )
-							{
-								return Result{ ResultType::FAILED_TO_WRITE_TO_STREAM };
-							}
-						}
-					}
-
-					// Add entry to all relevant resource groups
-					for( auto& filterGroup : matchedFilters )
-					{
-						// Resource group takes ownership of resource info
-						filterGroup->resourceGroup->AddResource( new ResourceInfo( resource ) );
+						threadId = 0;
 					}
 				}
+
+				for( int i = 0; i < numThreads; i++ )
+				{
+					threadPool.AddTask( CreateResourceGroupsFromFilterWorker, poolArguments, threadArguments.at( i ) );
+				}
+
+				threadPool.Join();
+
+				if( poolArguments->status.type != ResultType::SUCCESS )
+				{
+					return poolArguments->status;
+				}
+
+				// Subsequent paths need to have an added check to ensure they have
+				// not already been processed
+				// this is not needed for the first path as files will never have been
+				// encountered before so for efficiency is skipped.
+				poolArguments->checkForDuplicateRelativePaths = true;
 			}
+
+            poolArguments->statusSettings.Update( StatusProgressType::END, 100, 0, "process complete" );
 		}
 	}
 
@@ -1635,7 +1890,7 @@ Result ResourceGroup::ResourceGroupImpl::ProcessChunk( ResourceTools::GetChunk& 
 		}
 	}
 
-	if( !checksumStream.FinishAndRetrieve( checksum ) )
+	if( !checksumStream.Retrieve( checksum ) )
 	{
 		return Result( { ResultType::FAILED_TO_GENERATE_CHECKSUM } );
 	}

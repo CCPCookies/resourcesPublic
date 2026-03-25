@@ -1737,6 +1737,8 @@ TEST_F( ResourcesLibraryTest, CreateResourceGroupFromFilter )
 
 	params.callbackSettings.statusCallback = StatusUpdate;
 
+    params.asyncSettings.numberOfThreads = 0;
+
 	EXPECT_EQ( resourceGroup.CreateFromFilter( params ).type, CarbonResources::ResultType::SUCCESS );
 
 	EXPECT_TRUE( StatusIsValid() );
@@ -1782,6 +1784,8 @@ TEST_F( ResourcesLibraryTest, CreateResourceGroupFromFilterExportResources )
 	params.exportSettings.destinationSettings.destinationType = CarbonResources::ResourceDestinationType::LOCAL_RELATIVE;
 
 	params.callbackSettings.statusCallback = StatusUpdate;
+
+    params.asyncSettings.numberOfThreads = 0;
 
 	EXPECT_EQ( resourceGroup.CreateFromFilter( params ).type, CarbonResources::ResultType::SUCCESS );
 

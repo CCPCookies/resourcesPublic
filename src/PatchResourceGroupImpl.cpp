@@ -630,7 +630,7 @@ Result PatchResourceGroup::PatchResourceGroupImpl::Apply( const PatchApplyParams
 
             std::string patchedFileChecksum;
 
-            if (!patchedFileChecksumStream.FinishAndRetrieve(patchedFileChecksum))
+            if (!patchedFileChecksumStream.Retrieve(patchedFileChecksum))
             {
                 return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
             }
