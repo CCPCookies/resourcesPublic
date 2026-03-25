@@ -422,10 +422,8 @@ void CreateResourceGroupsFromFilterWorker( std::shared_ptr<ResourceGroupFromFilt
 
 	ResourceTools::Md5ChecksumStream checksumStream;
 
-    int randomiser = 0;
 	for( auto entry : threadArguments->entryPaths )
 	{
-		randomiser++;
 
 		commonArguments->RunStatusUpdate();
 
