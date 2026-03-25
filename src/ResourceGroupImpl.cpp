@@ -334,6 +334,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateFromDirectory( const CreateResour
 	return Result{ ResultType::SUCCESS };
 }
 
+// Thread structs for filtering
 struct ResourceGroupFromFilterPoolArguments
 {
 	bool backoff = false;
