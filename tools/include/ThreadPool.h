@@ -63,7 +63,7 @@ public:
 
 				m_tasks.pop();
 
-                std::apply( [task = std::move( task )]( auto&&... args ) { task->function( args... ); }, task->arguments );
+                std::apply( [task = task.get()]( auto&&... args ) { task->function( args... ); }, task->arguments );
 
 				m_numTasks--;
             } 
@@ -133,7 +133,7 @@ private:
 				m_tasks.pop();
 			}
 
-			std::apply( [task = std::move( task )]( auto&&... args ) { task->function( args... ); }, task->arguments );
+			std::apply( [task = task.get() ]( auto&&... args ) { task->function( args... ); }, task->arguments );
 
 			m_numTasks--;
 
