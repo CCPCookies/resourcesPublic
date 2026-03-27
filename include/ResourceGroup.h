@@ -10,6 +10,7 @@
 #include <string>
 #include <filesystem>
 #include <functional>
+#include <thread>
 
 
 namespace CarbonResources
@@ -315,6 +316,16 @@ struct ExportResourceSettings
 	};
 };
 
+/** @struct AsyncSettings
+    *  @brief Settings related to async processing
+    *  @var AsyncSettings::numberOfThreads
+    *  Number of threads to use for async processes, passing 0 will run all on main thread
+    */
+struct AsyncSettings
+{
+	uint32_t numberOfThreads = std::thread::hardware_concurrency();
+};
+
 /** @struct CompressionCalculationSettings
     *  @brief Function Parameters related to resource compression calculation
     *  @var CompressionCalculationSettings::calculateCompressions
@@ -353,6 +364,8 @@ struct CompressionCalculationSettings
     *  Settings related to filtering
     *  @var CreateResourceGroupFromFilterParams::calculateBinaryOperation
     *  Set true to include calculation of binary operation
+    *  @var CreateResourceGroupFromFilterParams::asyncSettings
+    *  Settings related to async setup
     */
 struct CreateResourceGroupFromFilterParams
 {
@@ -373,6 +386,8 @@ struct CreateResourceGroupFromFilterParams
 	FilterSettings filterSettings;
 
     bool calculateBinaryOperation = true;
+
+    AsyncSettings asyncSettings;
 };
 
 /** @struct ResourceGroupMergeParams

@@ -138,10 +138,8 @@ TEST_F( ResourceToolsTest, DownloadHeader )
 	std::string sourcePathString( sourcePath.string() );
 	std::string url = "file://" + sourcePathString;
 
-	std::chrono::seconds retrySeconds{ 0 };
-	int retryCount = 3;
 	std::string response = "";
-	EXPECT_EQ( downloader.GetHeader( url, retryCount, retrySeconds, response ), ResourceTools::Response::SUCCESS );
+	EXPECT_EQ( downloader.GetHeader( url, response ), ResourceTools::Response::SUCCESS );
 
 	EXPECT_NE( response, "" );
 
@@ -455,7 +453,7 @@ TEST_F( ResourceToolsTest, ResourceChunking )
 
 		std::string reconstitutedChecksum;
 
-		EXPECT_TRUE( reconstitutedResource1ChecksumStream.FinishAndRetrieve( reconstitutedChecksum ) );
+		EXPECT_TRUE( reconstitutedResource1ChecksumStream.Retrieve( reconstitutedChecksum ) );
 
 		EXPECT_EQ( reconsititedResource.expectedChecksum, reconstitutedChecksum );
 	}
@@ -867,11 +865,11 @@ TEST_F( ResourceToolsTest, GzipStreams )
 	ResourceTools::GetLocalFileData( testFile, originalData );
 
 	std::string originalChecksum;
-	EXPECT_TRUE( originalMd5Stream.FinishAndRetrieve( originalChecksum ) );
+	EXPECT_TRUE( originalMd5Stream.Retrieve( originalChecksum ) );
 
 	ResourceTools::Md5ChecksumStream uncompressedMd5Stream;
 	uncompressedMd5Stream << uncompressedData;
 	std::string uncompressedChecksum;
-	EXPECT_TRUE( uncompressedMd5Stream.FinishAndRetrieve( uncompressedChecksum ) );
+	EXPECT_TRUE( uncompressedMd5Stream.Retrieve( uncompressedChecksum ) );
 	EXPECT_EQ( uncompressedChecksum, originalChecksum );
 }

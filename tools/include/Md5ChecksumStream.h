@@ -27,7 +27,9 @@ public:
 
 	~Md5ChecksumStream();
 
-	bool FinishAndRetrieve( std::string& checksum );
+    void Start();
+
+	bool Retrieve( std::string& checksum );
 
 	bool operator<<( const std::string& data );
 

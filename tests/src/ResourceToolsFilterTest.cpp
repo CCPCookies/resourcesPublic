@@ -123,7 +123,7 @@ TEST_F( ResourceToolsTest, Filtering_AsteriskPatternMatch )
 
     std::filesystem::path validPath = "File";
 
-    ASSERT_TRUE( resourceFilter.CheckPath( validPath ) );
+    ASSERT_TRUE( resourceFilter.CheckPath( validPath.generic_string() ) );
 
 }
 
@@ -142,7 +142,7 @@ TEST_F( ResourceToolsTest, Filtering_AsteriskPatternMissmatch )
 
 	std::filesystem::path validPath = "Subfolder/File";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( validPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( validPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_ElipsisPatternMatch )
@@ -165,7 +165,7 @@ TEST_F( ResourceToolsTest, Filtering_ElipsisPatternMatch )
 
     for (auto path : validPaths)
 	{
-		ASSERT_TRUE( resourceFilter.CheckPath( path ) );
+		ASSERT_TRUE( resourceFilter.CheckPath( path.generic_string() ) );
     }
 	
 }
@@ -183,11 +183,11 @@ TEST_F( ResourceToolsTest, Filtering_SpecificFile )
 
 	std::filesystem::path validPath = "File";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( validPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( validPath.generic_string() ) );
 
     std::filesystem::path invalidPath = "NonMatching";
 
-    ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+    ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_FilterIncludeRule )
@@ -205,11 +205,11 @@ TEST_F( ResourceToolsTest, Filtering_FilterIncludeRule )
 
 	std::filesystem::path validPath = "File.type1";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( validPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( validPath.generic_string() ) );
 
     std::filesystem::path invalidPath = "File.type2";
 
-    ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+    ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_FilterExcludeRule )
@@ -227,11 +227,11 @@ TEST_F( ResourceToolsTest, Filtering_FilterExcludeRule )
 
     std::filesystem::path validPath = "File.type2";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( validPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( validPath.generic_string() ) );
 
 	std::filesystem::path invalidPath = "File.type1";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 	
 }
 
@@ -250,11 +250,11 @@ TEST_F( ResourceToolsTest, Filtering_FilterOverlappingIncludeExcludeRule1 )
 
 	std::filesystem::path invalidPath = "File.type1";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 
     std::filesystem::path invalidPath2 = "File.type2";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath2 ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath2.generic_string() ) );
 
 }
 
@@ -273,11 +273,11 @@ TEST_F( ResourceToolsTest, Filtering_FilterOverlappingIncludeExcludeRule2 )
 
 	std::filesystem::path invalidPath = "File.type1";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 
     std::filesystem::path invalidPath2 = "File.type2";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath2 ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath2.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_FilterRespathExcludeRule )
@@ -294,11 +294,11 @@ TEST_F( ResourceToolsTest, Filtering_FilterRespathExcludeRule )
 
 	std::filesystem::path invalidPath = "File";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 
     std::filesystem::path validPath = "Another";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( validPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( validPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_FilterRespathIncludeRule )
@@ -315,11 +315,11 @@ TEST_F( ResourceToolsTest, Filtering_FilterRespathIncludeRule )
 
 	std::filesystem::path validPath = "File";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( validPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( validPath.generic_string() ) );
 
     std::filesystem::path invalidPath = "Another";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_FilterIncludeRuleWithOverlappingRespathExcludeRule )
@@ -337,11 +337,11 @@ TEST_F( ResourceToolsTest, Filtering_FilterIncludeRuleWithOverlappingRespathExcl
 
 	std::filesystem::path invalidPath = "File";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 
     std::filesystem::path invalidPath2 = "Another";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath2 ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath2.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_FilterExcludeRuleWithOverlappingRespathIncludeRule )
@@ -359,11 +359,11 @@ TEST_F( ResourceToolsTest, Filtering_FilterExcludeRuleWithOverlappingRespathIncl
 
 	std::filesystem::path invalidPath = "File";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 
     std::filesystem::path invalidPath2 = "Another";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath2 ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath2.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_MultiPrefixMatch )
@@ -381,11 +381,11 @@ TEST_F( ResourceToolsTest, Filtering_MultiPrefixMatch )
 
 	std::filesystem::path prefix1ValidPath = "Path1/File";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( prefix1ValidPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( prefix1ValidPath.generic_string() ) );
 
     std::filesystem::path prefix2ValidPath = "Path2/File";
 
-    ASSERT_TRUE( resourceFilter.CheckPath( prefix2ValidPath ) );
+    ASSERT_TRUE( resourceFilter.CheckPath( prefix2ValidPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_MultiPrefixExcludeAppliesAcrossBoth )
@@ -404,19 +404,19 @@ TEST_F( ResourceToolsTest, Filtering_MultiPrefixExcludeAppliesAcrossBoth )
 
 	std::filesystem::path prefix1InvalidPath = "Path1/File";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( prefix1InvalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( prefix1InvalidPath.generic_string() ) );
 
 	std::filesystem::path prefix2InvalidPath = "Path2/File";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( prefix2InvalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( prefix2InvalidPath.generic_string() ) );
 
     std::filesystem::path prefix1ValidPath = "Path1/Another";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( prefix1ValidPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( prefix1ValidPath.generic_string() ) );
 
 	std::filesystem::path prefix2ValidPath = "Path2/Another";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( prefix2ValidPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( prefix2ValidPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_MultiPrefixIncludeAppliesAcrossBoth )
@@ -435,19 +435,19 @@ TEST_F( ResourceToolsTest, Filtering_MultiPrefixIncludeAppliesAcrossBoth )
 
 	std::filesystem::path prefix1ValidPath = "Path1/File";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( prefix1ValidPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( prefix1ValidPath.generic_string() ) );
 
 	std::filesystem::path prefix2ValidPath = "Path2/File";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( prefix2ValidPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( prefix2ValidPath.generic_string() ) );
 
     std::filesystem::path prefix1InvalidPath = "Path1/Another";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( prefix1InvalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( prefix1InvalidPath.generic_string() ) );
 
 	std::filesystem::path prefix2inValidPath = "Path2/Another";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( prefix2inValidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( prefix2inValidPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_MultiPrefixFilterIncludeOverrideExcludeAppliesAccrossBoth )
@@ -466,19 +466,19 @@ TEST_F( ResourceToolsTest, Filtering_MultiPrefixFilterIncludeOverrideExcludeAppl
 
 	std::filesystem::path prefix1InvalidPath = "Path1/File";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( prefix1InvalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( prefix1InvalidPath.generic_string() ) );
 
 	std::filesystem::path prefix2InvalidPath = "Path2/File";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( prefix2InvalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( prefix2InvalidPath.generic_string() ) );
 
     std::filesystem::path prefix1InvalidPath2 = "Path1/Another";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( prefix1InvalidPath2 ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( prefix1InvalidPath2.generic_string() ) );
 
 	std::filesystem::path prefix2InvalidPath2 = "Path2/Another";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( prefix2InvalidPath2 ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( prefix2InvalidPath2.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_MultiPrefixFilterIncludeAddedPathIncludeAppliesToLaterPaths )
@@ -497,11 +497,11 @@ TEST_F( ResourceToolsTest, Filtering_MultiPrefixFilterIncludeAddedPathIncludeApp
 
 	std::filesystem::path prefix1ValidPath = "Path1/File.type1";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( prefix1ValidPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( prefix1ValidPath.generic_string() ) );
 
 	std::filesystem::path prefix2ValidPath = "Path2/File.type2";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( prefix2ValidPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( prefix2ValidPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_MultiPrefixFilterIncludeWithLaterRespathExclude )
@@ -521,11 +521,11 @@ TEST_F( ResourceToolsTest, Filtering_MultiPrefixFilterIncludeWithLaterRespathExc
 
 	std::filesystem::path prefix1ValidPath = "Path1/File.type1";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( prefix1ValidPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( prefix1ValidPath.generic_string() ) );
 
 	std::filesystem::path prefix2InvalidPath = "Path2/File.type1";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( prefix2InvalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( prefix2InvalidPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_SpecificFileWithInclude )
@@ -543,7 +543,7 @@ TEST_F( ResourceToolsTest, Filtering_SpecificFileWithInclude )
 
 	std::filesystem::path invalidPath = "File";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_SpecificFileWithNonMatchingExclude )
@@ -563,11 +563,11 @@ TEST_F( ResourceToolsTest, Filtering_SpecificFileWithNonMatchingExclude )
 
 	std::filesystem::path invalidPath = "File";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 
     std::filesystem::path validPath = "File2";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( validPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( validPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_SpecificFileWithOverlappingExcludeRule )
@@ -585,7 +585,7 @@ TEST_F( ResourceToolsTest, Filtering_SpecificFileWithOverlappingExcludeRule )
 
 	std::filesystem::path validPath = "File";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( validPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( validPath.generic_string() ) );
 }
 
 TEST_F( ResourceToolsTest, Filtering_FilterGlobalIncludeRule )
@@ -603,9 +603,9 @@ TEST_F( ResourceToolsTest, Filtering_FilterGlobalIncludeRule )
 
 	std::filesystem::path validPath = "File.type1";
 
-	ASSERT_TRUE( resourceFilter.CheckPath( validPath ) );
+	ASSERT_TRUE( resourceFilter.CheckPath( validPath.generic_string() ) );
 
 	std::filesystem::path invalidPath = "File.type2";
 
-	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath ) );
+	ASSERT_FALSE( resourceFilter.CheckPath( invalidPath.generic_string() ) );
 }

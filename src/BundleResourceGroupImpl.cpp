@@ -280,7 +280,7 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
             // Validate the resource data
             std::string recreatedResourceChecksum;
 
-            if (!resourceChecksumStream.FinishAndRetrieve(recreatedResourceChecksum))
+            if (!resourceChecksumStream.Retrieve(recreatedResourceChecksum))
             {
                 return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
             }

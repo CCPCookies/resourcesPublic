@@ -182,6 +182,12 @@ struct Result
 	ResultType type = ResultType::SUCCESS;
 
 	std::string info = "";
+
+    bool operator!=( const Result& other ) const
+	{
+		return type != other.type;
+	}
+    
 };
 
 /** Converts ResultType to string 

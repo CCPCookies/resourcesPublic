@@ -14,7 +14,10 @@ StatusSettings::StatusSettings() :
 
 StatusSettings ::~StatusSettings()
 {
-	Update( StatusProgressType::END, 100, 0, "Process complete." );
+    if (m_lastUpdate.progress < 100)
+    {
+		Update( StatusProgressType::END, 100, 0, "Process complete." );
+    }
 }
 
 void StatusSettings::SetCallbackSettings( const CallbackSettings& callbackSettings )

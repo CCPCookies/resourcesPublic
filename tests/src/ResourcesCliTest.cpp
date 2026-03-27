@@ -756,6 +756,10 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromFilter )
 
     arguments.push_back( prefixBasePath.string() );
 
+    arguments.push_back( "--number-of-threads" );
+
+	arguments.push_back( "0" );
+
 	int res = RunCli( arguments, output );
 
 	ASSERT_EQ( res, 0 );
@@ -815,6 +819,10 @@ TEST_F( ResourcesCliTest, CreateResourceGroupFromFilterExportResources )
 	arguments.push_back( "--export-resources-destination-path" );
 
 	arguments.push_back( exportedResourcesPath.string() );
+
+    arguments.push_back( "--number-of-threads" );
+
+	arguments.push_back( "0" );
 
 	int res = RunCli( arguments, output );
 

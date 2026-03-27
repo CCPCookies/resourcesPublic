@@ -55,6 +55,8 @@ bool ResourceFilter::SetFromFilterFileData( const FilterFile& fileData )
 				// ResolvePath
 				filterPath->path = prefixPathStr + resPath->path.string();
 
+				filterPath->pathContainsWildcard = false;
+
 				std::replace( filterPath->path.begin(), filterPath->path.end(), '\\', '/' );
 
 				// Remove leading slash
@@ -63,9 +65,11 @@ bool ResourceFilter::SetFromFilterFileData( const FilterFile& fileData )
 					filterPath->path = filterPath->path.substr( 1 );
 				}
 
+                filterPath->pathLength = filterPath->path.size();
+
                 bool wildcardReplacedInMatchPattern = false;
 
-				ConvertResPathToPattern( filterPath->path, filterPath->matchPattern);
+				ConvertResPathToPattern( filterPath->path, filterPath->matchPattern, filterPath->pathContainsWildcard );
 
                 if( wildcardReplacedInMatchPattern )
                 {
@@ -96,7 +100,7 @@ bool ResourceFilter::SetFromFilterFileData( const FilterFile& fileData )
 	return true;
 }
 
-void ResourceFilter::ConvertResPathToPattern( std::string resPath, std::string& pattern ) const
+void ResourceFilter::ConvertResPathToPattern( std::string resPath, std::string& pattern, bool& pathContainsWildcard ) const
 {
 
 	// Replace any "..." with a unique token (RECURSIVE_FOLDER_ELLIPSES_WILDCARD)
@@ -113,10 +117,12 @@ void ResourceFilter::ConvertResPathToPattern( std::string resPath, std::string& 
 		if( resPath[i] == '*' )
 		{
 			pattern += "[^/]*";
+			pathContainsWildcard = true;
 		}
 		else if( resPath[i] == RECURSIVE_FOLDER_ELLIPSES_WILDCARD )
 		{
 			pattern += ".*";
+			pathContainsWildcard = true;
 		}
 		else if( std::string( ".^$|()[]{}+?\\" ).find( resPath[i] ) != std::string::npos )
 		{
@@ -131,17 +137,8 @@ void ResourceFilter::ConvertResPathToPattern( std::string resPath, std::string& 
 	}
 }
 
-bool ResourceFilter::CheckPath( const std::filesystem::path& path ) const
+bool ResourceFilter::CheckPath( const std::string& path, std::string* matchSectionId /*= nullptr*/, std::string* matchPath /*= nullptr*/ ) const
 {
-	std::string sectionId;
-	std::string matchPath;
-	return CheckPath( path, sectionId, matchPath );
-}
-
-bool ResourceFilter::CheckPath( const std::filesystem::path& path, std::string& matchSectionId, std::string& matchPath ) const
-{
-	std::string resolvedPathStr = path.generic_string();
-
 	for( auto& sectionFilterPath : m_paths )
 	{
 		bool includeOrExcludeRulesFailedForSection = false;
@@ -149,7 +146,15 @@ bool ResourceFilter::CheckPath( const std::filesystem::path& path, std::string& 
 		for( auto& filterPath : sectionFilterPath.second )
 		{
 			// Check for directly specified file
-			bool specificFileMatch = filterPath->path == resolvedPathStr;
+			bool specificFileMatch = false;
+
+			if( !filterPath->pathContainsWildcard ) // If path contains a wildcard it cannot be an exact match
+			{
+				if( filterPath->pathLength == path.size() ) // If path size doesn't match it doesn't match, early out
+				{
+					specificFileMatch = filterPath->path == path; // Finally do string comparison
+				}
+			}
 
 			if( specificFileMatch )
 			{
@@ -162,29 +167,44 @@ bool ResourceFilter::CheckPath( const std::filesystem::path& path, std::string& 
 				else
 				{
 					// Ignore all other rules and match this file
-					matchSectionId = filterPath->sectionId;
-					matchPath = filterPath->path;
+					if( matchSectionId )
+					{
+						( *matchSectionId ) = filterPath->sectionId;
+					}
+					if( matchPath )
+					{
+						( *matchPath ) = filterPath->path;
+					}
+
 					return true;
 				}
 			}
 			else
 			{
-                // If a previous include or exclude rule was failed
-                // Then the rest will also fail
-                // The section cannot be completely skipped as
-                // There may be specific files specified by full path
-                // That don't have to match filter rules.
-                if (includeOrExcludeRulesFailedForSection)
-                {
+				if( !filterPath->pathContainsWildcard )
+				{
+					// Filter path is not a wildcard
+					// And it didn't directly match
+					// Therefore the remaining checks can be skipped
 					continue;
-                }
+				}
+
+				// If a previous include or exclude rule was failed
+				// Then the rest will also fail
+				// The section cannot be completely skipped as
+				// There may be specific files specified by full path
+				// That don't have to match filter rules.
+				if( includeOrExcludeRulesFailedForSection )
+				{
+					continue;
+				}
 
 				// Check exclude rules
 				bool excludeRulesPassed = true;
 
 				for( auto& excludeRule : filterPath->excludeRules )
 				{
-					if( resolvedPathStr.find( excludeRule ) != std::string::npos )
+					if( path.find( excludeRule ) != std::string::npos )
 					{
 						// Exclude rule met
 						excludeRulesPassed = false;
@@ -206,7 +226,7 @@ bool ResourceFilter::CheckPath( const std::filesystem::path& path, std::string& 
 
 					for( auto& includeRule : filterPath->includeRules )
 					{
-						if( resolvedPathStr.find( includeRule ) != std::string::npos )
+						if( path.find( includeRule ) != std::string::npos )
 						{
 							includeRulesPassed = true;
 							break;
@@ -224,32 +244,36 @@ bool ResourceFilter::CheckPath( const std::filesystem::path& path, std::string& 
 				// Perform regex on filter pattern
 				try
 				{
-					if( !std::regex_match( resolvedPathStr, filterPath->matchPatternRegex ) )
+					if( !std::regex_match( path, filterPath->matchPatternRegex ) )
 					{
 						continue;
 					}
 					else
 					{
-						matchSectionId = filterPath->sectionId;
-
-						matchPath = filterPath->path;
+						if( matchSectionId )
+						{
+							( *matchSectionId ) = filterPath->sectionId;
+						}
+						if( matchPath )
+						{
+							( *matchPath ) = filterPath->path;
+						}
 
 						return true;
 					}
 				}
 				catch( const std::regex_error& e )
 				{
-					std::string errorMsg = "Regex Exception during WildcardMatching - regexPattern: " + filterPath->matchPattern + " checkString: " + resolvedPathStr + " - error details: " + e.what();
+					std::string errorMsg = "Regex Exception during WildcardMatching - regexPattern: " + filterPath->matchPattern + " checkString: " + path + " - error details: " + e.what();
 					throw std::runtime_error( errorMsg );
 				}
 				catch( const std::exception& e )
 				{
-					std::string errorMsg = "Standard Exception during WildcardMatching - regexPattern: " + filterPath->matchPattern + " checkString: " + resolvedPathStr + " - error details: " + e.what();
+					std::string errorMsg = "Standard Exception during WildcardMatching - regexPattern: " + filterPath->matchPattern + " checkString: " + path + " - error details: " + e.what();
 					throw std::runtime_error( errorMsg );
 				}
 			}
 		}
-
 	}
 
 	return false;

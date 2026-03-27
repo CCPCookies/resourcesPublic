@@ -12,6 +12,7 @@ namespace ResourceTools
 
 enum class Response
 {
+    NONE,
 	SUCCESS,
 	FILE_NOT_FOUND,
 	DOWNLOAD_ERROR,
@@ -23,10 +24,12 @@ class Downloader
 {
 public:
 	Downloader();
+
 	~Downloader();
+
 	bool DownloadFile( const std::string& url, const std::filesystem::path& outputPath, const std::chrono::seconds& retrySeconds );
 
-    Response GetHeader( const std::string& url, uintmax_t retryCount, const std::chrono::seconds& retrySeconds, std::string& response );
+    Response GetHeader( const std::string& url, std::string& response );
 
 	static bool GetAttributeValueFromHeader( const std::string& header, const std::string& attributeName, std::string& value );
 

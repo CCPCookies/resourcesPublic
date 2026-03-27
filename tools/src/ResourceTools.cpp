@@ -36,7 +36,7 @@ bool GenerateMd5Checksum( const std::filesystem::path& path, std::string& checks
 	{
 		md5Stream << temp;
 	}
-	md5Stream.FinishAndRetrieve( checksum );
+	md5Stream.Retrieve( checksum );
 	return true;
 }
 
@@ -56,7 +56,7 @@ bool GenerateMd5Checksum( const std::string& data, std::string& checksum )
 
 	md5ChecksumStream << data;
 
-	if( md5ChecksumStream.FinishAndRetrieve( checksum ) )
+	if( md5ChecksumStream.Retrieve( checksum ) )
 	{
 		return true;
 	}

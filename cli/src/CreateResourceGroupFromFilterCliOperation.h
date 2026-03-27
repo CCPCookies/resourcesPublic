@@ -58,6 +58,12 @@ private:
 	std::string m_remoteUrlToGetCompressionId;
 
 	std::string m_skipBinaryOperationCalculationId;
+
+    std::string m_numberOfThreadsId;
+
+    std::string m_networkRetryCountId;
+
+	std::string m_networkRetryBackoffMultiplierId;
 };
 
 #endif // CreateResourceGroupFromFilterCliOperation_H

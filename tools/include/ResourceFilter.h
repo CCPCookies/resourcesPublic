@@ -22,6 +22,11 @@ struct FilterPath
 
 	std::string path;
 
+    // Stored to speed up comparison during checks
+	bool pathContainsWildcard;
+
+	uintmax_t pathLength;
+
 	std::string matchPattern;
 
 	std::regex matchPatternRegex;
@@ -42,14 +47,12 @@ public:
 
 	bool SetFromFilterFileData( const FilterFile& fileData );
 
-	bool CheckPath( const std::filesystem::path& path ) const;
-
-	bool CheckPath( const std::filesystem::path& path, std::string& matchSectionId, std::string& matchPath ) const;
+	bool CheckPath( const std::string& path, std::string* matchSectionId = nullptr, std::string* matchPath = nullptr ) const;
 
 	const std::vector<std::filesystem::path>& GetPrefixPaths() const;
 
 private:
-	void ConvertResPathToPattern( std::string resPath, std::string& pattern ) const;
+	void ConvertResPathToPattern( std::string resPath, std::string& pattern, bool& pathContainsWildcard ) const;
 
 private:
 	std::map<std::string,std::vector<std::unique_ptr<FilterPath>>> m_paths;

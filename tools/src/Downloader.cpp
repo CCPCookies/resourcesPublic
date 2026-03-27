@@ -76,7 +76,7 @@ Downloader::~Downloader()
 	}
 }
 
-Response Downloader::GetHeader( const std::string& url, uintmax_t retryCount, const std::chrono::seconds& retrySeconds, std::string& response )
+Response Downloader::GetHeader( const std::string& url, std::string& response )
 {
 	std::stringstream out;
 	curl_easy_setopt( m_curlHandle, CURLOPT_URL, url.c_str() );
@@ -85,33 +85,29 @@ Response Downloader::GetHeader( const std::string& url, uintmax_t retryCount, co
 	curl_easy_setopt( m_curlHandle, CURLOPT_WRITEDATA, &out );
 	curl_easy_setopt( m_curlHandle, CURLOPT_WRITEFUNCTION, WriteToFileStringCallback );
 
-	for( unsigned int i = 0; i < retryCount; i++ )
+	
+	CURLcode cc = curl_easy_perform( m_curlHandle );
+
+	if( cc == CURLE_OK )
 	{
-		CURLcode cc = curl_easy_perform( m_curlHandle );
+		// File exists
+		response = out.str();
 
-		if( cc == CURLE_OK )
-		{
-			// File exists
-			response = out.str();
-
-			return Response::SUCCESS;
-		}
-
-		if( cc == CURLE_REMOTE_FILE_NOT_FOUND )
-		{
-			// File doesn't exist
-			response = out.str();
-
-			return Response::FILE_NOT_FOUND;
-		}
-
-		// Wait and retry with simple backoff
-		std::this_thread::sleep_for( retrySeconds * ( i + 1 ) );
+		return Response::SUCCESS;
 	}
+	else if( cc == CURLE_REMOTE_FILE_NOT_FOUND )
+	{
+		// File doesn't exist
+		response = out.str();
 
-	response = out.str();
-
-	return Response::DOWNLOAD_ERROR;
+		return Response::FILE_NOT_FOUND;
+	}
+    else
+    {
+		curl_easy_reset( m_curlHandle );
+		return Response::DOWNLOAD_ERROR;
+    }
+	
 }
 
 bool Downloader::DownloadFile( const std::string& url, const std::filesystem::path& outputPath, const std::chrono::seconds& retrySeconds )

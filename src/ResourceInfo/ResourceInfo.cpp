@@ -1142,7 +1142,7 @@ Result ResourceInfo::SetParametersFromSourceStream( ResourceTools::FileDataStrea
 		}
 	}
 
-	if( !md5ChecksumStream.FinishAndRetrieve( checksum ) )
+	if( !md5ChecksumStream.Retrieve( checksum ) )
 	{
 		stream.Seek( start );
 		return Result{ ResultType::FAILED_TO_GENERATE_CHECKSUM };
