@@ -68,6 +68,8 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 
 	resourceGroupDataParams.data = &resourceGroupData;
 
+    resourceGroupDataParams.downloadSettings = params.downloadSettings;
+
 	Result getChecksumResult = resourceGroupResource->GetChecksum( resourceGroupDataParams.expectedChecksum );
 
 	if( getChecksumResult.type != ResultType::SUCCESS )

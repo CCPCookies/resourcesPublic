@@ -22,7 +22,8 @@ CreateBundleCliOperation::CreateBundleCliOperation() :
 	m_bundleResourceGroupDestinationTypeArgumentId( "--bundle-resourcegroup-destination-type" ),
 	m_bundleResourceGroupDestinationBasePathArgumentId( "--bundle-resourcegroup-destination-path" ),
 	m_chunkSizeArgumentId( "--chunk-size" ),
-	m_downloadRetrySecondsArgumentId( "--download-retry-seconds" )
+	m_networkRetryBackoffMultiplierId( "--download-retry-seconds" ),
+	m_networkRetryCountId( "--network-retry-count" )
 {
 	AddRequiredPositionalArgument( m_inputResourceGroupPathArgumentId, "Path to ResourceGroup to bundle." );
 
@@ -49,7 +50,9 @@ CreateBundleCliOperation::CreateBundleCliOperation() :
 
 	AddArgument( m_chunkSizeArgumentId, "Represents the maximum size of the produced chunks in bytes.", false, false, SizeToString( defaultParams.chunkSize ) );
 
-	AddArgument( m_downloadRetrySecondsArgumentId, "The number of seconds before attempt to download a resource fails with a network related error", false, false, SecondsToString( defaultParams.downloadRetrySeconds ) );
+    AddArgument( m_networkRetryCountId, "Number of retries to attempt when encountering a failed download.", false, false, SizeToString( defaultParams.downloadSettings.retryCount ) );
+
+	AddArgument( m_networkRetryBackoffMultiplierId, "Multiplier in seconds to wait for when retrying, value will multiply on each retry to backoff.", false, false, SecondsToString( defaultParams.downloadSettings.retrySeconds ) );
 }
 
 bool CreateBundleCliOperation::Execute( std::string& returnErrorMessage ) const
@@ -100,11 +103,9 @@ bool CreateBundleCliOperation::Execute( std::string& returnErrorMessage ) const
 
 	bundleCreateParams.resourceBundleResourceGroupDestinationSettings.basePath = m_argumentParser->get<std::string>( m_bundleResourceGroupDestinationBasePathArgumentId );
 
-	long long retrySeconds{ 120 };
 	try
 	{
 		bundleCreateParams.chunkSize = std::stoull( m_argumentParser->get( m_chunkSizeArgumentId ) );
-		retrySeconds = std::stoll( m_argumentParser->get( m_downloadRetrySecondsArgumentId ) );
 	}
 	catch( std::invalid_argument& )
 	{
@@ -114,7 +115,41 @@ bool CreateBundleCliOperation::Execute( std::string& returnErrorMessage ) const
 	{
 		return false;
 	}
-	bundleCreateParams.downloadRetrySeconds = std::chrono::seconds( retrySeconds );
+
+    try
+	{
+		unsigned long long networkRetryCountUnsignedLongLong = std::stoull( m_argumentParser->get( m_networkRetryCountId ) );
+
+		if( networkRetryCountUnsignedLongLong > std::numeric_limits<uint32_t>::max() )
+		{
+			return false;
+		}
+
+		bundleCreateParams.downloadSettings.retryCount = static_cast<uint32_t>( networkRetryCountUnsignedLongLong );
+	}
+	catch( std::invalid_argument& )
+	{
+		return false;
+	}
+	catch( std::out_of_range& )
+	{
+		return false;
+	}
+
+	try
+	{
+		unsigned long long networkRetryBackoffMultiplierLongLong = std::stoull( m_argumentParser->get( m_networkRetryBackoffMultiplierId ) );
+
+		bundleCreateParams.downloadSettings.retrySeconds = std::chrono::seconds( networkRetryBackoffMultiplierLongLong );
+	}
+	catch( std::invalid_argument& )
+	{
+		return false;
+	}
+	catch( std::out_of_range& )
+	{
+		return false;
+	}
 
 	if( ShowCliStatusUpdates() )
 	{
@@ -153,7 +188,9 @@ void CreateBundleCliOperation::PrintStartBanner( const CarbonResources::Resource
 
 	std::cout << "Chunk Size: " << bundleCreateParams.chunkSize << " Bytes" << std::endl;
 
-	std::cout << "Download Retry Seconds: " << bundleCreateParams.downloadRetrySeconds.count() << std::endl;
+    std::cout << "Network retry count: " << bundleCreateParams.downloadSettings.retryCount << std::endl;
+
+	std::cout << "Network retry backoff multiplier ( Seconds ): " << bundleCreateParams.downloadSettings.retrySeconds.count() << std::endl;
 
 	std::cout << "----------------------------\n"
 			  << std::endl;

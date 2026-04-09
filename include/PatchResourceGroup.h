@@ -28,6 +28,8 @@ namespace CarbonResources
     *  Name of a temporary filename to use when patching large files. This file will be cleaned up on process completion. 
     *  @var PatchApplyParams::callbackSettings
     *  Settings relating to status callback messaging
+    *  @var PatchApplyParams::downloadSettings
+    *  Settings relating to downloads
     */
 struct PatchApplyParams final
 {
@@ -42,6 +44,8 @@ struct PatchApplyParams final
 	std::filesystem::path temporaryFilePath = "tempFile.resource";
 
 	CallbackSettings callbackSettings;
+
+    DownloadSettings downloadSettings;
 };
 
 /** @class PatchResourceGroup

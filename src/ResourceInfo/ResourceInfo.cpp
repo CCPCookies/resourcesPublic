@@ -618,6 +618,19 @@ Result ResourceInfo::GetDataLocalCdn( ResourceGetDataParams& params, const int b
 	}
 }
 
+void FileDownloadCallback(size_t totalSizeBytes, size_t dataSizeBytes, double bytesPerSecond, void* context)
+{
+    if (context)
+    {
+		DownloadCallback userCallback = *static_cast<DownloadCallback*>( context );
+
+		if( userCallback )
+		{
+			userCallback( totalSizeBytes, dataSizeBytes, bytesPerSecond );
+		}
+    }
+}
+
 Result ResourceInfo::GetDataRemoteCdn( ResourceGetDataParams& params, const int basePathId ) const
 {
 	if( basePathId >= params.resourceSourceSettings.basePaths.size() )
@@ -649,9 +662,18 @@ Result ResourceInfo::GetDataRemoteCdn( ResourceGetDataParams& params, const int 
 
 	if( !haveFileCached )
 	{
+		uintmax_t uncompressedSize;
+
+		Result getUncompressedSizeResult = GetUncompressedSize( uncompressedSize );
+
+        if (getUncompressedSizeResult.type != ResultType::SUCCESS)
+        {
+			return getUncompressedSizeResult;
+        }
+
 		ResourceTools::Downloader downloader;
 
-		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadRetrySeconds );
+		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadSettings.retrySeconds,params.downloadSettings.retryCount, uncompressedSize, FileDownloadCallback, (void*)&params.downloadSettings.downloadInfoCallback );
 
 		if( !downloadFileResult )
 		{
@@ -761,9 +783,18 @@ Result ResourceInfo::GetDataStreamRemoteCdn( ResourceGetDataStreamParams& params
 
 	if( !haveFileCached )
 	{
+		uintmax_t uncompressedSize;
+
+		Result getUncompressedSizeResult = GetUncompressedSize( uncompressedSize );
+
+		if( getUncompressedSizeResult.type != ResultType::SUCCESS )
+		{
+			return getUncompressedSizeResult;
+		}
+
 		ResourceTools::Downloader downloader;
 
-		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadRetrySeconds );
+		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadSettings.retrySeconds, params.downloadSettings.retryCount, uncompressedSize, FileDownloadCallback, (void*)&params.downloadSettings.downloadInfoCallback );
 
 		if( !downloadFileResult )
 		{
