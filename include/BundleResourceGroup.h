@@ -21,6 +21,8 @@ namespace CarbonResources
     *  Location where the unpacked resources should be saved.
     *  @var BundleUnpackParams::callbackSettings
     *  Settings relating to status callback messaging
+	*  @var BundleUnpackParams::DownloadSettings
+    *  Settings relating to downloads
     */
 struct BundleUnpackParams final
 {
@@ -29,6 +31,8 @@ struct BundleUnpackParams final
 	ResourceDestinationSettings resourceDestinationSettings;
 
 	CallbackSettings callbackSettings;
+
+    DownloadSettings downloadSettings;
 };
 
 /** @class BundleResourceGroup

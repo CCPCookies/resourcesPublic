@@ -18,3 +18,5 @@ See :doc:`../../DesignDocuments/filesystemDesign` for further details.
 .. doxygenstruct:: CarbonResources::ResourceDestinationSettings
     :members:
 
+.. doxygenstruct:: CarbonResources::DownloadSettings
+    :members:

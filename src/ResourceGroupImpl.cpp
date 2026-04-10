@@ -2061,7 +2061,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateBundle( const BundleCreateParams&
 
 			resourceGetDataParams.dataStream = resourceDataStream;
 
-			resourceGetDataParams.downloadRetrySeconds = params.downloadRetrySeconds;
+			resourceGetDataParams.downloadSettings = params.downloadSettings;
 
 			Result resourceGetDataResult = resource->GetDataStream( resourceGetDataParams );
 
@@ -2390,7 +2390,7 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 
 				previousResourceGetDataStreamParams.resourceSourceSettings = params.resourceSourceSettingsPrevious;
 
-				previousResourceGetDataStreamParams.downloadRetrySeconds = params.downloadRetrySeconds;
+				previousResourceGetDataStreamParams.downloadSettings = params.downloadSettings;
 
 				previousResourceGetDataStreamParams.dataStream = previousFileDataStream;
 
@@ -2409,6 +2409,8 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 				nextResourceGetDataStreamParams.resourceSourceSettings = params.resourceSourceSettingsNext;
 
 				nextResourceGetDataStreamParams.dataStream = nextFileDataStream;
+
+                nextResourceGetDataStreamParams.downloadSettings = params.downloadSettings;
 
 				Result getNextDataStreamResult = resourceNext->GetDataStream( nextResourceGetDataStreamParams );
 

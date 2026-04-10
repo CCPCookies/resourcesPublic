@@ -35,13 +35,52 @@ void ShutDownCurl()
 	curl_global_cleanup();
 }
 
+struct WriteToFileStreamCallWrapper
+{
+	std::ofstream out;
+
+    ResourceTools::DownloadFileCallback callback = nullptr;
+
+	size_t totalSizeBytes = 0;
+
+	size_t downloadedSizeBytes = 0;
+
+	std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
+
+	void* context = nullptr;
+};
+
 size_t WriteToFileStreamCallback( void* contents, size_t size, size_t nmemb, void* context )
 {
 	const char* charString = static_cast<const char*>( contents );
+
 	const size_t realSize = size * nmemb;
-	std::ofstream* out = static_cast<std::ofstream*>( context );
+
+	WriteToFileStreamCallWrapper* wrapper = static_cast<WriteToFileStreamCallWrapper*>( context );
+
 	std::string str( charString, realSize );
-	*out << str;
+
+	wrapper->out << str;
+
+	wrapper->downloadedSizeBytes += nmemb;
+
+    if (wrapper->callback)
+    {
+        // Calculate bytes per second
+		auto end = std::chrono::high_resolution_clock::now();
+
+		long long durationSecondsSinceSeconds = std::chrono::duration_cast<std::chrono::seconds>( end - wrapper->startTime ).count();
+		
+        double bytesPerSecond = (double)wrapper->downloadedSizeBytes;
+
+        if (durationSecondsSinceSeconds > 0)
+        {
+			bytesPerSecond = (double)wrapper->downloadedSizeBytes / durationSecondsSinceSeconds;
+        }
+
+		wrapper->callback( wrapper->totalSizeBytes, wrapper->downloadedSizeBytes, bytesPerSecond, wrapper->context );
+    }
+
 	return realSize;
 }
 
@@ -84,8 +123,6 @@ Response Downloader::GetHeader( const std::string& url, std::string& response )
 	curl_easy_setopt( m_curlHandle, CURLOPT_HEADER, 1L );
 	curl_easy_setopt( m_curlHandle, CURLOPT_WRITEDATA, &out );
 	curl_easy_setopt( m_curlHandle, CURLOPT_WRITEFUNCTION, WriteToFileStringCallback );
-
-	
 	CURLcode cc = curl_easy_perform( m_curlHandle );
 
 	if( cc == CURLE_OK )
@@ -110,7 +147,7 @@ Response Downloader::GetHeader( const std::string& url, std::string& response )
 	
 }
 
-bool Downloader::DownloadFile( const std::string& url, const std::filesystem::path& outputPath, const std::chrono::seconds& retrySeconds )
+bool Downloader::DownloadFile( const std::string& url, const std::filesystem::path& outputPath, const std::chrono::seconds& retrySeconds, uintmax_t retryCount, size_t expectedTotalSize /* = 0*/, DownloadFileCallback callback /* = nullptr */, void* callbackContext /* = nullptr */ )
 {
 	if( std::filesystem::exists( outputPath ) )
 	{
@@ -123,34 +160,44 @@ bool Downloader::DownloadFile( const std::string& url, const std::filesystem::pa
 		// Failed to create directory to place the downloaded file in.
 		return false;
 	}
-	std::ofstream out( outputPath, std::ios_base::app | std::ios::binary );
+
+	WriteToFileStreamCallWrapper callWrapper;
+	callWrapper.out = std::ofstream( outputPath, std::ios_base::app | std::ios::binary );
+	callWrapper.callback = callback;
+	callWrapper.totalSizeBytes = expectedTotalSize;
+	callWrapper.context = callbackContext;
+
 	curl_easy_setopt( m_curlHandle, CURLOPT_URL, url.c_str() );
 	curl_easy_setopt( m_curlHandle, CURLOPT_FAILONERROR, 1 );
-	curl_easy_setopt( m_curlHandle, CURLOPT_WRITEDATA, &out );
+	curl_easy_setopt( m_curlHandle, CURLOPT_WRITEDATA, &callWrapper );
 	curl_easy_setopt( m_curlHandle, CURLOPT_WRITEFUNCTION, WriteToFileStreamCallback );
 	curl_easy_setopt( m_curlHandle, CURLOPT_ACCEPT_ENCODING, "gzip" );
 	CURLcode cc{ CURLE_OK };
-	std::chrono::seconds sleepSeconds{ 1 };
-	auto startTime = std::chrono::steady_clock::now();
-	do
-	{
-		auto duration = std::chrono::duration_cast<std::chrono::seconds>( ( std::chrono::steady_clock::now() - startTime ) );
-		auto remaining = retrySeconds - duration;
+
+    for (auto i = 0; i < retryCount; i++)
+    {
+		callWrapper.startTime = std::chrono::high_resolution_clock::now();
 		cc = curl_easy_perform( m_curlHandle );
-		if( duration >= retrySeconds || s_curl_retry_errors.find( cc ) == s_curl_retry_errors.end() )
-		{
-			return cc == CURLE_OK;
-		}
-		if( remaining < sleepSeconds )
-		{
-			std::this_thread::sleep_for( remaining );
-		}
-		else
-		{
-			std::this_thread::sleep_for( sleepSeconds );
-		}
-		sleepSeconds *= 2;
-	} while( true );
+
+        if( cc == CURLE_OK )
+        {
+			return true;
+        }
+        else if (s_curl_retry_errors.find(cc) == s_curl_retry_errors.end())
+        {
+            // Error is something that a retry wont help with
+			return false;
+        }
+        else
+        {
+            // Sleep with a simple backoff
+			std::this_thread::sleep_for( (i+1) * retrySeconds );
+        }
+
+    }
+
+    return false;
+
 }
 
 bool Downloader::GetAttributeValueFromHeader( const std::string& header, const std::string& attributeName, std::string& value )

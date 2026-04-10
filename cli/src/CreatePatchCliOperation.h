@@ -52,7 +52,9 @@ private:
 
 	std::string m_maxInputChunkSizeArgumentId;
 
-	std::string m_downloadRetrySecondsArgumentId;
+    std::string m_networkRetryCountId;
+
+	std::string m_networkRetryBackoffMultiplierId;
 
 	std::string m_indexFolderArgumentId;
 

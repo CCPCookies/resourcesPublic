@@ -48,18 +48,29 @@ struct CallbackSettings
 	int verbosityLevel = -1;
 };
 
+/** Download Callback function signature.
+    * @param totalSizeBytes Total size in bytes of file being downloaded.
+    * @param currentlyDownloadedBytes Current size of data downloaded in bytes.
+    * @param bytesPerSecond Current transfer rate in bytes per second.
+    */
+using DownloadCallback = std::function<void( uintmax_t totalSizeBytes, uintmax_t currentlyDownloadedBytes, double bytesPerSecond )>;
+
 /** @struct DownloadSettings
     *  @brief Parameters relating downloading
     *  @var DownloadSettings::retrySeconds
     *  Delay before a failed download is retried (seconds)
     *  @var DownloadSettings::retryCount
     *  Number of times times a download is retried before failure. Note: a backoff is also applied before retry.
+    *  @var DownloadSettings::downloadInfoCallback
+    *  Optional callback to receive download information.
     */
 struct DownloadSettings
 {
 	std::chrono::seconds retrySeconds{ 1 };
 
 	uintmax_t retryCount = 3;
+
+    DownloadCallback downloadInfoCallback = nullptr;
 };
 
 /** @struct ResourceSourceSettings
@@ -108,8 +119,8 @@ struct ResourceDestinationSettings
     *  Where to save the resulting BundleResourceGroup
     *  @var BundleCreateParams::callbackSettings
     *  Settings relating to status callback messaging
-    *  @var BundleCreateParams::downloadRetrySeconds
-    *  Delay before a failed download is retried (seconds)
+    *  @var BundleCreateParams::downloadSettings
+    *  Settings related to downloads
     *  @var BundleCreateParams::calculateCompressions
     *  Specifies if compression will be calculated for the generated bundle chunks
     */
@@ -131,7 +142,7 @@ struct BundleCreateParams
 
 	CallbackSettings callbackSettings;
 
-	std::chrono::seconds downloadRetrySeconds{ 120 };
+	DownloadSettings downloadSettings;
 
     bool calculateCompressions = true;
 };
@@ -158,8 +169,8 @@ struct BundleCreateParams
     *  Where the produced PatchResourceGroup will be saved.
     *  @var PatchCreateParams::callbackSettings
     *  Settings relating to status callback messaging
-    *  @var PatchCreateParams::downloadRetrySeconds
-    *  Delay before a failed download is retried (seconds)
+    *  @var PatchCreateParams::downloadSettings
+    *  Settings related to downloads
     *  @var PatchCreateParams::indexFolder
     *  Directory to store index calculation files during patch creation.
     *  @var PatchCreateParams::calculateCompressions
@@ -187,7 +198,7 @@ struct PatchCreateParams
 
 	CallbackSettings callbackSettings;
 
-	std::chrono::seconds downloadRetrySeconds{ 120 };
+	DownloadSettings downloadSettings;
 
 	std::filesystem::path indexFolder = std::filesystem::temp_directory_path() / "carbonResources" / "chunkIndexes";
 

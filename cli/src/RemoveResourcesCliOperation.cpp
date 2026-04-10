@@ -171,6 +171,8 @@ bool RemoveResourcesCliOperation::RemoveResources( CarbonResources::ResourceGrou
 
     removeParams.callbackSettings.statusCallback = statusCallback;
 
+    removeParams.callbackSettings.verbosityLevel = GetVerbosityLevel();
+
     if( ShowCliStatusUpdates() )
 	{
 		CliStatusUpdate( "Removing Resources." );
@@ -186,6 +188,8 @@ bool RemoveResourcesCliOperation::RemoveResources( CarbonResources::ResourceGrou
 	}
 
     exportParams.callbackSettings.statusCallback = statusCallback;
+
+    exportParams.callbackSettings.verbosityLevel = GetVerbosityLevel();
 
     if( ShowCliStatusUpdates() )
 	{

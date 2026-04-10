@@ -83,6 +83,12 @@ TEST_F( ResourceToolsTest, FowlerNollVoChecksumGeneration )
 	EXPECT_EQ( output, "a9d1721dd5cc6d54" );
 }
 
+void DownloadCallback(size_t totalSizeBytes, size_t currentDownloadedBytes, double bytesPerSecond, void* context)
+{
+	size_t* contextInt = static_cast<size_t*>( context );
+	*contextInt = currentDownloadedBytes;
+}
+
 TEST_F( ResourceToolsTest, DownloadFile )
 {
 	const char* FOLDER_NAME = "a9";
@@ -106,7 +112,14 @@ TEST_F( ResourceToolsTest, DownloadFile )
 	}
 	EXPECT_FALSE( std::filesystem::exists( outputPath ) );
 	std::chrono::seconds retrySeconds{ 0 };
-	EXPECT_TRUE( downloader.DownloadFile( url, outputPathString, retrySeconds ) );
+	uintmax_t retries = 3;
+
+    uintmax_t sourceFilesize = std::filesystem::file_size( sourcePathString );
+
+    size_t contextCheck = 0;
+
+	EXPECT_TRUE( downloader.DownloadFile( url, outputPathString, retrySeconds, retries, sourceFilesize, DownloadCallback, &contextCheck ) );
+	EXPECT_EQ( contextCheck, sourceFilesize );
 	EXPECT_TRUE( std::filesystem::exists( outputPath ) );
 
 	// Check if download succeeds.

@@ -21,8 +21,6 @@ private:
 	void PrintStartBanner( const CarbonResources::ResourceGroupImportFromFileParams& resourceGroupParams, CarbonResources::BundleCreateParams& bundleCreateParams ) const;
 	bool CreateBundle( CarbonResources::ResourceGroupImportFromFileParams& resourceGroupParams, CarbonResources::BundleCreateParams& bundleCreateParams, std::string& returnErrorMessage ) const;
 
-private:
-	void CreateResourceGroupFromFileType();
 
 private:
 	std::string m_inputResourceGroupPathArgumentId;
@@ -45,7 +43,9 @@ private:
 
 	std::string m_chunkSizeArgumentId;
 
-	std::string m_downloadRetrySecondsArgumentId;
+    std::string m_networkRetryCountId;
+
+	std::string m_networkRetryBackoffMultiplierId;
 };
 
 #endif // CreateBundleCliOperation_H

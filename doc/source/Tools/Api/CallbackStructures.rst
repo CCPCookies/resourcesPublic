@@ -12,6 +12,8 @@ Granularity of updates can be controlled.
 
 .. doxygentypedef:: CarbonResources::StatusCallback
 
+.. doxygentypedef:: CarbonResources::DownloadCallback
+
 .. doxygenenum:: CarbonResources::StatusProgressType
 
 

@@ -237,11 +237,11 @@ struct ResourceGetDataStreamParams
 
 	std::shared_ptr<ResourceTools::FileDataStreamIn> dataStream;
 
-	std::filesystem::path cacheBasePath = "cache";
+	std::filesystem::path cacheBasePath = std::filesystem::temp_directory_path();
 
 	std::string expectedChecksum = "";
 
-	std::chrono::seconds downloadRetrySeconds{ 120 };
+	DownloadSettings downloadSettings;
 };
 
 struct ResourceGetDataParams
@@ -250,11 +250,11 @@ struct ResourceGetDataParams
 
 	std::string* data = nullptr;
 
-	std::filesystem::path cacheBasePath = "cache";
+	std::filesystem::path cacheBasePath = std::filesystem::temp_directory_path();
 
 	std::string expectedChecksum = "";
 
-	std::chrono::seconds downloadRetrySeconds{ 120 };
+	DownloadSettings downloadSettings;
 };
 
 struct ResourcePutDataStreamParams

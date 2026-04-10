@@ -263,6 +263,8 @@ Result PatchResourceGroup::PatchResourceGroupImpl::Apply( const PatchApplyParams
 
 	resourceGroupDataParams.data = &resourceGroupData;
 
+    resourceGroupDataParams.downloadSettings = params.downloadSettings;
+
 	Result resourceGroupGetDataResult = m_resourceGroupParameter.GetValue()->GetData( resourceGroupDataParams );
 
 	if( resourceGroupGetDataResult.type != ResultType::SUCCESS )
@@ -343,6 +345,8 @@ Result PatchResourceGroup::PatchResourceGroupImpl::Apply( const PatchApplyParams
 				resourceDataStreamParams.resourceSourceSettings = params.resourcesToPatchSourceSettings;
 
 				resourceDataStreamParams.dataStream = resourceDataStreamIn;
+
+                resourceDataStreamParams.downloadSettings = params.downloadSettings;
 
 				Result getResourceDataStream = resource->GetDataStream( resourceDataStreamParams );
 
@@ -489,6 +493,8 @@ Result PatchResourceGroup::PatchResourceGroupImpl::Apply( const PatchApplyParams
 
 							getDataStreamParams.resourceSourceSettings = params.resourcesToPatchSourceSettings;
 
+                            getDataStreamParams.downloadSettings = params.downloadSettings;
+
 							Result getDataStreamResult = resource->GetDataStream( getDataStreamParams );
 
 							if( getDataStreamResult.type != ResultType::SUCCESS )
@@ -585,6 +591,8 @@ Result PatchResourceGroup::PatchResourceGroupImpl::Apply( const PatchApplyParams
 				resourceGetDataParams.resourceSourceSettings = params.nextBuildResourcesSourceSettings;
 
 				resourceGetDataParams.dataStream = resourceStreamIn;
+
+                resourceGetDataParams.downloadSettings = params.downloadSettings;
 
 				Result resourceGetDataResult = resource->GetDataStream( resourceGetDataParams );
 
