@@ -673,7 +673,7 @@ Result ResourceInfo::GetDataRemoteCdn( ResourceGetDataParams& params, const int 
 
 		ResourceTools::Downloader downloader;
 
-		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadSettings.retrySeconds,params.downloadSettings.retryCount, uncompressedSize, FileDownloadCallback, (void*)&params.downloadSettings.downloadInfoCallback );
+		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadSettings.retrySeconds, params.downloadSettings.retryCount, uncompressedSize, FileDownloadCallback, (void*)&params.downloadSettings.downloadInfoCallback );
 
 		if( !downloadFileResult )
 		{

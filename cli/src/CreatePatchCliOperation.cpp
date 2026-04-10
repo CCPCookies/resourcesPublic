@@ -260,7 +260,7 @@ void CreatePatchCliOperation::PrintStartBanner( const CarbonResources::ResourceG
 
 	std::cout << "Resource Patch Resource Group Destination Settings Destination Type: " << DestinationTypeToString( createPatchParams.resourcePatchResourceGroupDestinationSettings.destinationType ) << std::endl;
 
-	std::cout << "Download Retry Seconds: " << createPatchParams.downloadSettings.retrySeconds.count() << std::endl;
+	std::cout << "Network retry backoff multiplier ( Seconds ):" << createPatchParams.downloadSettings.retrySeconds.count() << std::endl;
 
     std::cout << "Download Retry Count: " << createPatchParams.downloadSettings.retryCount << std::endl;
 
