@@ -55,3 +55,8 @@ if (PORT MATCHES "yaml-cpp")
     # When the compiler version is updated we can remove this.
     set(VCPKG_CMAKE_CONFIGURE_OPTIONS "${VCPKG_CMAKE_CONFIGURE_OPTIONS};-DCMAKE_POLICY_VERSION_MINIMUM=3.5")
 endif ()
+
+if (PORT MATCHES "tiny-process-library")
+    # Latest tagged version uses a version of cmake < 3.5
+    set(VCPKG_CMAKE_CONFIGURE_OPTIONS "${VCPKG_CMAKE_CONFIGURE_OPTIONS};-DCMAKE_POLICY_VERSION_MINIMUM=3.5")
+endif ()
