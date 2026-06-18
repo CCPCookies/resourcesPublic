@@ -48,3 +48,15 @@ endif ()
 if (PORT MATCHES "python3")
     set(VCPKG_LIBRARY_LINKAGE dynamic)
 endif ()
+
+if (PORT MATCHES "yaml-cpp")
+    # Version 8 uses version Cmake 3.4 which we don't support.
+    # Version 9 this isn't a problem but it fails with internal compiler error due to our compiler.
+    # When the compiler version is updated we can remove this.
+    set(VCPKG_CMAKE_CONFIGURE_OPTIONS "${VCPKG_CMAKE_CONFIGURE_OPTIONS};-DCMAKE_POLICY_VERSION_MINIMUM=3.5")
+endif ()
+
+if (PORT MATCHES "tiny-process-library")
+    # Latest tagged version uses a version of cmake < 3.5
+    set(VCPKG_CMAKE_CONFIGURE_OPTIONS "${VCPKG_CMAKE_CONFIGURE_OPTIONS};-DCMAKE_POLICY_VERSION_MINIMUM=3.5")
+endif ()
