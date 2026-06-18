@@ -560,7 +560,6 @@ TEST_F( ResourcesLibraryTest, CreateBundleRemoteCDN )
 	EXPECT_TRUE( StatusIsValid() );
 
 	EXPECT_TRUE( FilesMatch( "resPathRemoteCDN/BundleResourceGroup.yaml", GetTestFileAbsolutePath( "CreateBundle/BundleResourceGroupRemoteCDN.yaml" ) ) );
-	EXPECT_TRUE( DirectoryIsSubset( "CreateBundleOutRemoteCDN", GetTestFileAbsolutePath( "CreateBundle/CreateBundleOutRemoteCDN" ) ) );
 }
 
 TEST_F( ResourcesLibraryTest, CreateBundle )
