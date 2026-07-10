@@ -26,6 +26,11 @@ val TrinityDev = CarbonBuildWindows("TrinityDev Windows", "TrinityDev", "x64-win
 val Release = CarbonBuildWindows("Release Windows", "Release", "x64-windows-release")
 val ReleaseDevFeatures = CarbonBuildWindows("Release Windows with Dev Features", "Release", "x64-windows-release-with-dev-features")
 
+val Debug_v145 = CarbonBuildWindows("Debug Windows v145", "Debug", "x64-windows-v145-debug", "-arch=x64 -vcvars_ver=14.51")
+val Internal_v145 = CarbonBuildWindows("Internal Windows v145", "Internal", "x64-windows-v145-internal", "-arch=x64 -vcvars_ver=14.51")
+val TrinityDev_v145 = CarbonBuildWindows("TrinityDev Windows v145", "TrinityDev", "x64-windows-v145-trinitydev", "-arch=x64 -vcvars_ver=14.51")
+val Release_v145 = CarbonBuildWindows("Release Windows v145", "Release", "x64-windows-v145-release", "-arch=x64 -vcvars_ver=14.51")
+
 object Project : Project({
     id("Windows")
     name = "Windows"
@@ -35,6 +40,12 @@ object Project : Project({
     buildType(TrinityDev)
     buildType(Release)
     buildType(ReleaseDevFeatures)
+
+    buildType(Debug_v145)
+    buildType(Internal_v145)
+    buildType(TrinityDev_v145)
+    buildType(Release_v145)
+    buildType(ReleaseDevFeatures_v145)
 })
 
 
@@ -101,7 +112,7 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String) 
         exec {
             name = "Configure"
             path = "cmake"
-            arguments = "--preset %env.CMAKE_PRESET% -S %teamcity.build.checkoutDir%/%github_checkout_folder% -B %env.CMAKE_BUILD_FOLDER% -DINSTALL_TO_MONOLITH=ON -DCMAKE_INSTALL_PREFIX=%env.CMAKE_INSTALL_PREFIX% -DVCPKG_INSTALL_OPTIONS=--x-buildtrees-root=%teamcity.build.checkoutDir%/%github_checkout_folder%/buildtrees"
+            arguments = "--preset %env.CMAKE_PRESET% -S %teamcity.build.checkoutDir%/%github_checkout_folder% -B %env.CMAKE_BUILD_FOLDER% -DINSTALL_TO_MONOLITH=ON -DBUILD_CLI=ON -DBUILD_TESTING=ON -DBUILD_DOCUMENTATION=ON -DCMAKE_INSTALL_PREFIX=%env.CMAKE_INSTALL_PREFIX% -DVCPKG_INSTALL_OPTIONS=--x-buildtrees-root=%teamcity.build.checkoutDir%/%github_checkout_folder%/buildtrees"
         }
         exec {
             name = "Build"
