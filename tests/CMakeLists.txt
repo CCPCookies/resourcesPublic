@@ -45,6 +45,16 @@ if (DEV_FEATURES)
     target_compile_definitions(resources-test PRIVATE DEV_FEATURES)
 endif ()
 
+if(CMAKE_IMPORT_LIBRARY_SUFFIX)
+
+    add_custom_command(TARGET resources-test POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:resources-test> $<TARGET_FILE_DIR:resources-test>
+            COMMAND_EXPAND_LISTS
+            VERBATIM
+    )
+
+endif()
+
 if(BUILD_CLI)
         if (WIN32)
 
