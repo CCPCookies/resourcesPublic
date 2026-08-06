@@ -167,6 +167,7 @@ enum class ResultType
 	RESOURCE_NOT_FOUND,
 	REQUIRED_INPUT_PARAMETER_NOT_SET,
 	FAILED_TO_INITIALIZE_RESOURCE_FILTER,
+    INVALID_INPUT_PARAMETER
 	//NOTE: if adding to this enum, a complimentary entry must be added to resultToString.
 };
 

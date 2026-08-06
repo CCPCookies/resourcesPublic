@@ -342,6 +342,11 @@ TEST_F( ResourcesCliTest, CreateBundle )
 	arguments.push_back( "--chunk-size" );
 	arguments.push_back( "1000" );
 
+    arguments.push_back( "--split-on-uncompressed-size" );
+
+    arguments.push_back( "--number-of-threads" );
+	arguments.push_back( "0" );
+
 
 	int res = RunCli( arguments, output );
 

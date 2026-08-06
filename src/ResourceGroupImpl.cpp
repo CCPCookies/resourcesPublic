@@ -1871,66 +1871,101 @@ Result ResourceGroup::ResourceGroupImpl::ExportCsv( const VersionInternal& outpu
 	return Result{ ResultType::SUCCESS };
 }
 
-Result ResourceGroup::ResourceGroupImpl::ProcessChunk( ResourceTools::GetChunk& chunkFile, const std::filesystem::path& chunkRelativePath, BundleResourceGroup::BundleResourceGroupImpl& bundleResourceGroup, const ResourceDestinationSettings& chunkDestinationSettings ) const
+struct ProcessChunkPoolArguments
+{
+    std::map<uintmax_t, BundleResourceInfo*> bundleResources;
+
+    std::mutex bundleResourceGroupMutex;
+
+    bool calculateCompressions = false;
+
+    uintmax_t totalNumberOfChunks = 0;
+
+    std::atomic<uintmax_t> numberOfChunksProcessed = 0;
+
+    StatusSettings statusSettings;
+
+    Result status = Result{ ResultType::SUCCESS };
+
+    void RunStatusUpdate()
+	{
+		if( statusSettings.RequiresStatusUpdates() )
+		{
+			
+			if( ( numberOfChunksProcessed % 20 ) == 0 )
+			{
+
+				float step = static_cast<float>( 100.0 / totalNumberOfChunks );
+				float progress = step * numberOfChunksProcessed;
+
+				std::stringstream ss;
+
+				ss << "Chunks Processed: " << std::to_string( numberOfChunksProcessed );
+
+				statusSettings.Update( StatusProgressType::PERCENTAGE, progress, step, ss.str() );
+			}
+		}
+		
+	}
+};
+
+struct ProcessChunkThreadArguments
+{
+	uintmax_t chunkIndex;
+
+	ResourceTools::ChunkInfo chunkInfo;
+	
+    std::filesystem::path chunkRelativePath;
+
+	ResourceDestinationSettings chunkDestinationSettings;
+
+};
+
+void ProcessChunkWorker( std::shared_ptr<ProcessChunkPoolArguments> commonArguments, std::shared_ptr<ProcessChunkThreadArguments> threadArguments )
 {
 	// Create resource from Patch Data
-	BundleResourceInfo* chunkResource = new BundleResourceInfo( { chunkRelativePath } );
+	BundleResourceInfo* chunkResource = new BundleResourceInfo( { threadArguments->chunkRelativePath } );
 
-	// md5 Checksum
-	ResourceTools::Md5ChecksumStream checksumStream;
-
-	std::string checksum;
-	{
-		std::string chunk;
-
-		while( *chunkFile.uncompressedChunkIn >> chunk )
-		{
-			checksumStream << chunk;
-		}
-	}
-
-	if( !checksumStream.Retrieve( checksum ) )
-	{
-		return Result( { ResultType::FAILED_TO_GENERATE_CHECKSUM } );
-	}
-
-	chunkResource->SetDataChecksum( checksum );
+	chunkResource->SetDataChecksum( threadArguments->chunkInfo.checksum );
 
 	// Compressed Size
-	chunkResource->SetCompressedSize( chunkFile.compressedChunkIn->Size() );
+
+	// Compressed data already exists on disk as part of chunking
+	// Get size from there
+	if( threadArguments->chunkInfo.compressedSize > 0 )
+	{
+		chunkResource->SetCompressedSize( threadArguments->chunkInfo.compressedSize );
+	}
 
 	// Uncompressed Size
-	chunkResource->SetUncompressedSize( chunkFile.uncompressedChunkIn->Size() );
+	chunkResource->SetUncompressedSize( threadArguments->chunkInfo.uncompressedSize );
 
 	// Export chunk file
-	std::filesystem::path sourceFile;
+	std::filesystem::path sourceFile = threadArguments->chunkInfo.path;
 
-	if( chunkDestinationSettings.destinationType == ResourceDestinationType::REMOTE_CDN )
+    if( !std::filesystem::exists( sourceFile.parent_path() ) )
 	{
-		sourceFile = chunkFile.compressedChunkIn->GetPath();
-	}
-	else
-	{
-		sourceFile = chunkFile.uncompressedChunkIn->GetPath();
+		commonArguments->status = Result{ ResultType::FILE_NOT_FOUND };
+		return;
 	}
 
 	std::filesystem::path targetFile;
 
-	if( chunkDestinationSettings.destinationType == ResourceDestinationType::LOCAL_RELATIVE )
+	std::string location;
+
+	if( threadArguments->chunkDestinationSettings.destinationType == ResourceDestinationType::LOCAL_RELATIVE )
 	{
 		std::filesystem::path relativePath;
 
 		chunkResource->GetRelativePath( relativePath );
 
-		targetFile = chunkDestinationSettings.basePath / relativePath;
+		targetFile = threadArguments->chunkDestinationSettings.basePath / relativePath;
 	}
 	else
 	{
-		std::string location;
-
 		chunkResource->GetLocation( location );
 
-		targetFile = chunkDestinationSettings.basePath / location;
+		targetFile = threadArguments->chunkDestinationSettings.basePath / location;
 	}
 
 	if( std::filesystem::exists( targetFile ) )
@@ -1945,24 +1980,71 @@ Result ResourceGroup::ResourceGroupImpl::ProcessChunk( ResourceTools::GetChunk& 
 
 	try
 	{
-		std::filesystem::copy_file( sourceFile, targetFile );
+		if( threadArguments->chunkInfo.compressedSize == 0 && ( commonArguments->calculateCompressions || threadArguments->chunkDestinationSettings.destinationType == ResourceDestinationType::REMOTE_CDN ) )
+        {
+			// Destination type requires compression but data is not compressed
+			// Load in data and compress
+			std::string data;
+
+			if( !ResourceTools::GetLocalFileData( sourceFile, data ) )
+			{
+				commonArguments->status = Result{ ResultType::FAILED_TO_OPEN_FILE };
+				return;
+			}
+
+			// Compress the data
+			std::string compressedData;
+			if( !ResourceTools::GZipCompressData( data, compressedData ) )
+			{
+				commonArguments->status = Result{ ResultType::FAILED_TO_COMPRESS_DATA };
+				return;
+			}
+
+			chunkResource->SetCompressedSize( compressedData.size() );
+
+            if( threadArguments->chunkDestinationSettings.destinationType == ResourceDestinationType::REMOTE_CDN )
+			{
+				// Save file
+				if( !ResourceTools::SaveFile( targetFile, compressedData ) )
+				{
+					commonArguments->status = Result{ ResultType::FAILED_TO_SAVE_FILE };
+					return;
+				}
+
+				// Delete tmp file
+				std::filesystem::remove( sourceFile );
+			}
+            else
+            {
+                // Uncompressed data but deferred calculated compression
+				std::filesystem::rename( sourceFile, targetFile );
+            }
+
+        }
+        else
+        {
+			std::filesystem::rename( sourceFile, targetFile );
+        }
 	}
 	catch( std::filesystem::filesystem_error& e )
 	{
-		return Result( { ResultType::FAILED_TO_SAVE_FILE, e.what() } );
+		commonArguments->status = Result{ ResultType::FAILED_TO_SAVE_FILE, e.what() };
+		return;
 	}
 
 	// Add the chunk resource to the bundleResourceGroup
-	Result addResourceResult = bundleResourceGroup.AddResource( chunkResource );
+    {
+		std::unique_lock<std::mutex> lock( commonArguments->bundleResourceGroupMutex );
 
-	if( addResourceResult.type != ResultType::SUCCESS )
-	{
-		delete chunkResource;
+        commonArguments->bundleResources[threadArguments->chunkIndex] = chunkResource;
 
-		return addResourceResult;
-	}
+        commonArguments->numberOfChunksProcessed++;
 
-	return Result{ ResultType::SUCCESS };
+        // This has to be inside a mutex
+        commonArguments->RunStatusUpdate();
+    }
+	
+	return;
 }
 
 Result ResourceGroup::ResourceGroupImpl::CreateBundle( const BundleCreateParams& params, StatusSettings& statusSettings ) const
@@ -1983,11 +2065,12 @@ Result ResourceGroup::ResourceGroupImpl::CreateBundle( const BundleCreateParams&
 		return setChunkSizeResult;
 	}
 
-	ResourceTools::BundleStreamOut bundleStream( params.chunkSize, params.chunkDestinationSettings.basePath, params.chunkDestinationSettings.destinationType == ResourceDestinationType::REMOTE_CDN );
-
+    // If not splitting on compressed then it will defer compression to later,
+    // This will then calculate compression asyncronously 
+	ResourceTools::BundleStreamOut bundleStream( params.chunkSize, params.chunkDestinationSettings.basePath, params.chunkDestinationSettings.destinationType == ResourceDestinationType::REMOTE_CDN, params.splitOnCompressedSize, params.calculateCompressions );
 
 	// Update status
-	statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 5, 40, "Generating Chunks" );
+	statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 5, 10, "Generating Chunks" );
 
 	int i = 0;
 
@@ -2005,7 +2088,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateBundle( const BundleCreateParams&
 	// Loop through all resources and send data for chunking
 	{
 		StatusSettings fileProcessingDetailStatusSettings;
-		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 45, 35, "Generating Chunks", &fileProcessingDetailStatusSettings );
+		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 15, 35, "Generating Chunks", &fileProcessingDetailStatusSettings );
 
 
 		for( ResourceInfo* resource : toBundle )
@@ -2018,6 +2101,8 @@ Result ResourceGroup::ResourceGroupImpl::CreateBundle( const BundleCreateParams&
 			{
 				return getLocationResult;
 			}
+
+			StatusSettings fileProcessingDetail2StatusSettings;
 
 			if( fileProcessingDetailStatusSettings.RequiresStatusUpdates() )
 			{
@@ -2046,7 +2131,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateBundle( const BundleCreateParams&
 
 				i++;
 
-				fileProcessingDetailStatusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, percentComplete, step, message );
+				fileProcessingDetailStatusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, percentComplete, step, message, &fileProcessingDetail2StatusSettings );
 			}
 			if( location.empty() )
 			{
@@ -2065,58 +2150,117 @@ Result ResourceGroup::ResourceGroupImpl::CreateBundle( const BundleCreateParams&
 
 			Result resourceGetDataResult = resource->GetDataStream( resourceGetDataParams );
 
-            while( !resourceDataStream->IsFinished() )
+			while( !resourceDataStream->IsFinished() )
 			{
-                if (!bundleStream.operator<<(resourceDataStream))
-                {
+				if( fileProcessingDetailStatusSettings.RequiresStatusUpdates() )
+				{
+					size_t currentNumberOfChunks = bundleStream.GetNumberOfChunksCreated();
+
+					if( numberOfChunks < currentNumberOfChunks )
+					{
+						numberOfChunks = currentNumberOfChunks;
+						float step = static_cast<float>( 100.0 / resourceDataStream->Size() );
+						float percentComplete = static_cast<float>( step * resourceDataStream->GetCurrentPosition() );
+
+						std::string message = "Chunk Created: " + std::to_string( currentNumberOfChunks );
+
+						fileProcessingDetail2StatusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, percentComplete, step, message );
+					}
+				}
+
+				if( !bundleStream.operator<<( resourceDataStream ) )
+				{
 					return Result( { ResultType::FAILED_TO_READ_FROM_STREAM } );
-                }
+				}
 			}
-
 		}
+	}   
 
-        // Finish last chunk
-		if( !bundleStream.Finish() )
-		{
-			return Result( { ResultType::FAILED_TO_READ_FROM_STREAM } );
-		}
-
-		// Add to BundleResourceGroup
-
-		// Loop through possible created chunks
-		ResourceTools::GetChunk chunkFile;
-
-		chunkFile.clearCache = false;
-
-		bool bundleReadOk{ true };
-
-		while( ( bundleReadOk = bundleStream >> chunkFile ) && !chunkFile.outOfChunks )
-		{
-			std::stringstream ss;
-			ss << chunkBaseName << numberOfChunks << ".chunk";
-			std::string chunkName = ss.str();
-
-			std::filesystem::path chunkPath = params.chunkDestinationSettings.basePath / ss.str();
-
-			Result processChunkResult = ProcessChunk( chunkFile, chunkPath, bundleResourceGroup, params.chunkDestinationSettings );
-
-			if( processChunkResult.type != ResultType::SUCCESS )
-			{
-				return processChunkResult;
-			}
-
-			numberOfChunks++;
-		}
-		if( !bundleReadOk )
-		{
-			return Result( { ResultType::FAILED_TO_READ_FROM_STREAM } );
-		}
+    // Finish last chunk
+	if( !bundleStream.Finish() )
+	{
+		return Result( { ResultType::FAILED_TO_READ_FROM_STREAM } );
 	}
 
+    numberOfChunks = bundleStream.GetNumberOfChunksCreated();
+
+	// Add to BundleResourceGroup
+    {
+		std::shared_ptr<ProcessChunkPoolArguments> poolArguments = std::make_shared<ProcessChunkPoolArguments>();
+
+		poolArguments->calculateCompressions = params.calculateCompressions;
+
+		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 50, 40, "Processing Chunks", &poolArguments->statusSettings );
+
+		poolArguments->totalNumberOfChunks = numberOfChunks;
+
+		std::vector<std::shared_ptr<ProcessChunkThreadArguments>> threadArgumentsVector;
+
+		int numThreads = params.asyncSettings.numberOfThreads + 1;
+
+		ThreadPool<std::shared_ptr<ProcessChunkPoolArguments>, std::shared_ptr<ProcessChunkThreadArguments>> threadPool( numThreads - 1 );
+
+		threadPool.Start();
+
+		for( int i = 0; i < numberOfChunks; i++ )
+		{
+			std::shared_ptr<ProcessChunkThreadArguments> threadArguments = std::make_shared<ProcessChunkThreadArguments>();
+
+			std::stringstream ss;
+			ss << chunkBaseName << i << ".chunk";
+			std::string chunkName = ss.str();
+			std::filesystem::path chunkPath = params.chunkDestinationSettings.basePath / ss.str();
+
+            if( !bundleStream.GetChunkInfo( i, threadArguments->chunkInfo) )
+            {
+				return Result( { ResultType::FAILED_TO_RETRIEVE_CHUNK_DATA } );
+            }
+
+            threadArguments->chunkIndex = i;
+
+			threadArguments->chunkRelativePath = chunkPath;
+
+			threadArguments->chunkDestinationSettings = params.chunkDestinationSettings;
+
+			threadArgumentsVector.push_back( std::move( threadArguments ) );
+
+			threadPool.AddTask( ProcessChunkWorker, poolArguments, threadArgumentsVector[i] );
+		}
+
+		threadPool.Join();
+
+		if( poolArguments->status.type != ResultType::SUCCESS )
+		{
+			return poolArguments->status;
+		}
+
+        // Add all the bundle chunks in the correct order to the bundle resource group
+		for( int i = 0; i < numberOfChunks; i++ )
+		{
+			auto findResource = poolArguments->bundleResources.find( i );
+
+            if (findResource == poolArguments->bundleResources.end())
+            {
+				return Result{ ResultType::UNEXPECTED_END_OF_CHUNKS };
+            }
+
+			BundleResourceInfo* bundleResourceInfo = findResource->second;
+
+			Result addResourceResult = bundleResourceGroup.AddResource( bundleResourceInfo );
+
+			if( addResourceResult.type != ResultType::SUCCESS )
+			{
+				delete bundleResourceInfo;
+
+				return addResourceResult;
+			}
+		}
+    }
+    
 	// Export this resource list
 	{
 		StatusSettings exportStatusSettings;
-		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 80, 10, "Exporting ResourceGroups", &exportStatusSettings );
+		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 90, 5, "Exporting ResourceGroups", &exportStatusSettings );
 
 		std::string resourceGroupData;
 
@@ -2163,7 +2307,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateBundle( const BundleCreateParams&
 		std::string bundleResourceGroupData;
 
 		StatusSettings exportToDataStatusSettings;
-		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 90, 10, "Exporting ResourceGroups", &exportToDataStatusSettings );
+		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 95, 5, "Exporting ResourceGroups", &exportToDataStatusSettings );
 
 		Result exportBundleResourceGroupToDataResult = bundleResourceGroup.ExportToData( bundleResourceGroupData, exportToDataStatusSettings );
 
@@ -2764,6 +2908,31 @@ Result ResourceGroup::ResourceGroupImpl::RemoveResources( const ResourceGroupRem
     }
 
 	return Result{ ResultType::SUCCESS };
+}
+
+Result ResourceGroup::ResourceGroupImpl::GetLargestResourceSize(uintmax_t &largestResourceSizeOut)
+{
+    largestResourceSizeOut = 0;
+
+    for (auto iter = m_resourcesParameter.begin(); iter != m_resourcesParameter.end(); iter++)
+    {
+		uintmax_t uncompressedSize;
+
+		Result getUncompressedSizeResult = ( *iter )->GetUncompressedSize( uncompressedSize );
+
+        if (getUncompressedSizeResult.type != ResultType::SUCCESS)
+        {
+			return getUncompressedSizeResult;
+        }
+
+        if (uncompressedSize > largestResourceSizeOut)
+        {
+			largestResourceSizeOut = uncompressedSize;
+        }
+
+    }
+
+    return Result{ ResultType::SUCCESS };
 }
 
 Result ResourceGroup::ResourceGroupImpl::RemoveResource( ResourceInfo& resource )

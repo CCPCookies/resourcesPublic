@@ -443,6 +443,7 @@ TEST_F( ResourcesLibraryTest, UnpackRemoteBundleAsLocal )
 	bundleCreateParams.resourceBundleResourceGroupDestinationSettings.basePath = "UnpackRemoteBundleAsLocal";
 	bundleCreateParams.chunkSize = 1000000000;
 	bundleCreateParams.callbackSettings.statusCallback = StatusUpdate;
+	bundleCreateParams.asyncSettings.numberOfThreads = 0;
 
 	EXPECT_EQ( resourceGroup.CreateBundle( bundleCreateParams ).type, CarbonResources::ResultType::SUCCESS );
 
@@ -555,6 +556,8 @@ TEST_F( ResourcesLibraryTest, CreateBundleRemoteCDN )
 
 	bundleCreateParams.callbackSettings.statusCallback = StatusUpdate;
 
+    bundleCreateParams.asyncSettings.numberOfThreads = 0;
+
 	EXPECT_EQ( resourceGroup.CreateBundle( bundleCreateParams ).type, CarbonResources::ResultType::SUCCESS );
 
 	EXPECT_TRUE( StatusIsValid() );
@@ -600,6 +603,10 @@ TEST_F( ResourcesLibraryTest, CreateBundle )
 	bundleCreateParams.chunkSize = 1000;
 
     bundleCreateParams.callbackSettings.statusCallback = StatusUpdate;
+
+    bundleCreateParams.splitOnCompressedSize = false;
+
+    bundleCreateParams.asyncSettings.numberOfThreads = 0;
 
 	EXPECT_EQ( resourceGroup.CreateBundle( bundleCreateParams ).type, CarbonResources::ResultType::SUCCESS );
 
@@ -647,6 +654,8 @@ TEST_F( ResourcesLibraryTest, CreateAndUnpackBundle )
 	bundleCreateParams.chunkSize = 1000;
 
     bundleCreateParams.callbackSettings.statusCallback = StatusUpdate;
+
+    bundleCreateParams.asyncSettings.numberOfThreads = 0;
 
 	EXPECT_EQ( resourceGroup.CreateBundle( bundleCreateParams ).type, CarbonResources::ResultType::SUCCESS );
 
