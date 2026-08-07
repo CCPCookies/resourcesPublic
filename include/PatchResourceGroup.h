@@ -30,6 +30,8 @@ namespace CarbonResources
     *  Settings relating to status callback messaging
     *  @var PatchApplyParams::downloadSettings
     *  Settings relating to downloads
+    *  @var PatchApplyParams::skipNewFiles
+    *  If set then any new files will be skipped rather than retrieved from nextBuildResourcesSource
     */
 struct PatchApplyParams final
 {
@@ -46,6 +48,8 @@ struct PatchApplyParams final
 	CallbackSettings callbackSettings;
 
     DownloadSettings downloadSettings;
+
+    bool skipNewFiles = false;
 };
 
 /** @class PatchResourceGroup

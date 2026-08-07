@@ -2426,7 +2426,9 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 			return subtractionResult;
 		}
 	}
-    
+
+    // Stores references to all the new files
+    ResourceGroup::ResourceGroupImpl newFilesResourceGroup;
 
 	// Ensure that the diff results have the same number of members
 	if( resourceGroupSubtractionPrevious->m_resourcesParameter.GetSize() != resourceGroupSubtractionNext->m_resourcesParameter.GetSize() )
@@ -2436,6 +2438,8 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 
 	int patchId = 0;
 
+    uintmax_t totalSizeOfPatch = 0; // Uncompressed size is used for this limit
+
 	// Update status
     {
 		StatusSettings resourceStatusSettings;
@@ -2443,6 +2447,12 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 
 		for( int i = 0; i < resourceGroupSubtractionNext->m_resourcesParameter.GetSize(); i++ )
 		{
+
+            // Check the current limit for overall patch size has not been exceeded
+			if( totalSizeOfPatch > params.maxTotalPatchSize )
+			{
+				return Result{ ResultType::PATCH_SIZE_EXCEEDED };
+			}
 
 			ResourceInfo* resourcePrevious = resourceGroupSubtractionPrevious->m_resourcesParameter.At( i );
 
@@ -2555,6 +2565,12 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 				// Process one chunk at a time
 				for( uintmax_t dataOffset = 0; dataOffset < nextUncompressedSize; dataOffset += params.maxInputFileChunkSize )
 				{
+                    // Check the current limit for overall patch size has not been exceeded
+                    if (totalSizeOfPatch > params.maxTotalPatchSize)
+                    {
+						return Result{ ResultType::PATCH_SIZE_EXCEEDED };
+                    }
+
 					std::string previousFileData = "";
 
 					if( previousFileDataStream->IsFinished() )
@@ -2719,6 +2735,8 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 
 							return putPatchDataResult;
 						}
+
+                        totalSizeOfPatch += patchData.size();
 					}
 
 					// Add the patch resource to the patchResourceGroup
@@ -2734,6 +2752,20 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 					patchId++;
 				}
 			}
+            else
+            {
+                // New file  
+                totalSizeOfPatch += nextUncompressedSize;
+
+				if( totalSizeOfPatch > params.maxTotalPatchSize )
+				{
+					return Result{ ResultType::PATCH_SIZE_EXCEEDED };
+				}
+
+				ResourceInfo* newResource = new ResourceInfo( *resourceNext );
+                    
+                newFilesResourceGroup.AddResource( newResource );
+            }
 		}
     }
 	
@@ -2787,10 +2819,11 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 		}
     }
 	
+    // Export patch resource group data
 	std::string patchResourceGroupData;
     {
 		StatusSettings exportPatchResourceGroupStatusSettings;
-		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 80, 20, "Export ResourceGroups.", &exportPatchResourceGroupStatusSettings );
+		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 80, 10, "Export ResourceGroups.", &exportPatchResourceGroupStatusSettings );
 
 
 		Result exportToDataResult = patchResourceGroup.ExportToData( patchResourceGroupData, exportPatchResourceGroupStatusSettings );
@@ -2822,6 +2855,44 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 			return patchResourceGroupPutResult;
 		}
     }
+
+    // Export new files resource group
+	std::string newFilesResourceGroupData;
+	{
+		StatusSettings exportNewFilesResourceGroupStatusSettings;
+		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 90, 10, "Export ResourceGroups.", &exportNewFilesResourceGroupStatusSettings );
+
+
+		Result exportToDataResult = newFilesResourceGroup.ExportToData( newFilesResourceGroupData, exportNewFilesResourceGroupStatusSettings );
+
+		if( exportToDataResult.type != ResultType::SUCCESS )
+		{
+			return exportToDataResult;
+		}
+
+		PatchResourceGroupInfo newFilesResourceGroupInfo( { params.resourceGroupNewFilesRelativePath } );
+
+		Result setNewFilesParametersFromDataResult = newFilesResourceGroupInfo.SetParametersFromData( newFilesResourceGroupData );
+
+		if( setNewFilesParametersFromDataResult.type != ResultType::SUCCESS )
+		{
+			return setNewFilesParametersFromDataResult;
+		}
+
+		ResourcePutDataParams newFilesPutDataParams;
+
+		newFilesPutDataParams.resourceDestinationSettings = params.resourceNewFilesResourceGroupDestinationSettings;
+
+		newFilesPutDataParams.data = &newFilesResourceGroupData;
+
+		Result newFilesResourceGroupPutResult = newFilesResourceGroupInfo.PutData( newFilesPutDataParams );
+
+		if( newFilesResourceGroupPutResult.type != ResultType::SUCCESS )
+		{
+			return newFilesResourceGroupPutResult;
+		}
+	}
+    
 
 	return Result{ ResultType::SUCCESS };
 }

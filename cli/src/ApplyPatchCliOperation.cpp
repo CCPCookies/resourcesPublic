@@ -17,7 +17,8 @@ ApplyPatchCliOperation::ApplyPatchCliOperation() :
 	m_nextResourcesBasePathsArgumentId( "--next-resources-base-path" ),
 	m_nextResourcesSourceTypeArgumentId( "--next-resources-source-type" ),
 	m_resourcesToPatchDestinationPathArgumentId( "--output-base-path" ),
-	m_resourcesToPatchDestinationTypeArgumentId( "--output-destination-type" )
+	m_resourcesToPatchDestinationTypeArgumentId( "--output-destination-type" ),
+	m_skipNewFilesArgumentId( "--skip-new-files" )
 {
 	AddRequiredPositionalArgument( m_patchResourceGroupPathArgumentId, "The path to the PatchResourceGroup.yaml file." );
 
@@ -38,6 +39,8 @@ ApplyPatchCliOperation::ApplyPatchCliOperation() :
 	AddArgument( m_resourcesToPatchDestinationPathArgumentId, "The path in which to place the patched version of the files.", false, false, "ApplyPatchOut" );
 
 	AddArgument( m_resourcesToPatchDestinationTypeArgumentId, "The type of repository in which to place the patched version of the files.", false, false, DestinationTypeToString( defaultParams.resourcesToPatchDestinationSettings.destinationType ), ResourceDestinationTypeChoicesAsString() );
+
+    AddArgumentFlag( m_skipNewFilesArgumentId, "Skip new files. New files will need to be sourced another way." );
 }
 
 bool ApplyPatchCliOperation::Execute( std::string& returnErrorMessage ) const
@@ -127,6 +130,8 @@ bool ApplyPatchCliOperation::Execute( std::string& returnErrorMessage ) const
 
 	patchApplyParams.temporaryFilePath = "tempFile.resource";
 
+    patchApplyParams.skipNewFiles = m_argumentParser->get<bool>( m_skipNewFilesArgumentId );
+
     if( ShowCliStatusUpdates() )
 	{
 		PrintStartBanner( importParamsPrevious, patchApplyParams );
@@ -152,6 +157,15 @@ void ApplyPatchCliOperation::PrintStartBanner( const CarbonResources::ResourceGr
 	std::cout << "Next Resources Source Type: " << SourceTypeToString( patchApplyParams.nextBuildResourcesSourceSettings.sourceType ) << std::endl;
 	std::cout << "Output Path Base Path: " << patchApplyParams.resourcesToPatchDestinationSettings.basePath << std::endl;
 	std::cout << "Output Path Destination Type: " << DestinationTypeToString( patchApplyParams.resourcesToPatchDestinationSettings.destinationType ) << std::endl;
+
+    if( patchApplyParams.skipNewFiles )
+	{
+		std::cout << "Skip New Files: Off" << std::endl;
+	}
+	else
+	{
+		std::cout << "Skip New Files: On" << std::endl;
+	}
 
 	std::cout << "----------------------------\n"
 			  << std::endl;
