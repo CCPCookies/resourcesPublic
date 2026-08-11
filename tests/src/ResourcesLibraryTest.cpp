@@ -747,6 +747,10 @@ TEST_F( ResourcesLibraryTest, ApplyPatch )
 
 	EXPECT_EQ( patchResourceGroup.Apply( patchApplyParams ).type, CarbonResources::ResultType::SUCCESS );
 
+    EXPECT_EQ( patchApplyParams.resourcesToRemove.size(), 1 );
+
+    EXPECT_EQ( patchApplyParams.resourcesToRemove.at( 0 ), "testresource.txt" );
+
     EXPECT_TRUE( StatusIsValid() );
 
 	// Check Expected Outcome

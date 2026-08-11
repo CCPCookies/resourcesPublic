@@ -2449,7 +2449,7 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 		{
 
             // Check the current limit for overall patch size has not been exceeded
-			if( totalSizeOfPatch > params.maxTotalPatchSize )
+			if( ( params.maxTotalPatchSize > 0 ) && ( totalSizeOfPatch > params.maxTotalPatchSize ) )
 			{
 				return Result{ ResultType::PATCH_SIZE_EXCEEDED };
 			}
@@ -2566,7 +2566,7 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
 				for( uintmax_t dataOffset = 0; dataOffset < nextUncompressedSize; dataOffset += params.maxInputFileChunkSize )
 				{
                     // Check the current limit for overall patch size has not been exceeded
-                    if (totalSizeOfPatch > params.maxTotalPatchSize)
+					if( ( params.maxTotalPatchSize > 0 ) && ( totalSizeOfPatch > params.maxTotalPatchSize ) )
                     {
 						return Result{ ResultType::PATCH_SIZE_EXCEEDED };
                     }
@@ -2757,7 +2757,7 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
                 // New file  
                 totalSizeOfPatch += nextUncompressedSize;
 
-				if( totalSizeOfPatch > params.maxTotalPatchSize )
+				if( ( params.maxTotalPatchSize > 0 ) && ( totalSizeOfPatch > params.maxTotalPatchSize ) )
 				{
 					return Result{ ResultType::PATCH_SIZE_EXCEEDED };
 				}

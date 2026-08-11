@@ -199,7 +199,7 @@ struct BundleCreateParams
     *  @var PatchCreateParams::calculateCompressions
     *  Specifies if compression will be calculated for the generated bundle chunks
     *  @var PatchCreateParams::maxTotalPatchSize
-    *  The maximum size of total patch data, if exceeded the process will fail.
+    *  The maximum size of total patch data, if exceeded the process will fail, a value of zero will be treated as unlimited.
     */
 struct PatchCreateParams
 {
@@ -233,7 +233,7 @@ struct PatchCreateParams
 
     bool calculateCompressions = true;
 
-    uint32_t maxTotalPatchSize = 1073741824;
+    uint32_t maxTotalPatchSize = 0;
 };
 
 /** @struct ResourceGroupImportFromFileParams

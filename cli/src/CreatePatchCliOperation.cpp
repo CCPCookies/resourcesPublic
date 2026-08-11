@@ -79,7 +79,7 @@ CreatePatchCliOperation::CreatePatchCliOperation() :
 
 	AddArgument( m_newFilesResourceGroupDestinationPathArgumentId, "Represents the base path where the new files ResourceGroup will be saved.", false, false, defaultParams.resourceNewFilesResourceGroupDestinationSettings.basePath.string() );
 
-    AddArgument( m_maxOverallPatchArgumentId, "The maximum overall patch size. If patch generation goes over this value the process will stop with failure. This value represents the uncompressed size.", false, false, SizeToString( defaultParams.maxTotalPatchSize ) );
+    AddArgument( m_maxOverallPatchArgumentId, "The maximum overall patch size. If patch generation goes over this value the process will stop with failure. This value represents the uncompressed size. A value of 0 will be treated as unlimited", false, false, SizeToString( defaultParams.maxTotalPatchSize ) );
 }
 
 bool CreatePatchCliOperation::Execute( std::string& returnErrorMessage ) const

@@ -28,7 +28,7 @@ ApplyPatchCliOperation::ApplyPatchCliOperation() :
 
 	AddArgument( m_resourcesToPatchSourceBasePathsArgumentId, "The paths to the folders containing resources to patch.", true, true, PathsToString( defaultParams.resourcesToPatchSourceSettings.basePaths ) );
 
-	AddArgument( m_nextResourcesBasePathsArgumentId, "The path to resources after the patch. This is used to get fully added files which are not included in the generated patch files.", true, true, PathListToString( defaultParams.nextBuildResourcesSourceSettings.basePaths ) );
+	AddArgument( m_nextResourcesBasePathsArgumentId, "The path to resources after the patch. This is used to get fully added files which are not included in the generated patch files.", false, true, PathListToString( defaultParams.nextBuildResourcesSourceSettings.basePaths ) );
 
 	AddArgument( m_patchBinariesSourceTypeArgumentId, "The type of repository the patch binaries are sourced from.", false, false, SourceTypeToString( defaultParams.patchBinarySourceSettings.sourceType ), ResourceSourceTypeChoicesAsString() );
 
@@ -58,22 +58,25 @@ bool ApplyPatchCliOperation::Execute( std::string& returnErrorMessage ) const
 
 	CarbonResources::PatchApplyParams patchApplyParams;
 
-	std::vector<std::filesystem::path> newBuildResourceSettingBasePaths;
-	std::optional<std::string> nextResources = m_argumentParser->present<std::string>( m_nextResourcesBasePathsArgumentId );
-	if( !nextResources.has_value() )
-	{
-		returnErrorMessage = "Failed to parse next resource base path";
+	patchApplyParams.skipNewFiles = m_argumentParser->get<bool>( m_skipNewFilesArgumentId );
+    
+    if (!patchApplyParams.skipNewFiles)
+    {
+		std::vector<std::filesystem::path> newBuildResourceSettingBasePaths;
 
-		return false;
-	}
-	newBuildResourceSettingBasePaths.push_back( nextResources.value() );
-	std::string nextResourcesType = m_argumentParser->get( m_nextResourcesSourceTypeArgumentId );
-	if( !StringToResourceSourceType( nextResourcesType, patchApplyParams.nextBuildResourcesSourceSettings.sourceType ) )
-	{
-		returnErrorMessage = "Invalid next build source type";
+		std::string nextResources = m_argumentParser->get<std::string>( m_nextResourcesBasePathsArgumentId );
+		newBuildResourceSettingBasePaths.push_back( nextResources );
 
-		return false;
-	}
+        std::string nextResourcesType = m_argumentParser->get( m_nextResourcesSourceTypeArgumentId );
+		if( !StringToResourceSourceType( nextResourcesType, patchApplyParams.nextBuildResourcesSourceSettings.sourceType ) )
+		{
+			returnErrorMessage = "Invalid next build source type";
+
+			return false;
+		}
+
+        patchApplyParams.nextBuildResourcesSourceSettings.basePaths = newBuildResourceSettingBasePaths;
+    }
 
 	std::vector<std::filesystem::path> patchBinarySourceSettingsBasePaths;
 	auto patchBinaries = m_argumentParser->present<std::vector<std::string>>( m_patchBinariesSourceBasePathsArgumentId );
@@ -88,7 +91,7 @@ bool ApplyPatchCliOperation::Execute( std::string& returnErrorMessage ) const
 		patchBinarySourceSettingsBasePaths.push_back( path );
 	}
 	patchApplyParams.patchBinarySourceSettings.basePaths = patchBinarySourceSettingsBasePaths;
-	patchApplyParams.nextBuildResourcesSourceSettings.basePaths = newBuildResourceSettingBasePaths;
+	
 	std::string patchBinariesType = m_argumentParser->get( m_patchBinariesSourceTypeArgumentId );
 	if( !StringToResourceSourceType( patchBinariesType, patchApplyParams.patchBinarySourceSettings.sourceType ) )
 	{
@@ -130,7 +133,6 @@ bool ApplyPatchCliOperation::Execute( std::string& returnErrorMessage ) const
 
 	patchApplyParams.temporaryFilePath = "tempFile.resource";
 
-    patchApplyParams.skipNewFiles = m_argumentParser->get<bool>( m_skipNewFilesArgumentId );
 
     if( ShowCliStatusUpdates() )
 	{

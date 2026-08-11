@@ -244,7 +244,7 @@ Result PatchResourceGroup::PatchResourceGroupImpl::GetTargetResourcePatches( con
 	return Result{ ResultType::SUCCESS };
 }
 
-Result PatchResourceGroup::PatchResourceGroupImpl::Apply( const PatchApplyParams& params, StatusSettings& statusSettings )
+Result PatchResourceGroup::PatchResourceGroupImpl::Apply( PatchApplyParams& params, StatusSettings& statusSettings )
 {
 	statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 0, 10, "Applying Patch." );
 
@@ -723,6 +723,8 @@ Result PatchResourceGroup::PatchResourceGroupImpl::Apply( const PatchApplyParams
 				float percentage = static_cast<float>( step * i );
 				removingFilesStatusSettings.Update( StatusProgressType::PERCENTAGE, percentage, step, toRemove.string() );
             }
+
+            params.resourcesToRemove.push_back( path );
 
 			std::error_code ec;
 			if( std::filesystem::exists( toRemove ) )
