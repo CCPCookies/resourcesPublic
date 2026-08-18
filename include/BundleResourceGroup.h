@@ -36,7 +36,7 @@ struct BundleUnpackParams final
 
     DownloadSettings downloadSettings;
 
-    uintmax_t chunkReadCacheSize = 1073741824;
+    uintmax_t chunkReadCacheSize = 1024 * 1024 * 1024; // 1GB
 };
 
 /** @class BundleResourceGroup

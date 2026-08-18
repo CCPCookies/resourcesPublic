@@ -148,7 +148,10 @@ bool BundleStreamOut::operator<<( std::shared_ptr<FileDataStreamIn> streamIn )
 
         if( m_splitOnCompressedSize )
         {
-			m_compressionStream->operator<<( &data );
+			if(!m_compressionStream->operator<<( &data ))
+			{
+				return false;
+			}
         }
 
         // Output uncompressed data
@@ -199,7 +202,7 @@ bool BundleStreamOut::operator<<( std::shared_ptr<FileDataStreamIn> streamIn )
 
 bool BundleStreamOut::GetChunkInfo( int index, ChunkInfo& chunkInfo )
 {
-	if( index > m_chunkInfos.size() )
+	if( index >= m_chunkInfos.size() )
     {
 		return false;
     }

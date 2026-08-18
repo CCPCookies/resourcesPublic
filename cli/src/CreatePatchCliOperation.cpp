@@ -12,7 +12,7 @@ CreatePatchCliOperation::CreatePatchCliOperation() :
 	m_nextResourceGroupPathArgumentId( "next-resourcegroup-path" ),
 	m_resourceGroupRelativePathArgumentId( "--resourcegroup-relative-path" ),
 	m_patchResourceGroupRelativePathArgumentId( "--patchResourcegroup-relative-path" ),
-	m_newFilesResourceGroupRelativePathArgumentId( "--new-files-Resourcegroup-relative-path" ),
+	m_newFilesResourceGroupRelativePathArgumentId( "--new-files-resourcegroup-relative-path" ),
 	m_resourceSourceTypePreviousArgumentId( "--resource-source-type-previous" ),
 	m_resourceSourceBasePathPreviousArgumentId( "--resource-source-base-path-previous" ),
 	m_resourceSourceTypeNextArgumentId( "--resource-source-type-next" ),

@@ -162,11 +162,11 @@ void ApplyPatchCliOperation::PrintStartBanner( const CarbonResources::ResourceGr
 
     if( patchApplyParams.skipNewFiles )
 	{
-		std::cout << "Skip New Files: Off" << std::endl;
+		std::cout << "Skip New Files: On" << std::endl;
 	}
 	else
 	{
-		std::cout << "Skip New Files: On" << std::endl;
+		std::cout << "Skip New Files: Off" << std::endl;
 	}
 
 	std::cout << "----------------------------\n"

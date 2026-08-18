@@ -1887,6 +1887,23 @@ struct ProcessChunkPoolArguments
 
     Result status = Result{ ResultType::SUCCESS };
 
+    std::mutex returnStatusMutex;
+
+    void SetReturnStatus( ResultType type, const char* info = nullptr )
+    {
+		{
+			std::unique_lock<std::mutex> lock( returnStatusMutex );
+
+			status.type = type;
+
+            if (info)
+			{
+				status.info = info;
+            }
+				
+		}
+    }
+
     void RunStatusUpdate()
 	{
 		if( statusSettings.RequiresStatusUpdates() )
@@ -1924,7 +1941,11 @@ struct ProcessChunkThreadArguments
 void ProcessChunkWorker( std::shared_ptr<ProcessChunkPoolArguments> commonArguments, std::shared_ptr<ProcessChunkThreadArguments> threadArguments )
 {
 	// Create resource from Patch Data
-	BundleResourceInfo* chunkResource = new BundleResourceInfo( { threadArguments->chunkRelativePath } );
+	BundleResourceInfoParams bundleResourceInfoParams;
+
+	bundleResourceInfoParams.relativePath = threadArguments->chunkRelativePath;
+
+	std::unique_ptr<BundleResourceInfo> chunkResource = std::make_unique<BundleResourceInfo>( bundleResourceInfoParams );
 
 	chunkResource->SetDataChecksum( threadArguments->chunkInfo.checksum );
 
@@ -1988,7 +2009,7 @@ void ProcessChunkWorker( std::shared_ptr<ProcessChunkPoolArguments> commonArgume
 
 			if( !ResourceTools::GetLocalFileData( sourceFile, data ) )
 			{
-				commonArguments->status = Result{ ResultType::FAILED_TO_OPEN_FILE };
+				commonArguments->SetReturnStatus( ResultType::FAILED_TO_OPEN_FILE );
 				return;
 			}
 
@@ -1996,7 +2017,7 @@ void ProcessChunkWorker( std::shared_ptr<ProcessChunkPoolArguments> commonArgume
 			std::string compressedData;
 			if( !ResourceTools::GZipCompressData( data, compressedData ) )
 			{
-				commonArguments->status = Result{ ResultType::FAILED_TO_COMPRESS_DATA };
+				commonArguments->SetReturnStatus( ResultType::FAILED_TO_COMPRESS_DATA );
 				return;
 			}
 
@@ -2007,7 +2028,7 @@ void ProcessChunkWorker( std::shared_ptr<ProcessChunkPoolArguments> commonArgume
 				// Save file
 				if( !ResourceTools::SaveFile( targetFile, compressedData ) )
 				{
-					commonArguments->status = Result{ ResultType::FAILED_TO_SAVE_FILE };
+					commonArguments->SetReturnStatus( ResultType::FAILED_TO_SAVE_FILE );
 					return;
 				}
 
@@ -2028,7 +2049,7 @@ void ProcessChunkWorker( std::shared_ptr<ProcessChunkPoolArguments> commonArgume
 	}
 	catch( std::filesystem::filesystem_error& e )
 	{
-		commonArguments->status = Result{ ResultType::FAILED_TO_SAVE_FILE, e.what() };
+		commonArguments->SetReturnStatus( ResultType::FAILED_TO_SAVE_FILE, e.what() );
 		return;
 	}
 
@@ -2036,7 +2057,7 @@ void ProcessChunkWorker( std::shared_ptr<ProcessChunkPoolArguments> commonArgume
     {
 		std::unique_lock<std::mutex> lock( commonArguments->bundleResourceGroupMutex );
 
-        commonArguments->bundleResources[threadArguments->chunkIndex] = chunkResource;
+        commonArguments->bundleResources[threadArguments->chunkIndex] = chunkResource.release();
 
         commonArguments->numberOfChunksProcessed++;
 
@@ -2044,7 +2065,6 @@ void ProcessChunkWorker( std::shared_ptr<ProcessChunkPoolArguments> commonArgume
         commonArguments->RunStatusUpdate();
     }
 	
-	return;
 }
 
 Result ResourceGroup::ResourceGroupImpl::CreateBundle( const BundleCreateParams& params, StatusSettings& statusSettings ) const
@@ -2196,9 +2216,7 @@ Result ResourceGroup::ResourceGroupImpl::CreateBundle( const BundleCreateParams&
 
 		std::vector<std::shared_ptr<ProcessChunkThreadArguments>> threadArgumentsVector;
 
-		int numThreads = params.asyncSettings.numberOfThreads + 1;
-
-		ThreadPool<std::shared_ptr<ProcessChunkPoolArguments>, std::shared_ptr<ProcessChunkThreadArguments>> threadPool( numThreads - 1 );
+		ThreadPool<std::shared_ptr<ProcessChunkPoolArguments>, std::shared_ptr<ProcessChunkThreadArguments>> threadPool( params.asyncSettings.numberOfThreads );
 
 		threadPool.Start();
 

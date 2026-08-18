@@ -64,7 +64,7 @@ CreateBundleCliOperation::CreateBundleCliOperation() :
 
     AddArgumentFlag( m_splitOnUncompressedSize, "Set to split on uncompressed size rather than the default compressed size. This will likely lead to more inefficient chunking but may run faster." );
 
-    AddArgument( m_numberOfThreadsId, "Nnumber of threads to use for async processes.", false, false, SizeToString( defaultParams.asyncSettings.numberOfThreads ) );
+    AddArgument( m_numberOfThreadsId, "Number of threads to use for async processes.", false, false, SizeToString( defaultParams.asyncSettings.numberOfThreads ) );
 }
 
 bool CreateBundleCliOperation::Execute( std::string& returnErrorMessage ) const
@@ -254,11 +254,11 @@ void CreateBundleCliOperation::PrintStartBanner( const CarbonResources::Resource
 
     if( bundleCreateParams.calculateCompressions )
 	{
-		std::cout << "Calculate Compression: Off" << std::endl;
+		std::cout << "Calculate Compression: On" << std::endl;
 	}
 	else
 	{
-		std::cout << "Calculate Compression: On" << std::endl;
+		std::cout << "Calculate Compression: Off" << std::endl;
 	}
 
     if( bundleCreateParams.splitOnCompressedSize )
