@@ -61,6 +61,8 @@ using DownloadCallback = std::function<void( uintmax_t totalSizeBytes, uintmax_t
     *  Delay before a failed download is retried (seconds)
     *  @var DownloadSettings::retryCount
     *  Number of times times a download is retried before failure. Note: a backoff is also applied before retry.
+    *  @var DownloadSettings::cacheBasePath
+    *  Base path where temporary downloads are placed.
     *  @var DownloadSettings::downloadInfoCallback
     *  Optional callback to receive download information.
     */
@@ -69,6 +71,8 @@ struct DownloadSettings
 	std::chrono::seconds retrySeconds{ 1 };
 
 	uintmax_t retryCount = 3;
+
+    std::filesystem::path cacheBasePath = std::filesystem::temp_directory_path();
 
     DownloadCallback downloadInfoCallback = nullptr;
 };

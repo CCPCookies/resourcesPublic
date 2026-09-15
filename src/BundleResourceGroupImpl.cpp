@@ -114,7 +114,7 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 			ss << "Failed to import resource group data from the following paths:";
 			for( auto path : resourceGroupDataParams.resourceSourceSettings.basePaths )
 			{
-				ss << " \"" << path.string() << "\"";
+				ss << " \"" << path.u8string() << "\"";
 			}
 			createResult.info = ss.str();
 			return createResult;
@@ -161,6 +161,8 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 				resourceGetDataParams.resourceSourceSettings = params.chunkSourceSettings;
 
 				resourceGetDataParams.data = &chunkData;
+
+                resourceGetDataParams.downloadSettings = params.downloadSettings;
 
 				Result getChunkChecksumResult = chunk->GetChecksum( resourceGetDataParams.expectedChecksum );
 
@@ -318,6 +320,8 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 							resourceGetDataParams.resourceSourceSettings = params.chunkSourceSettings;
 
 							resourceGetDataParams.data = &chunkData;
+
+                            resourceGetDataParams.downloadSettings = params.downloadSettings;
 
 							Result getChunkChecksumResult = chunk->GetChecksum( resourceGetDataParams.expectedChecksum );
 

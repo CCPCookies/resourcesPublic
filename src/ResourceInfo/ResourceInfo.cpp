@@ -12,6 +12,8 @@
 
 #include <FileDataStreamOut.h>
 
+#include <ScopedFile.h>
+
 #include <yaml-cpp/yaml.h>
 
 #include "../ResourceGroupImpl.h"
@@ -640,54 +642,39 @@ Result ResourceInfo::GetDataRemoteCdn( ResourceGetDataParams& params, const int 
 
 	std::filesystem::path path = params.resourceSourceSettings.basePaths.at( basePathId ) / m_location.GetValue().ToString();
 
-	std::filesystem::path tempPath = params.cacheBasePath / m_location.GetValue().ToString();
+	std::filesystem::path tempPath = params.downloadSettings.cacheBasePath / m_location.GetValue().ToString();
 
 	std::string url = path.string();
 
 	std::replace( url.begin(), url.end(), '\\', '/' );
 
-	bool haveFileCached{ false };
+    ResourceTools::ScopedFile tempDownloadFile( tempPath );
 
-	if( std::filesystem::exists( tempPath ) )
+	uintmax_t uncompressedSize;
+
+	Result getUncompressedSizeResult = GetUncompressedSize( uncompressedSize );
+
+    if (getUncompressedSizeResult.type != ResultType::SUCCESS)
+    {
+		return getUncompressedSizeResult;
+    }
+
+	ResourceTools::Downloader downloader;
+
+	bool downloadFileResult = downloader.DownloadFile( url, tempPath, params.downloadSettings.retrySeconds, params.downloadSettings.retryCount, uncompressedSize, FileDownloadCallback, (void*)&params.downloadSettings.downloadInfoCallback );
+
+	if( !downloadFileResult )
 	{
-		if( ResourceTools::Md5ChecksumMatches( tempPath, params.expectedChecksum ) )
-		{
-			haveFileCached = true;
-		}
-		else
-		{
-			std::filesystem::remove( tempPath );
-		}
+		std::stringstream ss;
+
+		ss << "Failed to download file \nfrom remote url: " << url << "\nto local path: " << tempPath.u8string();
+
+		return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
 	}
 
-	if( !haveFileCached )
+	if( !params.expectedChecksum.empty() && !ResourceTools::Md5ChecksumMatches( tempPath, params.expectedChecksum ) )
 	{
-		uintmax_t uncompressedSize;
-
-		Result getUncompressedSizeResult = GetUncompressedSize( uncompressedSize );
-
-        if (getUncompressedSizeResult.type != ResultType::SUCCESS)
-        {
-			return getUncompressedSizeResult;
-        }
-
-		ResourceTools::Downloader downloader;
-
-		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadSettings.retrySeconds, params.downloadSettings.retryCount, uncompressedSize, FileDownloadCallback, (void*)&params.downloadSettings.downloadInfoCallback );
-
-		if( !downloadFileResult )
-		{
-			std::stringstream ss;
-
-			ss << "Failed to download file \nfrom remote url: " << url << "\nto local path: " << tempPath.string();
-
-			return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
-		}
-
-		if( !params.expectedChecksum.empty() && !ResourceTools::Md5ChecksumMatches( tempPath, params.expectedChecksum ) )
-		{
-			return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, "The downloaded file does not have the expected checksum" };
-		}
+		return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, "The downloaded file does not have the expected checksum" };
 	}
 
 	ResourceGetDataParams localParams = params;
@@ -696,7 +683,7 @@ Result ResourceInfo::GetDataRemoteCdn( ResourceGetDataParams& params, const int 
 
 	localParams.resourceSourceSettings.basePaths.clear();
 
-	localParams.resourceSourceSettings.basePaths.push_back( params.cacheBasePath );
+	localParams.resourceSourceSettings.basePaths.push_back( params.downloadSettings.cacheBasePath );
 
 	// Attempt locally now it has been downloaded
 	return GetDataLocalCdn( localParams, 0 );
@@ -767,48 +754,34 @@ Result ResourceInfo::GetDataStreamRemoteCdn( ResourceGetDataStreamParams& params
 	std::string url = path.string();
 
 	std::replace( url.begin(), url.end(), '\\', '/' );
-	bool haveFileCached{ false };
 
-	if( std::filesystem::exists( tempPath ) )
+    ResourceTools::ScopedFile tempFile( tempPath );
+
+	uintmax_t uncompressedSize;
+
+	Result getUncompressedSizeResult = GetUncompressedSize( uncompressedSize );
+
+	if( getUncompressedSizeResult.type != ResultType::SUCCESS )
 	{
-		if( ResourceTools::Md5ChecksumMatches( tempPath, params.expectedChecksum ) )
-		{
-			haveFileCached = true;
-		}
-		else
-		{
-			std::filesystem::remove( tempPath );
-		}
+		return getUncompressedSizeResult;
 	}
 
-	if( !haveFileCached )
+	ResourceTools::Downloader downloader;
+
+	bool downloadFileResult = downloader.DownloadFile( url, tempPath, params.downloadSettings.retrySeconds, params.downloadSettings.retryCount, uncompressedSize, FileDownloadCallback, (void*)&params.downloadSettings.downloadInfoCallback );
+
+	if( !downloadFileResult )
 	{
-		uintmax_t uncompressedSize;
+		std::stringstream ss;
 
-		Result getUncompressedSizeResult = GetUncompressedSize( uncompressedSize );
+		ss << "Failed to download file \nfrom remote url: " << url << "\nto local path: " << tempPath.u8string();
 
-		if( getUncompressedSizeResult.type != ResultType::SUCCESS )
-		{
-			return getUncompressedSizeResult;
-		}
+		return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
+	}
 
-		ResourceTools::Downloader downloader;
-
-		bool downloadFileResult = downloader.DownloadFile( url, tempPath.string(), params.downloadSettings.retrySeconds, params.downloadSettings.retryCount, uncompressedSize, FileDownloadCallback, (void*)&params.downloadSettings.downloadInfoCallback );
-
-		if( !downloadFileResult )
-		{
-			std::stringstream ss;
-
-			ss << "Failed to download file \nfrom remote url: " << url << "\nto local path: " << tempPath.string();
-
-			return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, ss.str() };
-		}
-
-		if( !params.expectedChecksum.empty() && !ResourceTools::Md5ChecksumMatches( tempPath, params.expectedChecksum ) )
-		{
-			return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, "The downloaded file does not have the expected checksum" };
-		}
+	if( !params.expectedChecksum.empty() && !ResourceTools::Md5ChecksumMatches( tempPath, params.expectedChecksum ) )
+	{
+		return Result{ ResultType::FAILED_TO_DOWNLOAD_FILE, "The downloaded file does not have the expected checksum" };
 	}
 
 	ResourceGetDataStreamParams localCdnParams = params;
