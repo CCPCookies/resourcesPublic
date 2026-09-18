@@ -54,7 +54,7 @@ Result BundleResourceGroup::BundleResourceGroupImpl::SetResourceGroup( const Res
 
 Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackParams& params, StatusSettings& statusSettings )
 {
-	statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 0, 20, "Rebuilding resources." );
+	statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 0, 10, "Rebuilding resources." );
 
     
     // Ensure the cache size if enough to hold the largest chunk
@@ -104,7 +104,7 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 
     {
 		StatusSettings createResourceGroupFromYamlStatusSettings;
-		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 20, 20, "Rebuilding resources.", &createResourceGroupFromYamlStatusSettings );
+		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 10, 10, "Rebuilding resources.", &createResourceGroupFromYamlStatusSettings );
 
 		
 		Result createResult = CreateResourceGroupFromYamlString( resourceGroupData, resourceGroup, createResourceGroupFromYamlStatusSettings );
@@ -144,7 +144,7 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 
     {
 		StatusSettings innerStatusUpdate;
-		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 40, 40, "Rebuilding resources.", &innerStatusUpdate );
+		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 20, 75, "Rebuilding resources.", &innerStatusUpdate );
 
         // Read in chunks up to cache limit
         while (bundleStream.GetCacheSize() < params.chunkReadCacheSize)
@@ -199,6 +199,24 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
             }
         }
 
+        uintmax_t totalSizeOfResourcesInBundle = 0;
+
+        for( ResourceInfo* resource : toBundle )
+		{
+			uintmax_t resourceUncompressedSize = 0;
+
+            Result getCompressedSizeResult = resource->GetUncompressedSize( resourceUncompressedSize );
+
+            if (getCompressedSizeResult.type != ResultType::SUCCESS)
+            {
+				return getCompressedSizeResult;
+            }
+
+			totalSizeOfResourcesInBundle += resourceUncompressedSize;
+		}
+
+        uintmax_t bytesProcessed = 0;
+
 		for( ResourceInfo* resource : toBundle )
 		{
 			std::string location;
@@ -208,6 +226,15 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 			if( getLocationResult.type != ResultType::SUCCESS )
 			{
 				return getLocationResult;
+			}
+
+            uintmax_t resourceFileUncompressedSize;
+
+			Result getUncompressedDataSizeResult = resource->GetUncompressedSize( resourceFileUncompressedSize );
+
+			if( getUncompressedDataSizeResult.type != ResultType::SUCCESS )
+			{
+				return getUncompressedDataSizeResult;
 			}
 
 
@@ -235,8 +262,11 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 					    message = "Rebuilding: " + relativePath.string();
 				    }
 
-                    float step = static_cast<float>( 100.0 / toBundle.size() );
-					float progress = static_cast<float>( numProcessed * step );
+                    //Calculate the step based on the size of the current resource so it is weighted
+                    //This gives smoother progress updates
+					double ratio = ( 100.0 / totalSizeOfResourcesInBundle );
+					float step = static_cast<float>( ratio * resourceFileUncompressedSize );
+					float progress = static_cast<float>( ratio * bytesProcessed );
 
 				    innerStatusUpdate.Update( CarbonResources::StatusProgressType::PERCENTAGE, progress, step, message, &resourceLevelStatusUpdate );
 
@@ -248,15 +278,7 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 				    continue;
 			    }
 
-			    uintmax_t resourceFileUncompressedSize;
-
-			    Result getUncompressedDataSizeResult = resource->GetUncompressedSize( resourceFileUncompressedSize );
-
-			    if( getUncompressedDataSizeResult.type != ResultType::SUCCESS )
-			    {
-				    return getUncompressedDataSizeResult;
-			    }
-
+			    
 
 			    ResourceTools::FileDataStreamOut resourceDataStreamOut;
 
@@ -287,7 +309,7 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 				    {
 						float step = static_cast<float>( 100.0 / resourceFileUncompressedSize );
 						float progress = static_cast<float>( resourceDataStreamOut.GetFileSize() * step );
-					    std::string message = "Aquiring chunks and rebuilding resource";
+					    std::string message = "Acquiring chunks and rebuilding resource";
 
 					    resourceLevelStatusUpdate.Update( CarbonResources::StatusProgressType::PERCENTAGE, progress, step, message );
 				    }
@@ -396,13 +418,15 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 			    {
 				    return Result{ ResultType::UNEXPECTED_CHUNK_CHECKSUM_RESULT };
 			    }
+
+                bytesProcessed += resourceFileUncompressedSize;
 		    }
         }
     }
 
     {
 		StatusSettings exportStatusSettings;
-		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 80, 20, "Exporting data.", &exportStatusSettings );
+		statusSettings.Update( CarbonResources::StatusProgressType::PERCENTAGE, 95, 5, "Exporting data.", &exportStatusSettings );
 
 		// Export the resource group file.
 		ResourceGroupExportToFileParams exportParams;
