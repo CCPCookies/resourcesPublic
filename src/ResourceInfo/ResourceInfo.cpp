@@ -624,12 +624,21 @@ void FileDownloadCallback(size_t totalSizeBytes, size_t dataSizeBytes, double by
 {
     if (context)
     {
-		DownloadCallback userCallback = *static_cast<DownloadCallback*>( context );
+		ResourceGetDataParams resourceGetDataParams = *static_cast<ResourceGetDataParams*>( context );
 
-		if( userCallback )
+		if( resourceGetDataParams.downloadSettings.downloadInfoCallback )
 		{
-			userCallback( totalSizeBytes, dataSizeBytes, bytesPerSecond );
+			resourceGetDataParams.downloadSettings.downloadInfoCallback( totalSizeBytes, dataSizeBytes, bytesPerSecond );
 		}
+
+        // Update progress logging
+		if( resourceGetDataParams.logging )
+        {
+			float step = static_cast<float>( 100.0 / totalSizeBytes );
+			float progress = static_cast<float>( dataSizeBytes * step );
+
+			resourceGetDataParams.logging->Update( StatusProgressType::PERCENTAGE, progress, step, "Downloading File" );
+        }
     }
 }
 
@@ -661,7 +670,7 @@ Result ResourceInfo::GetDataRemoteCdn( ResourceGetDataParams& params, const int 
 
 	ResourceTools::Downloader downloader;
 
-	bool downloadFileResult = downloader.DownloadFile( url, tempPath, params.downloadSettings.retrySeconds, params.downloadSettings.retryCount, uncompressedSize, FileDownloadCallback, (void*)&params.downloadSettings.downloadInfoCallback );
+	bool downloadFileResult = downloader.DownloadFile( url, tempPath, params.downloadSettings.retrySeconds, params.downloadSettings.retryCount, uncompressedSize, FileDownloadCallback, (void*)&params );
 
 	if( !downloadFileResult )
 	{

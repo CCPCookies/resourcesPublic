@@ -126,6 +126,8 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 	ResourceTools::BundleStreamIn bundleStream( m_chunkSize.GetValue() );
 
 	auto chunkIterator = m_resourcesParameter.begin();
+	auto numberOfChunks = m_resourcesParameter.GetSize();
+	size_t numberOfChunksProcessed = 0;
 
 	// Reconstitute the resources in the bundle
 	auto numResources = resourceGroup->GetSize();
@@ -149,9 +151,32 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
         // Read in chunks up to cache limit
         while (bundleStream.GetCacheSize() < params.chunkReadCacheSize)
         {
+			
+
 			if( chunkIterator != m_resourcesParameter.end() )
 			{
 				ResourceInfo* chunk = ( *chunkIterator );
+
+                // Only process if required for the process
+				if( innerStatusUpdate.RequiresStatusUpdates() )
+				{
+					//Calculate the step based on the size of the current resource so it is weighted
+					//This gives smoother progress updates
+					float step = static_cast<float>( 100.0 / numberOfChunks );
+					float progress = static_cast<float>( numberOfChunksProcessed * step );
+
+                    std::filesystem::path chunkRelativePath;
+					Result getChunkRelativePathResult = chunk->GetRelativePath( chunkRelativePath );
+
+                    if (getChunkRelativePathResult.type != ResultType::SUCCESS)
+                    {
+						return getChunkRelativePathResult;
+                    }
+
+					std::string message = "Processing Chunk: " + chunkRelativePath.u8string();
+
+					innerStatusUpdate.Update( CarbonResources::StatusProgressType::PERCENTAGE, progress, step, message );
+				}
 
 				// Get chunk data
 				std::string chunkData;
@@ -192,6 +217,7 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
             if( chunkIterator != m_resourcesParameter.end() )
 			{
 				chunkIterator++;
+				numberOfChunksProcessed++;
 			}
             else
             {
@@ -237,41 +263,8 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 				return getUncompressedDataSizeResult;
 			}
 
-
             {
-			    StatusSettings resourceLevelStatusUpdate;
 
-			    // Only process if required for the process
-			    if( innerStatusUpdate.RequiresStatusUpdates() )
-			    {
-				    std::filesystem::path relativePath;
-
-				    if( resource->GetRelativePath( relativePath ).type != ResultType::SUCCESS )
-				    {
-					    return Result{ ResultType::FAIL };
-				    }
-
-				    std::string message;
-
-				    if( location.empty() )
-				    {
-					    message = "Nothing to rebuild: " + relativePath.string();
-				    }
-				    else
-				    {
-					    message = "Rebuilding: " + relativePath.string();
-				    }
-
-                    //Calculate the step based on the size of the current resource so it is weighted
-                    //This gives smoother progress updates
-					double ratio = ( 100.0 / totalSizeOfResourcesInBundle );
-					float step = static_cast<float>( ratio * resourceFileUncompressedSize );
-					float progress = static_cast<float>( ratio * bytesProcessed );
-
-				    innerStatusUpdate.Update( CarbonResources::StatusProgressType::PERCENTAGE, progress, step, message, &resourceLevelStatusUpdate );
-
-				    numProcessed++;
-			    }
 
 			    if( location.empty() )
 			    {
@@ -304,15 +297,6 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 
 			    while( resourceDataStreamOut.GetFileSize() < resourceFileUncompressedSize )
 			    {
-				    // Only process if required for the process
-				    if( resourceLevelStatusUpdate.RequiresStatusUpdates() )
-				    {
-						float step = static_cast<float>( 100.0 / resourceFileUncompressedSize );
-						float progress = static_cast<float>( resourceDataStreamOut.GetFileSize() * step );
-					    std::string message = "Acquiring chunks and rebuilding resource";
-
-					    resourceLevelStatusUpdate.Update( CarbonResources::StatusProgressType::PERCENTAGE, progress, step, message );
-				    }
 
 				    std::string resourceChunkData;
 
@@ -344,9 +328,33 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 
 					    while( bundleStream.GetCacheSize() < params.chunkReadCacheSize )
 					    {
+							
 						    if( chunkIterator != m_resourcesParameter.end() )
 						    {
 							    ResourceInfo* chunk = ( *chunkIterator );
+
+                                StatusSettings innerChunkStatusUpdate;
+
+                                // Only process if required for the process
+								if( innerStatusUpdate.RequiresStatusUpdates() )
+								{
+									//Calculate the step based on the size of the current resource so it is weighted
+									//This gives smoother progress updates
+									float step = static_cast<float>( 100.0 / numberOfChunks );
+									float progress = static_cast<float>( numberOfChunksProcessed * step );
+
+									std::filesystem::path chunkRelativePath;
+									Result getChunkRelativePathResult = chunk->GetRelativePath( chunkRelativePath );
+
+									if( getChunkRelativePathResult.type != ResultType::SUCCESS )
+									{
+										return getChunkRelativePathResult;
+									}
+
+									std::string message = "Processing Chunk: " + chunkRelativePath.u8string();
+
+									innerStatusUpdate.Update( CarbonResources::StatusProgressType::PERCENTAGE, progress, step, message, &innerChunkStatusUpdate );
+								}
 
 							    // Get chunk data
 							    std::string chunkData;
@@ -358,6 +366,8 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 							    resourceGetDataParams.data = &chunkData;
 
 							    resourceGetDataParams.downloadSettings = params.downloadSettings;
+
+                                resourceGetDataParams.logging = &innerChunkStatusUpdate;
 
 							    Result getChunkChecksumResult = chunk->GetChecksum( resourceGetDataParams.expectedChecksum );
 
@@ -387,6 +397,7 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 						    if( chunkIterator != m_resourcesParameter.end() )
 						    {
 							    chunkIterator++;
+								numberOfChunksProcessed++;
 						    }
 						    else
 						    {
