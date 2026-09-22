@@ -27,6 +27,8 @@ bool BundleStreamIn::operator<<( const std::string& dataData )
 {
 	m_cache.append( dataData );
 
+    auto test = dataData.size();
+
     m_cacheSize += dataData.size();
 
 	return true;

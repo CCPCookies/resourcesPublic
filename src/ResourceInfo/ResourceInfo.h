@@ -14,7 +14,6 @@
 #include "ResourceGroup.h"
 #include "../VersionInternal.h"
 #include "../ParameterVersion.h"
-#include "../StatusSettings.h"
 
 namespace ResourceTools
 {
@@ -254,9 +253,6 @@ struct ResourceGetDataParams
 	std::string expectedChecksum = "";
 
 	DownloadSettings downloadSettings;
-
-    StatusSettings* logging = nullptr;
-
 };
 
 struct ResourcePutDataStreamParams
