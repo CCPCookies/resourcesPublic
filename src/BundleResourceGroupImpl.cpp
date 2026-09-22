@@ -129,7 +129,6 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 
 	// Reconstitute the resources in the bundle
 	auto numResources = resourceGroup->GetSize();
-	int numProcessed = 0;
 
 	std::vector<ResourceInfo*> toBundle;
 
@@ -270,7 +269,6 @@ Result BundleResourceGroup::BundleResourceGroupImpl::Unpack( const BundleUnpackP
 
 				    innerStatusUpdate.Update( CarbonResources::StatusProgressType::PERCENTAGE, progress, step, message, &resourceLevelStatusUpdate );
 
-				    numProcessed++;
 			    }
 
 			    if( location.empty() )
