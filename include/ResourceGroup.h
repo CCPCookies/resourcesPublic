@@ -58,6 +58,8 @@ struct CallbackSettings
     *  BytesPerSecond Current transfer rate in bytes per second.
     *  @var DownloadCallbackParams::url
     *  BytesPerSecond Current transfer rate in bytes per second.
+    *  @var DownloadCallbackParams::relativePath
+    *  Relative path of resource.
     */
 struct DownloadCallbackParams
 {
@@ -65,6 +67,7 @@ struct DownloadCallbackParams
 	uintmax_t currentlyDownloadedBytes = 0;
 	double bytesPerSecond = 0;
 	std::string url = "";
+	std::filesystem::path relativePath = "";
 };
 
 /** Download Callback function signature.
