@@ -83,7 +83,7 @@ TEST_F( ResourceToolsTest, FowlerNollVoChecksumGeneration )
 	EXPECT_EQ( output, "a9d1721dd5cc6d54" );
 }
 
-void DownloadCallback(size_t totalSizeBytes, size_t currentDownloadedBytes, double bytesPerSecond, void* context)
+void DownloadCallback(const std::string& url, size_t totalSizeBytes, size_t currentDownloadedBytes, double bytesPerSecond, void* context)
 {
 	size_t* contextInt = static_cast<size_t*>( context );
 	*contextInt = currentDownloadedBytes;

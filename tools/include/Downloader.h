@@ -18,7 +18,7 @@ enum class Response
 	DOWNLOAD_ERROR,
 };
 
-using DownloadFileCallback =  std::function<void( size_t totalSizeBytes, size_t dataSizeBytes, double bytesPerSecond, void* )>;
+using DownloadFileCallback =  std::function<void( const std::string& url, size_t totalSizeBytes, size_t dataSizeBytes, double bytesPerSecond, void* )>;
 
 
 // Utility class for downloading files.

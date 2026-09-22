@@ -37,6 +37,8 @@ void ShutDownCurl()
 
 struct WriteToFileStreamCallWrapper
 {
+	std::string url;
+
 	std::ofstream out;
 
     ResourceTools::DownloadFileCallback callback = nullptr;
@@ -78,7 +80,7 @@ size_t WriteToFileStreamCallback( void* contents, size_t size, size_t nmemb, voi
 			bytesPerSecond = (double)wrapper->downloadedSizeBytes / durationSecondsSinceSeconds;
         }
 
-		wrapper->callback( wrapper->totalSizeBytes, wrapper->downloadedSizeBytes, bytesPerSecond, wrapper->context );
+		wrapper->callback( wrapper->url, wrapper->totalSizeBytes, wrapper->downloadedSizeBytes, bytesPerSecond, wrapper->context );
     }
 
 	return realSize;
@@ -166,6 +168,7 @@ bool Downloader::DownloadFile( const std::string& url, const std::filesystem::pa
 	callWrapper.callback = callback;
 	callWrapper.totalSizeBytes = expectedTotalSize;
 	callWrapper.context = callbackContext;
+	callWrapper.url = url;
 
 	curl_easy_setopt( m_curlHandle, CURLOPT_URL, url.c_str() );
 	curl_easy_setopt( m_curlHandle, CURLOPT_FAILONERROR, 1 );

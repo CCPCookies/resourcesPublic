@@ -620,7 +620,7 @@ Result ResourceInfo::GetDataLocalCdn( ResourceGetDataParams& params, const int b
 	}
 }
 
-void FileDownloadCallback(size_t totalSizeBytes, size_t dataSizeBytes, double bytesPerSecond, void* context)
+void FileDownloadCallback(const std::string& url, size_t totalSizeBytes, size_t dataSizeBytes, double bytesPerSecond, void* context)
 {
     if (context)
     {
@@ -628,7 +628,7 @@ void FileDownloadCallback(size_t totalSizeBytes, size_t dataSizeBytes, double by
 
 		if( userCallback )
 		{
-			userCallback( totalSizeBytes, dataSizeBytes, bytesPerSecond );
+			userCallback( { totalSizeBytes, dataSizeBytes, bytesPerSecond, url } );
 		}
     }
 }
