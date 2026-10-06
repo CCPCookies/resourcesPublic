@@ -2595,7 +2595,7 @@ Result ResourceGroup::ResourceGroupImpl::CreatePatch( const PatchCreateParams& p
                         unsigned int matchPercent = 0;
                         if (totalChunksProcessed > 0)
                         {
-							matchPercent = unsigned int( ( 100.0 / totalChunksProcessed ) * matches );
+							matchPercent = static_cast<unsigned int>( ( 100.0 / totalChunksProcessed ) * matches );
                         }
 						std::stringstream ss;
                         ss << "Progress : " << percent << "% Match Count: " << matches << "/" << totalChunksProcessed << " Match Ratio: " << matchPercent << "%";
