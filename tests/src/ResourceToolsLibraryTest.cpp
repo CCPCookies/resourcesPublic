@@ -920,33 +920,36 @@ TEST_F( ResourceToolsTest, GenerateChunkIndex )
 		std::filesystem::remove( outputPath );
 	}
 
-	size_t offset;
+	std::vector<size_t> offsets;
 
 	std::filesystem::path indexFolder = "./GenerateChunkIndex/Indexes";
 
 	std::string notInFile = "Once upon a time, in a galaxy far, far away...";
 	ResourceTools::ChunkIndex notInFileIndex( introMovieFilePath, static_cast<uint32_t>( notInFile.size() ), indexFolder );
 	notInFileIndex.Generate();
-	ASSERT_FALSE( notInFileIndex.FindMatchingChunk( notInFile, offset ) );
+	ASSERT_FALSE( notInFileIndex.FindMatchingChunks( notInFile, offsets ) );
 
 	std::string startOfFile = "TIME";
 	ResourceTools::ChunkIndex startOfFileIndex( introMovieFilePath, static_cast<uint32_t>( startOfFile.size() ), indexFolder );
 	startOfFileIndex.Generate();
-	ASSERT_TRUE( startOfFileIndex.FindMatchingChunk( startOfFile, offset ) );
-	ASSERT_EQ( offset, 0 );
+	offsets.clear();
+	ASSERT_TRUE( startOfFileIndex.FindMatchingChunks( startOfFile, offsets ) );
+	ASSERT_EQ( offsets.at(0), 0 );
 
 	std::string early = "introseq.blue";
 	ResourceTools::ChunkIndex earlyIndex( introMovieFilePath, static_cast<uint32_t>( early.size() ), indexFolder );
 	earlyIndex.Generate();
-	ASSERT_TRUE( earlyIndex.FindMatchingChunk( early, offset ) );
-	ASSERT_EQ( offset, data.find( early ) );
+	offsets.clear();
+	ASSERT_TRUE( earlyIndex.FindMatchingChunks( early, offsets ) );
+	ASSERT_EQ( offsets.at(0), data.find( early ) );
 
 	// Find the last 20 bytes of the file.
 	std::string final = data.substr( data.size() - 20 );
 	ResourceTools::ChunkIndex finalIndex( introMovieFilePath, static_cast<uint32_t>( final.size() ), indexFolder );
 	finalIndex.Generate();
-	ASSERT_TRUE( finalIndex.FindMatchingChunk( final, offset ) );
-	ASSERT_EQ( offset, data.size() - 20 );
+	offsets.clear();
+	ASSERT_TRUE( finalIndex.FindMatchingChunks( final, offsets ) );
+	ASSERT_EQ( offsets.at(0), data.size() - 20 );
 }
 
 TEST_F( ResourceToolsTest, GenerateChunkIndexWithFilter )
@@ -964,21 +967,22 @@ TEST_F( ResourceToolsTest, GenerateChunkIndexWithFilter )
 		std::filesystem::remove( outputPath );
 	}
 
-	size_t offset;
+	std::vector<size_t> offsets;
 	std::filesystem::path indexFolder = "./GenerateChunkIndex/Indexes";
 
 	std::string notInFile = "Once upon a time, in a galaxy far, far away...";
 	ResourceTools::ChunkIndex notInFileIndex( introMovieFilePath, static_cast<uint32_t>( notInFile.size() ), indexFolder );
 	notInFileIndex.GenerateChecksumFilter( introMovieFilePath );
 	notInFileIndex.Generate();
-	ASSERT_FALSE( notInFileIndex.FindMatchingChunk( notInFile, offset ) );
+	ASSERT_FALSE( notInFileIndex.FindMatchingChunks( notInFile, offsets ) );
 
 	std::string startOfFile = "TIME";
 	ResourceTools::ChunkIndex startOfFileIndex( introMovieFilePath, static_cast<uint32_t>( startOfFile.size() ), indexFolder );
 	startOfFileIndex.GenerateChecksumFilter( introMovieFilePath );
 	startOfFileIndex.Generate();
-	ASSERT_TRUE( startOfFileIndex.FindMatchingChunk( startOfFile, offset ) );
-	ASSERT_EQ( offset, 0 );
+	offsets.clear();
+	ASSERT_TRUE( startOfFileIndex.FindMatchingChunks( startOfFile, offsets ) );
+	ASSERT_EQ( offsets.at(0), 0 );
 
 	// Find a chunk early on in the file, that should be
 	// included in the index.
@@ -986,16 +990,18 @@ TEST_F( ResourceToolsTest, GenerateChunkIndexWithFilter )
 	ResourceTools::ChunkIndex earlyIndex( introMovieFilePath, static_cast<uint32_t>( early.size() ), indexFolder );
 	earlyIndex.GenerateChecksumFilter( introMovieFilePath );
 	earlyIndex.Generate();
-	ASSERT_TRUE( earlyIndex.FindMatchingChunk( early, offset ) );
-	ASSERT_EQ( data.substr( offset, 10 ), early );
+	offsets.clear();
+	ASSERT_TRUE( earlyIndex.FindMatchingChunks( early, offsets ) );
+	ASSERT_EQ( data.substr( offsets.at(0), 10 ), early );
 
 	// Find the last whole chunk in the file.
 	std::string final = data.substr( data.size() - 31, 20 );
 	ResourceTools::ChunkIndex finalIndex( introMovieFilePath, 20, indexFolder );
 	finalIndex.GenerateChecksumFilter( introMovieFilePath );
 	finalIndex.Generate();
-	ASSERT_TRUE( finalIndex.FindMatchingChunk( final, offset ) );
-	ASSERT_EQ( offset, data.size() - 31 );
+	offsets.clear();
+	ASSERT_TRUE( finalIndex.FindMatchingChunks( final, offsets ) );
+	ASSERT_EQ( offsets.at(0), data.size() - 31 );
 }
 
 #if __APPLE__
